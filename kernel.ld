@@ -1,5 +1,3 @@
-
-
 SECTIONS {
 	/*
 	 * 0x8000 ver el ARManual. *bootloader!
@@ -18,6 +16,5 @@ SECTIONS {
 	/DISCARD/ : {
 		*(*)
 	}
-	*/
 	
 }

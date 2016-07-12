@@ -40,14 +40,14 @@ __aeabi_uidiv:
  
     mov Di, D                   /* r3 ← r1 */
     cmp Di, Ni, LSR #1           /* update cpsr with r3 - r0/2 */
-    .Lloop2A$:
+    .LloopA$:
       movls Di, Di, LSL #1       /* if r3 <= 2*r0 (C=0 or Z=1) then r3 ← r3*2 */
       cmp Di, Ni, LSR #1         /* update cpsr with r3 - (r0/2) */
-      bls .Lloop2A$                /* branch to .Lloop2 if r3 <= 2*r0 (C=0 or Z=1) */
+      bls .LloopA$                /* branch to .Lloop2 if r3 <= 2*r0 (C=0 or Z=1) */
  
     mov Q, #0                   /* r2 ← 0 */
  
-    .Lloop2B$:
+    .LloopB$:
       cmp Ni, Di                 /* update cpsr with r0 - r3 */
       subhs Ni, Ni, Di           /* if r0 >= r3 (C=1) then r0 ← r0 - r3 */
       adc Q, Q, Q             /* r2 ← r2 + r2 + C.
@@ -55,7 +55,7 @@ __aeabi_uidiv:
  
       mov Di, Di, LSR #1         /* r3 ← r3/2 */
       cmp Di, D                 	/* update cpsr with r3 - r1 */
-      bhs .Lloop2B$              	/* if r3 >= r1 branch to .Lloop3 */
+      bhs .LloopB$              	/* if r3 >= r1 branch to .Lloop3 */
 
     .unreq Ni
     .unreq D

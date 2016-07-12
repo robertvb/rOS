@@ -290,7 +290,7 @@ void displayBgInfo(void) {
 	currentY 	  = FrameBufferDescrp->vHeight/2;
 
 	currentX += drawString("SISTEMA OPERATIVO : ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH/2;
-	drawString("Estructura: Monolotico",100,currentX,currentY+=2*CHAR_HEIGHT);
+	drawString("Estructura: Monolitico",100,currentX,currentY+=2*CHAR_HEIGHT);
 	drawString("Long. de palabra: 32 bits",100,currentX,currentY+=CHAR_HEIGHT);
 	drawString("Tiempo encendido:",100,currentX,currentY+=CHAR_HEIGHT);
 
