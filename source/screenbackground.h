@@ -6,13 +6,13 @@
 #include "string.h"
 #include "gpuFrameBuffer.h"
 
-#define MAX_CONSOLE	  	 4
+#define MAX_CONSOLE	  	    4
 #define MAX_SIZE_BOARD		40
 #define VERTICAL_EDGES		CHAR_WIDTH		
 #define HORIZONTAL_EDGES	CHAR_WIDTH
 #define SHADOW_EDGES		2
-#define LOGO_X			HORIZONTAL_EDGES +  8*CHAR_WIDTH
-#define LOGO_Y			VERTICAL_EDGES   +  6*CHAR_WIDTH
+#define LOGO_X			    HORIZONTAL_EDGES +  8*CHAR_WIDTH
+#define LOGO_Y			    VERTICAL_EDGES   +  6*CHAR_WIDTH
 
 typedef struct {
 		uint32_t currentX;
