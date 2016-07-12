@@ -5,6 +5,7 @@
 #include "rpi-atags.h"
 #include "string.h"
 #include "gpuFrameBuffer.h"
+/*dsadsadsa*/
 
 #define MAX_CONSOLE			4
 #define MAX_SIZE_BOARD		40
