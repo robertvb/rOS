@@ -2,11 +2,11 @@
 
 extern BackgroundInfo;
 
-volatile static bgInfo_t * bgInfo = (bgInfo_t *) &BackgroundInfo;
+static bgInfo_t * bgInfo = (bgInfo_t *) &BackgroundInfo;
 
 void bgInit(uint32_t atagsAddr) {
 
-	
+
 	
 	bgInfo->bgColor = 0x2844;
 	bgInfo->workingChar = '|';
@@ -59,12 +59,12 @@ void bgInit(uint32_t atagsAddr) {
 }
 
 void bgRefresh(void) {
-	
+
 	switch(bgInfo->workingChar) {
 
 		case '|':
 			bgInfo->workingChar = (bgInfo->bwk ? '/' : 92);
-			bgInfo->bwk = (bgInfo->bwk ? 0 : 1);
+			//bgInfo->bwk = (bgInfo->bwk ? 0 : 1);
 			break;
 		case '/':
 			bgInfo->workingChar = '-';
@@ -285,7 +285,7 @@ void displayBgInfo(void) {
 	uint16_t currentY;
 	rpi_gpu_framebuffer_descriptor_t * FrameBufferDescrp;
 
-	FrameBufferDescrp = RPI_GetFrameBufferDescpr();
+	FrameBufferDescrp = (rpi_gpu_framebuffer_descriptor_t *) RPI_GetFrameBufferDescpr();
 	x0 = currentX	  = FrameBufferDescrp->vWidth - FrameBufferDescrp->vWidth/3;
 	currentY 	  = FrameBufferDescrp->vHeight/2;
 
