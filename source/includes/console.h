@@ -1,6 +1,8 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include <stdint.h>
+
 #define MAX_COMMANDS		50
 #define MAX_SIZE_COMMAND	16
 #define MAX_SIZE_COMMAND_DESCRP 61

@@ -1,4 +1,4 @@
-#include "string.h"
+#include "includes/string.h"
 
 
 /* Parsea num a char *, guarda el resultado en str */
@@ -11,7 +11,7 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 	if(base > 16)							// Se comprueba la base
 		return -1;
 
-	if(stringLength(str) < 10)					// Necesiamos 11 caracteres, 10 para el numero y 1 para el '\0'
+	if(stringLength(str) < 10)					// 11 caracteres, 10 para el numero y 1 para el '\0'
 		return -2;
 
 	if(num==0) {

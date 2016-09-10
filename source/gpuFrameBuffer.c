@@ -1,4 +1,4 @@
-#include "gpuFrameBuffer.h"
+#include "includes/gpuFrameBuffer.h"
 
 extern FrameBufferInfo;
 extern SystemDefaultFontInfo;
@@ -25,8 +25,6 @@ void paintEntireScreen(uint16_t Colour16b) {
 			*(pixel++)= Colour16b;
 }
 
-
-//Unused
 void line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t Colour16b) {
 	int32_t dx;
 	int32_t sx;
@@ -84,7 +82,7 @@ int8_t drawCharacter(uint8_t Char, uint32_t x, uint32_t y) {
 	uint8_t row;
 	uint8_t * currentCharAddress;
 
-	if(Char > 127)	//Se comprueba que el caracter esta dentro de los 128 que podemos representar
+	if(Char > 127)	//vemos si el caracter esta dentro de los 128 que podemos representar
 		return -1;
 	
 	currentCharAddress=(fontInfoAddress + Char * 16);

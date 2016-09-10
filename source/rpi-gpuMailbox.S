@@ -24,7 +24,7 @@ MailboxWrite:
 		.unreq status
 		bne wait1$
 
-# Nos aseguramos de que el estado está a 0 el bit más significativo (el buzon puede recivir mensajes)
+# Nos aseguramos de que el estado está a 0 el bit más significativo (significa que el buzon puede recivir mensajes)
 
 	add value,channel
 	.unreq channel
@@ -119,7 +119,7 @@ InitialiseFrameBuffer:
 	mov r0,#1
 	bl MailboxRead
 
-# Recive la respuesta (almanecana en r0)
+# Recive la respuesta (almacenada en r0)
 		
 	teq result,#0
 	movne result,#0
