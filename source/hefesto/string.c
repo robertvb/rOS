@@ -1,4 +1,4 @@
-#include "includes/string.h"
+#include "../includes/hefesto/string.h"
 
 
 /* Parsea num a char *, guarda el resultado en str */
@@ -23,7 +23,7 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 
 	divCont = 0;							// Llevamos la cuenta de la sucesivas divisiones
 
-	if(base==Hexa) 
+	if(base==HEXADECIMAL)
 		while(num) {						// Se divide hasta que el ńumero sea 0
 
 			reminder = num % base;
@@ -31,7 +31,7 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 			if(reminder < 10)
 				str[divCont] = '0' + reminder;
 			else
-				str[divCont] = 'a' + reminder - Dec;	// Números y letras no son adyacentes en ASCII
+				str[divCont] = 'a' + reminder - DECIMAL;	// Números y letras no son adyacentes en ASCII
 									// 'a' representa el inicio de las minúsculas en la tabla ASCII (adyacentes)
 			divCont++;
 			num /= base;					// Le restamos el resto y loop.

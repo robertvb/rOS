@@ -1,4 +1,4 @@
-#include "includes/gpuFrameBuffer.h"
+#include "../includes/hades/gpuFrameBuffer.h"
 
 extern FrameBufferInfo;
 extern SystemDefaultFontInfo;

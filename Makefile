@@ -21,7 +21,7 @@ LINKER = kernel.ld
 
 # The names of all object files that must be generated.
 # Primero el codigo en asm y después el C. De otra manera da error.
-OBJECTS := $(patsubst $(SOURCE)%.S,$(BUILD)%.o,$(wildcard $(SOURCE)*.S)) $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c))
+OBJECTS := $(patsubst $(SOURCE)%.S,$(BUILD)%.o,$(wildcard $(SOURCE)*/*.S)) $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*/*.c))
 
 # Rule to make all.
 all: $(TARGET) $(LIST)
@@ -47,7 +47,7 @@ $(TARGET) : $(BUILD)output.elf
 $(BUILD)output.elf : $(OBJECTS) $(LINKER)
 	$(ARMGNU)-ld $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf -T $(LINKER)
 
-# Rule to make the object files.
+# Rule to make the object files (ensamblador).
 $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -g -I $(SOURCE) $< -o $@
 
@@ -61,3 +61,7 @@ clean :
 	-rm -f $(LIST)
 	-rm -f $(MAP)
 	-mkdir build
+	-mkdir build/apolo
+	-mkdir build/hades
+	-mkdir build/hefesto
+	-mkdir build/poseidon

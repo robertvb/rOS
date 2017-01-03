@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 #define Binary			 	 2
-#define Dec				10
-#define Hexa				16
+#define DECIMAL				10
+#define HEXADECIMAL			16
 
 
 int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str);

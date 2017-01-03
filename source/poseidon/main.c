@@ -1,5 +1,5 @@
-#include "includes/rpi-gpio.h"
-#include "includes/rpi-systimer.h"
+#include "../includes/hades/rpi-gpio.h"
+#include "../includes/hades/rpi-systimer.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 

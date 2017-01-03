@@ -1,10 +1,10 @@
 #ifndef SCREEN_BACKGROUND_H
 #define SCREEN_BACKGROUND_H
 
-#include "rpi-systimer.h"
-#include "rpi-atags.h"
-#include "string.h"
-#include "gpuFrameBuffer.h"
+#include "../hades/rpi-systimer.h"
+#include "../hades/rpi-atags.h"
+#include "../hefesto/string.h"
+#include "../hades/gpuFrameBuffer.h"
 
 #define MAX_CONSOLE		4
 #define MAX_SIZE_BOARD		40
@@ -14,7 +14,7 @@
 #define LOGO_X			HORIZONTAL_EDGES +  8*CHAR_WIDTH
 #define LOGO_Y			VERTICAL_EDGES   +  6*CHAR_WIDTH
 
-struct bgInfo_t {
+typedef struct {
 		uint32_t currentX;						// Posición actual X
 		uint32_t currentY;						// Posición actual Y
 		uint32_t onTime;						// Tiempo que lleva el sistema encendido
@@ -27,8 +27,7 @@ struct bgInfo_t {
 		uint16_t bgColor;						// Color del fondo
 		uint8_t workingChar;					// Guiño a miOS (/ - | - \) ;)
 		uint8_t bwk;							// bool working char
-
-} bgInfo;
+	} bgInfo_t;
 
 void bgInit(uint32_t atagsAddr);
 void bgRefresh(void);
