@@ -1,5 +1,8 @@
 #include "includes/rpi-systimer.h"
 
+/* Internal linkage, visibilidad a nivel de fichero.
+ *  Singleton.
+ */
 static rpi_sys_timer_t* rpiSystemTimer = (rpi_sys_timer_t*)RPI_SYSTIMER_BASE;
 
 rpi_sys_timer_t* RPI_GetSystemTimer(void)

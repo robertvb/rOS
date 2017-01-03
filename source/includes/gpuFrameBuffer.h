@@ -48,7 +48,7 @@ typedef struct {			// DESCRIPTOR DEL BUFFER DE MARCO
     } rpi_gpu_framebuffer_descriptor_t;
 
 
-typedef struct {			//BUZÓN DE COMUNICACION CON LA GPU (*UNSUDED, abordado en las rutinas de inicio del sistema - rpi-gpuMailbox.S - )
+typedef struct {			//BUZÓN DE COMUNICACION CON LA GPU (*UNUSED, abordado en las rutinas de inicio del sistema - rpi-gpuMailbox.S - )
 
     volatile uint32_t read1;		//0x2000B880		**************
     volatile uint32_t read2;		//0x2000B884		* CAMPO READ *
@@ -69,5 +69,6 @@ void line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t Colour16b);
 void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b);
 int8_t drawCharacter(uint8_t Char, uint32_t posX, uint32_t posY);
 int8_t drawString(uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
+void eraseString(uint16_t baseColour16b, uint32_t x, uint32_t y, uint32_t len);
 
 #endif

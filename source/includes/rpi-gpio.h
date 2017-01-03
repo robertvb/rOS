@@ -49,7 +49,8 @@
 #define GPIO_GPPUDCLK0  38
 #define GPIO_GPPUDCLK1  39
 
-extern void habilitar_GPIO_ACT_LED_output();
-extern void apaga_ACT_LED();
-extern void enciende_ACT_LED();
+void habilitar_GPIO_ACT_LED_output();
+void apaga_ACT_LED();
+void enciende_ACT_LED();
+
 #endif

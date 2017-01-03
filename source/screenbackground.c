@@ -1,20 +1,21 @@
 #include "includes/screenbackground.h"
 
-extern BackgroundInfo;
-
-static bgInfo_t * bgInfo = (bgInfo_t *) &BackgroundInfo;
+//extern BackgroundInfo;
+//static bgInfo_t * bgInfo = (bgInfo_t *) &BackgroundInfo;
 
 void bgInit(uint32_t atagsAddr) {
 
 
 	
-	bgInfo->bgColor = 0x2844;
-	bgInfo->workingChar = '|';
-	bgInfo->bwk = 0;
+	bgInfo.bgColor = 0x2844;
+	bgInfo.workingChar = '|';
+	bgInfo.bwk = 0;
+	bgInfo.onTime = 0;
+	RPI_GetSystemTimer()->counter_lo = 0;
 
 	/************* Empezamos a pintar el BackGround con la info obtenida ************/
 
-	paintEntireScreen(bgInfo->bgColor);
+	paintEntireScreen(bgInfo.bgColor);
 
 	bgDrawEdges(LightGrey);
 
@@ -22,76 +23,49 @@ void bgInit(uint32_t atagsAddr) {
 
 	parseAtags(atagsAddr);
 
+	RPI_GetSystemTimer()->counter_lo = 0;
 	displayBgInfo();
 
-	/*
-	drawString(bgInfo->cmdLine,200,0,260);
-	drawString(bgInfo->cmdLine+60,200,0,280);
-	drawString(bgInfo->cmdLine+120,200,0,300);
-	drawString(bgInfo->cmdLine+180,200,0,320);
-	drawString(bgInfo->cmdLine+180+60,200,0,340);
-	drawString(bgInfo->cmdLine+180+60+60,200,0,360);
-	drawString(bgInfo->cmdLine+180+60+60+60,200,0,380);
-	
-    	drawString("Informacion del sistema: ",70,100,100);
-
-    	drawString("Placa base: ",70,100,140);
-
-	drawString("Memoria RAM: 0x",70,100,160);
-	uintToString(bgInfo->memSize,Hexa,buf2);
-	drawString(buf2,70,100 + 15*CHAR_WIDTH,160);
-
-	drawString("From: 0x",70,100 + 15*CHAR_WIDTH,180);
-	uintToString(bgInfo->memStartAddress,Hexa,buf);
-	drawString(buf,70,100 + (15+8)*CHAR_WIDTH,180);
-
-	drawString("To: 0x",70,100 + 15*CHAR_WIDTH,200);
-	uintToString(bgInfo->memStartAddress + bgInfo->memSize - 1,Hexa,buf4);
-	drawString(buf4,70,100 + (15+6)*CHAR_WIDTH,200);
-
-	drawString("El sistema lleva encendido: ",70,100,220);
-	uintToString((uint32_t) *bgInfo->onTime,Dec,buf3);
-	drawString(buf3,70,100 + 28*CHAR_WIDTH,220);
-	*/		
-
-	bgInfo->currentY=240;
+	bgInfo.currentY=240;
 
 }
 
 void bgRefresh(void) {
-
-	switch(bgInfo->workingChar) {
+/*
+	switch(bgInfo.workingChar) {
 
 		case '|':
-			bgInfo->workingChar = (bgInfo->bwk ? '/' : 92);
-			//bgInfo->bwk = (bgInfo->bwk ? 0 : 1);
+			bgInfo.workingChar = (bgInfo.bwk ? '/' : 92);
+			//bgInfo.bwk = (bgInfo.bwk ? 0 : 1);
 			break;
 		case '/':
-			bgInfo->workingChar = '-';
+			bgInfo.workingChar = '-';
 			break;
 		case '-':
-			bgInfo->workingChar = '|';
+			bgInfo.workingChar = '|';
 			break;
 		case 92:
-			bgInfo->workingChar = '|';
+			bgInfo.workingChar = '|';
 			break;
 	} 
 
 	
 /*
 	if(uintToString(timer->counter_lo,Dec,WritingBuf) == 0) {
-    		drawString("           ",70,100 + 28*CHAR_WIDTH,bgInfo->currentY);
-		drawString(WritingBuf,70,100 + 28*CHAR_WIDTH,bgInfo->currentY+=CHAR_HEIGHT);
+    		drawString("           ",70,100 + 28*CHAR_WIDTH,bgInfo.currentY);
+		drawString(WritingBuf,70,100 + 28*CHAR_WIDTH,bgInfo.currentY+=CHAR_HEIGHT);
 		for(i=0;i<12;i++)
 			WritingBuf[i]='a';
 		WritingBuf[i]='\0';
 	}
 	else 
 		
-		drawString("que no le ha gustao al del refresh",70,100 + 28*CHAR_WIDTH,bgInfo->currentY*=CHAR_HEIGHT); */
-
+		drawString("que no le ha gustao al del refresh",70,100 + 28*CHAR_WIDTH,bgInfo.currentY*=CHAR_HEIGHT); */
+/*
 	drawCharacter(' ',1024 - LOGO_X, LOGO_Y);
-	drawCharacter(bgInfo->workingChar,1024 - LOGO_X, LOGO_Y);
+	drawCharacter(bgInfo.workingChar,1024 - LOGO_X, LOGO_Y);*/
+
+	displayBgInfo();
 }
 
 void bgDrawEdges(uint16_t color) {
@@ -150,29 +124,29 @@ void bgDrawEdges(uint16_t color) {
 
 void bgDrawLogo(uint16_t color) {
 
-	bgInfo->currentX = LOGO_X;
-	bgInfo->currentY = LOGO_Y;
+	bgInfo.currentX = LOGO_X;
+	bgInfo.currentY = LOGO_Y;
 
-	drawString("___  _ ____ _  _ _  _ ____ _  _ _ ___  ____    ____ \0",80,bgInfo->currentX,bgInfo->currentY);
-	bgInfo->currentY+=CHAR_HEIGHT;
-	drawString("|__] | |___ |  | |  | |___ |  | | |    |  |    |__| \0",80,bgInfo->currentX,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+13*CHAR_WIDTH,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+28*CHAR_WIDTH,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+37*CHAR_WIDTH,bgInfo->currentY);
-	bgInfo->currentY+=CHAR_HEIGHT;
-	drawString("|__] | |___ |  |   /  |___ |  | | |__/ |__|    |  |  \0",80,bgInfo->currentX,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+18*CHAR_WIDTH,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+14*CHAR_WIDTH,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+29*CHAR_WIDTH,bgInfo->currentY);
+	drawString("___  _ ____ _  _ _  _ ____ _  _ _ ___  ____    ____ \0",80,bgInfo.currentX,bgInfo.currentY);
+	bgInfo.currentY+=CHAR_HEIGHT;
+	drawString("|__] | |___ |  | |  | |___ |  | | |    |  |    |__| \0",80,bgInfo.currentX,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+13*CHAR_WIDTH,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+28*CHAR_WIDTH,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+37*CHAR_WIDTH,bgInfo.currentY);
+	bgInfo.currentY+=CHAR_HEIGHT;
+	drawString("|__] | |___ |  |   /  |___ |  | | |__/ |__|    |  |  \0",80,bgInfo.currentX,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+18*CHAR_WIDTH,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+14*CHAR_WIDTH,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+29*CHAR_WIDTH,bgInfo.currentY);
 
 	
-	bgInfo->currentY+=2*CHAR_HEIGHT;
-	drawString("____ ____ ____ \0",80,bgInfo->currentX,bgInfo->currentY);
-	bgInfo->currentY+=CHAR_HEIGHT;
-	drawString("|__/ |  | [__ \0",80,bgInfo->currentX,bgInfo->currentY);
-	bgInfo->currentY+=CHAR_HEIGHT;
-	drawString("|    |__| ___].  v0.2.\0",80,bgInfo->currentX,bgInfo->currentY);
-	drawCharacter(92,bgInfo->currentX+3*CHAR_WIDTH,bgInfo->currentY);
+	bgInfo.currentY+=2*CHAR_HEIGHT;
+	drawString("____ ____ ____ \0",80,bgInfo.currentX,bgInfo.currentY);
+	bgInfo.currentY+=CHAR_HEIGHT;
+	drawString("|__/ |  | [__ \0",80,bgInfo.currentX,bgInfo.currentY);
+	bgInfo.currentY+=CHAR_HEIGHT;
+	drawString("|    |__| ___].  v0.2.\0",80,bgInfo.currentX,bgInfo.currentY);
+	drawCharacter(92,bgInfo.currentX+3*CHAR_WIDTH,bgInfo.currentY);
 
 
 }
@@ -194,8 +168,8 @@ void parseAtags(uint32_t atagsAddr) {
 			case ATAG_CORE:
 				break;
 			case ATAG_MEM:
-			//	bgInfo->memSize		 = ((struct atag_mem *)atags)->size;
-			//	bgInfo->memStartAddress  = ((struct atag_mem *)atags)->address;
+			//	bgInfo.memSize		 = ((struct atag_mem *)atags)->size;
+			//	bgInfo.memStartAddress  = ((struct atag_mem *)atags)->address;
 				break;
 			case ATAG_VIDEOTEXT:
 				break;
@@ -223,29 +197,29 @@ void parseAtags(uint32_t atagsAddr) {
 
 	if(searchStringPattern("bcm2708", cmdLine)) {
 	
-		strncpy(bgInfo->board,"bcm2708",40);
+		strncpy(bgInfo.board,"bcm2708",40);
 
 		pos = searchStringPattern("boardrev=",cmdLine);
 
 		if(pos) {
 
-			strncpy(bgInfo->rev,cmdLine+pos,4);
+			strncpy(bgInfo.rev,cmdLine+pos,4);
 		}
 		else { // revision de la placa desconocida, es una RPI, pero no sabemos cual. something is something!
 			
-			strncpy(bgInfo->rev,"desconocida",40);
+			strncpy(bgInfo.rev,"desconocida",40);
 		}
 
 		pos = searchStringPattern("clock_freq=",cmdLine);
 
 		if(pos) {
 
-			strncpy(bgInfo->freqCPU,cmdLine+pos,10);
+			strncpy(bgInfo.freqCPU,cmdLine+pos,10);
 
 		}
 		else {
 
-			strncpy(bgInfo->freqCPU,"desconocida",40);
+			strncpy(bgInfo.freqCPU,"desconocida",40);
 
 		}
 
@@ -253,27 +227,27 @@ void parseAtags(uint32_t atagsAddr) {
 
 		if(pos) {
 
-			strncpy(bgInfo->serial,cmdLine+pos,11);
+			strncpy(bgInfo.serial,cmdLine+pos,11);
 		}
 		else {
 
-			strncpy(bgInfo->serial,"desconocido",40);
+			strncpy(bgInfo.serial,"desconocido",40);
 		}
 
 		pos = searchStringPattern("macaddr=",cmdLine);
 
 		if(pos) {
 
-			strncpy(bgInfo->mac,cmdLine + pos,18);
+			strncpy(bgInfo.mac,cmdLine + pos,18);
 		}
 		else {
 		
-			strncpy(bgInfo->mac,"desconocida",40);
+			strncpy(bgInfo.mac,"desconocida",40);
 		}
 
 	}
 	else // placa base desconocida. Malo malo, estamos en algo que no es una RPI :(
-		strncpy(bgInfo->board,"desconocida. Buena suerte amigo!",40);
+		strncpy(bgInfo.board,"desconocida. Buena suerte amigo!",40);
 }
 
 void displayBgInfo(void) {
@@ -292,20 +266,36 @@ void displayBgInfo(void) {
 	currentX += drawString("SISTEMA OPERATIVO : ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH/2;
 	drawString("Estructura: Monolitico",100,currentX,currentY+=2*CHAR_HEIGHT);
 	drawString("Long. de palabra: 32 bits",100,currentX,currentY+=CHAR_HEIGHT);
-	drawString("Tiempo encendido:",100,currentX,currentY+=CHAR_HEIGHT);
+	currentX2 = drawString("Tiempo encendido:",100,currentX,currentY+=CHAR_HEIGHT);
+
+	char  onTimeMinute [] = {"            \0"};
+	char  onTimeSecond [] = {"            \0"};
+	int actualMsecond = RPI_GetSystemTimer()->counter_lo;
+
+	if(actualMsecond >= bgInfo.onTime * 1000000) {
+
+		bgInfo.onTime += 1;
+		uintToString(bgInfo.onTime / 60,Dec,onTimeMinute);
+		strncat(onTimeMinute, "m",12);
+		uintToString(bgInfo.onTime % 60,Dec,onTimeSecond);
+		strncat(onTimeSecond,"s",12);
+		eraseString(bgInfo.bgColor,currentX2,currentY,24);
+		currentX2 += drawString(onTimeMinute,12,currentX2,currentY)*CHAR_WIDTH;
+		currentX2 += drawString(onTimeSecond,12,currentX2,currentY)*CHAR_WIDTH;
+	}
 
 	drawString("HARDWARE SUBYACENTE : ", 100,x0,currentY+=2*CHAR_HEIGHT)*CHAR_WIDTH;
 	currentX2 = currentX + drawString("Placa base: ",100,currentX,currentY+=2*CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->board,40,currentX2,currentY);
+	drawString(bgInfo.board,40,currentX2,currentY);
 	currentX2 = currentX + drawString("Revision: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->rev,40,currentX2,currentY);
+	drawString(bgInfo.rev,40,currentX2,currentY);
 	currentX2 = currentX + drawString("Num. serial: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->serial,40,currentX2,currentY)*CHAR_WIDTH;
+	drawString(bgInfo.serial,40,currentX2,currentY)*CHAR_WIDTH;
 	currentX2 = currentX + drawString("MAC: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->mac,40,currentX2,currentY)*CHAR_WIDTH;
+	drawString(bgInfo.mac,40,currentX2,currentY)*CHAR_WIDTH;
 	currentX2 = currentX + drawString("CPU's: 1",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
 	currentX2 = currentX + drawString("Frecuencia CPU: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->freqCPU,40,currentX2,currentY)*CHAR_WIDTH;
+	drawString(bgInfo.freqCPU,40,currentX2,currentY)*CHAR_WIDTH;
 
 	drawString("PANTALLA : ",100,x0,currentY+=2*CHAR_HEIGHT)*CHAR_WIDTH;
 	drawString("Resolucion: 1024 x 768 ",100,currentX,currentY+=2*CHAR_HEIGHT);

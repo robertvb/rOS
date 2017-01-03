@@ -7,18 +7,18 @@
 #define RPI_SYSTIMER_BASE       0x20003000
 
 
-typedef struct {
-    volatile uint32_t control_status;
-    volatile uint32_t counter_lo;
-    volatile uint32_t counter_hi;
-    volatile uint32_t compare0;
-    volatile uint32_t compare1;
-    volatile uint32_t compare2;
-    volatile uint32_t compare3;
+typedef volatile struct {
+     uint32_t control_status;
+     uint32_t counter_lo;
+     uint32_t counter_hi;
+     uint32_t compare0;
+     uint32_t compare1;
+     uint32_t compare2;
+     uint32_t compare3;
     } rpi_sys_timer_t;
 
 
-extern rpi_sys_timer_t* RPI_GetSystemTimer(void);
-extern void RPI_esperarMicroSeconds( uint32_t us );
+rpi_sys_timer_t* RPI_GetSystemTimer(void);
+void RPI_esperarMicroSeconds( uint32_t us );
 
 #endif

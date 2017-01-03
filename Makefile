@@ -19,7 +19,8 @@ MAP = kernel.map
 # The name of the linker script to use.
 LINKER = kernel.ld
 
-# The names of all object files that must be generated. Deduced from the 
+# The names of all object files that must be generated.
+# Primero el codigo en asm y después el C. De otra manera da error.
 OBJECTS := $(patsubst $(SOURCE)%.S,$(BUILD)%.o,$(wildcard $(SOURCE)*.S)) $(patsubst $(SOURCE)%.c,$(BUILD)%.o,$(wildcard $(SOURCE)*.c))
 
 # Rule to make all.
@@ -31,7 +32,7 @@ rebuild: all
 # Rules
 
 build/%.o: source/%.c
-	$(ARMGNU)-gcc-4.7.4 -c -O2 -DRPIBPLUS -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -nostartfiles -o $@ $<
+	$(ARMGNU)-gcc-4.7.4 -c -O2 -DRPIBPLUS -fno-builtin -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -nostartfiles -o $@ $<
 
 
 # Rule to make the listing file.
@@ -42,7 +43,7 @@ $(LIST) : $(BUILD)output.elf
 $(TARGET) : $(BUILD)output.elf
 	$(ARMGNU)-objcopy $(BUILD)output.elf -O binary $(TARGET) 
 
-# Rule to make the elf file.
+# Rule to make the elf file (linkado).
 $(BUILD)output.elf : $(OBJECTS) $(LINKER)
 	$(ARMGNU)-ld $(OBJECTS) -Map $(MAP) -o $(BUILD)output.elf -T $(LINKER)
 

@@ -106,3 +106,14 @@ uint8_t * strncpy(uint8_t *dest, const uint8_t *src, const uint32_t numChars) {
 	return save;
 }
 
+uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n){
+    char *ret = dest;
+    while (*dest)
+        dest++;
+    while (n--)
+        if (!(*dest++ = *src++))
+            return ret;
+    *dest = 0;
+    return ret;
+}
+

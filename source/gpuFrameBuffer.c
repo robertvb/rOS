@@ -66,10 +66,9 @@ void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b) {
 	uint32_t  offset;
 	if(posX < FrameBufferDescrp->vWidth && posY < FrameBufferDescrp->vHeight) {
 		
-		        
-		        offset = (posY * FrameBufferDescrp->pitch) + (posX << 1);
-			ptr = (uint16_t *) (FrameBufferDescrp->pointer + offset);
-			*ptr = Colour16b;
+		offset = (posY * FrameBufferDescrp->pitch) + (posX << 1);
+		ptr = (uint16_t *) (FrameBufferDescrp->pointer + offset);
+		*ptr = Colour16b;
 	
 	}
 }
@@ -131,4 +130,15 @@ int8_t drawString(uint8_t * string, uint32_t length, uint32_t x, uint32_t y) {
 	}
 
 	return nextChar + 1;
+}
+
+void eraseString(uint16_t baseColour16b, uint32_t x, uint32_t y, uint32_t len) {
+
+	uint16_t * pixel = (uint16_t *) FrameBufferDescrp->pointer;
+	int i,j;
+	for(i = x; i < x + CHAR_WIDTH * len; i++) {
+		for(j = y;  j < y + CHAR_HEIGHT; j++) {
+			setPixel(i,j,baseColour16b);
+		}
+	}
 }

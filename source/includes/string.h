@@ -24,4 +24,6 @@ uint8_t * strcpy(uint8_t * dest, const uint8_t *  src);
 
 uint8_t * strncpy(uint8_t * dest, const uint8_t * src, const uint32_t numChars);
 
+uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n);
+
 #endif

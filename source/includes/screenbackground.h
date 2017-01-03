@@ -14,10 +14,10 @@
 #define LOGO_X			HORIZONTAL_EDGES +  8*CHAR_WIDTH
 #define LOGO_Y			VERTICAL_EDGES   +  6*CHAR_WIDTH
 
-typedef struct {
+struct bgInfo_t {
 		uint32_t currentX;						// Posición actual X
 		uint32_t currentY;						// Posición actual Y
-		uint32_t * onTime;						// Tiempo que lleva el sistema encendido
+		uint32_t onTime;						// Tiempo que lleva el sistema encendido
 		uint8_t board[MAX_SIZE_BOARD];			// Nombre de la placa (familia)
 		uint8_t rev[MAX_SIZE_BOARD];			// Revisión
 		uint8_t serial[MAX_SIZE_BOARD];			// Num serial de la placa (Hexadecimal)
@@ -28,7 +28,7 @@ typedef struct {
 		uint8_t workingChar;					// Guiño a miOS (/ - | - \) ;)
 		uint8_t bwk;							// bool working char
 
-	} bgInfo_t;
+} bgInfo;
 
 void bgInit(uint32_t atagsAddr);
 void bgRefresh(void);
