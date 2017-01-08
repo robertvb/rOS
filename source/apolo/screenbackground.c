@@ -61,39 +61,6 @@ void bgInit(uint32_t atagsAddr) {
 }
 
 void bgRefresh(void) {
-/*
-	switch(bgInfo->workingChar) {
-
-		case '|':
-			bgInfo->workingChar = (bgInfo->bwk ? '/' : 92);
-			//bgInfo->bwk = (bgInfo->bwk ? 0 : 1);
-			break;
-		case '/':
-			bgInfo->workingChar = '-';
-			break;
-		case '-':
-			bgInfo->workingChar = '|';
-			break;
-		case 92:
-			bgInfo->workingChar = '|';
-			break;
-	} 
-
-	
-/*
-	if(uintToString(timer->counter_lo,Dec,WritingBuf) == 0) {
-    		drawString("           ",70,100 + 28*CHAR_WIDTH,bgInfo->currentY);
-		drawString(WritingBuf,70,100 + 28*CHAR_WIDTH,bgInfo->currentY+=CHAR_HEIGHT);
-		for(i=0;i<12;i++)
-			WritingBuf[i]='a';
-		WritingBuf[i]='\0';
-	}
-	else 
-		
-		drawString("que no le ha gustao al del refresh",70,100 + 28*CHAR_WIDTH,bgInfo->currentY*=CHAR_HEIGHT); */
-/*
-	drawCharacter(' ',1024 - LOGO_X, LOGO_Y);
-	drawCharacter(bgInfo->workingChar,1024 - LOGO_X, LOGO_Y);*/
 
 	displayBgInfo();
 }
@@ -296,7 +263,7 @@ void displayBgInfo(void) {
 	currentX += drawString("SISTEMA OPERATIVO : ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH/2;
 	drawString("Estructura: Monolitico",100,currentX,currentY+=2*CHAR_HEIGHT);
 	drawString("Long. de palabra: 32 bits",100,currentX,currentY+=CHAR_HEIGHT);
-	currentX2 = drawString("Tiempo encendido:",100,currentX,currentY+=CHAR_HEIGHT);
+	currentX2 +=currentX + drawString("Tiempo encendido:",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
 
 	char  onTimeMinute [] = {"            \0"};
 	char  onTimeSecond [] = {"            \0"};
@@ -309,7 +276,7 @@ void displayBgInfo(void) {
 		strncat(onTimeMinute, "m",12);
 		uintToString(bgInfo->onTime % 60,DECIMAL,onTimeSecond);
 		strncat(onTimeSecond,"s",12);
-		eraseString(bgInfo->bgColor,currentX2,currentY,24);
+		eraseString(bgInfo->bgColor,currentX2,currentY,10);
 		currentX2 += drawString(onTimeMinute,12,currentX2,currentY)*CHAR_WIDTH;
 		currentX2 += drawString(onTimeSecond,12,currentX2,currentY)*CHAR_WIDTH;
 	}
