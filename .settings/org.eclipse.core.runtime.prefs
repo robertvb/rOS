@@ -1,0 +1,5 @@
+content-types/enabled=true
+content-types/org.eclipse.cdt.core.asmSource/file-names=.S
+content-types/org.eclipse.cdt.core.cHeader/file-names=.h
+content-types/org.eclipse.cdt.core.cSource/file-names=.c
+eclipse.preferences.version=1

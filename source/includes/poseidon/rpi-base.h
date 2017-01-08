@@ -23,40 +23,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../includes/hades/rpi-gpio.h"
-#include "../includes/hades/rpi-systimer.h"
-#include "../includes/poseidon/rpi-armtimer.h"
-#include "../includes/poseidon/rpi-interrupts.h"
+#ifndef RPI_BASE_H
+#define RPI_BASE_H
 
-int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
+#include <stdint.h>
 
-    habilitar_GPIO_ACT_LED_output();
-    apaga_ACT_LED();
-	bgInit(atagsAddr);
+#ifdef RPI2
+    #define PERIPHERAL_BASE     0x3F000000UL
+#else
+    #define PERIPHERAL_BASE     0x20000000UL
+#endif
 
-    /* Enable the timer interrupt IRQ */
-    RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
-
-    /* Setup the system timer interrupt */
-    /* Timer frequency = Clk/256 * 0x400 */
-    RPI_GetArmTimer()->Load = 0x400;
-
-    /* Setup the ARM Timer */
-    RPI_GetArmTimer()->Control =
-            RPI_ARMTIMER_CTRL_23BIT |
-            RPI_ARMTIMER_CTRL_ENABLE |
-            RPI_ARMTIMER_CTRL_INT_ENABLE |
-            RPI_ARMTIMER_CTRL_PRESCALE_256;
-
-    /* Enable interrupts! */
-    _enable_interrupts();
-
-	while(1) {
-		bgRefresh();
-		RPI_esperarMicroSeconds(500000);
-		bgRefresh();
-		RPI_esperarMicroSeconds(500000);
-	}
-
-	return 0;
-}
+#endif

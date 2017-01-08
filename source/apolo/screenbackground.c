@@ -283,7 +283,11 @@ void displayBgInfo(void) {
 
 	drawString("HARDWARE SUBYACENTE : ", 100,x0,currentY+=2*CHAR_HEIGHT)*CHAR_WIDTH;
 	currentX2 = currentX + drawString("Placa base: ",100,currentX,currentY+=2*CHAR_HEIGHT)*CHAR_WIDTH;
-	drawString(bgInfo->board,40,currentX2,currentY);
+	if(bgInfo->board[0] != '\0')
+		drawString(bgInfo->board,40,currentX2,currentY);
+	else{
+		drawString("ERROR",40,currentX2,currentY);
+	}
 	currentX2 = currentX + drawString("Revision: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;
 	drawString(bgInfo->rev,40,currentX2,currentY);
 	currentX2 = currentX + drawString("Num. serial: ",100,currentX,currentY+=CHAR_HEIGHT)*CHAR_WIDTH;

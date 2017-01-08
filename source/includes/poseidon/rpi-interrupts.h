@@ -4,7 +4,6 @@
 #define RPI_INTERRUPTS_H
 
 #include <stdint.h>
-
 #include "rpi-base.h"
 
 /** @brief See Section 7.5 of the BCM2836 ARM Peripherals documentation, the base
