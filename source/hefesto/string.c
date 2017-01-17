@@ -87,7 +87,7 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 }
 
 /* Cuenta el número de caracteres hasta llegar al '\0' */
-uint8_t stringLength(uint8_t * str) {
+uint8_t stringLength(const uint8_t * str) {
 
 	uint8_t cont;
 	for(cont=0; str[cont] != '\0'; cont++);

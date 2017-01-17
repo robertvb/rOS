@@ -28,6 +28,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/poseidon/rpi-armtimer.h"
 #include "../includes/poseidon/rpi-interrupts.h"
 #include "../includes/zeus/scheduler.h"
+<<<<<<< e1c0d372596dcf7b1e665d3e174eb2b1f6e08eff
+=======
+#include "../includes/hades/rpi-uart.h"
+>>>>>>> atenea + zeus (provisional)
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -42,6 +46,24 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
     /* end of bss setting to 0 */
 
+<<<<<<< e1c0d372596dcf7b1e665d3e174eb2b1f6e08eff
+=======
+	uart_init();
+	uart_puts("Hello, it is rOS :)!\r\n");
+	unsigned char buffer[500];
+	char c = 1;
+	int i,j = 0;
+	while ( 1 ) {
+		for(i = 0; i < 500 && (c = uart_getc()) != '-'; i++) {
+			buffer[i] = c;
+		}
+		for(j = 0; j < i; j++) {
+			uart_putc(buffer[j]);
+			buffer[j] = '\0';
+		}
+	}
+
+>>>>>>> atenea + zeus (provisional)
     habilitar_GPIO_ACT_LED_output();
     apaga_ACT_LED();
 	//bgInit(atagsAddr);

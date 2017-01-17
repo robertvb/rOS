@@ -14,7 +14,11 @@ void *sbrk(uint32_t increment)
 
     previous_heap_end = heap_end;
 
+<<<<<<< e1c0d372596dcf7b1e665d3e174eb2b1f6e08eff
     if (heap_end + increment > _get_stack_pointer())
+=======
+    if (heap_end + increment > (char *)_get_stack_pointer())
+>>>>>>> atenea + zeus (provisional)
         return (void *)-1;
 
     heap_end += increment;

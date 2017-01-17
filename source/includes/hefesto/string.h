@@ -41,7 +41,7 @@ uint8_t intToString(int32_t num, uint8_t base, uint8_t * str);
 
 int8_t * stringToInt(char * str, uint8_t base);
 
-uint8_t stringLength(uint8_t * str);
+uint8_t stringLength(const uint8_t * str);
 
 uint32_t searchStringPattern(uint8_t * pattern, const uint8_t * str);
 
