@@ -65,3 +65,5 @@ clean :
 	-mkdir build/hades
 	-mkdir build/hefesto
 	-mkdir build/poseidon
+	-mkdir build/atenea
+	-mkdir build/zeus

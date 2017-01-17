@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "../includes/poseidon/rpi-armtimer.h"
+#include "../includes/zeus/scheduler.h"
 
 /** @brief The BCM2835 Interupt controller peripheral at it's base address */
 static rpi_irq_controller_t* rpiIRQController =
@@ -96,7 +97,8 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 */
 void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
 {
-    static int lit = 0;
+
+	static int lit = 0;
 
     /* Clear the ARM Timer interrupt - it's the only interrupt we have
        enabled, so we want don't have to work out which interrupt source
@@ -106,14 +108,16 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
     /* Flip the LED */
     if( lit )
     {
-        apaga_ACT_LED();
+        enciende_ACT_LED();
         lit = 0;
     }
     else
     {
-        enciende_ACT_LED();
+        apaga_ACT_LED();
         lit = 1;
     }
+
+    dispatch();
 }
 
 

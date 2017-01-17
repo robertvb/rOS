@@ -27,19 +27,31 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/hades/rpi-systimer.h"
 #include "../includes/poseidon/rpi-armtimer.h"
 #include "../includes/poseidon/rpi-interrupts.h"
+#include "../includes/zeus/scheduler.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
+	/* Primero seteamos a cero toda la bss */
+
+    extern uint32_t * _bss_start;
+    extern uint32_t * _bss_end;
+
+    uint32_t * bss = _bss_start;
+    while( bss < _bss_end )
+        *bss++ = 0;
+
+    /* end of bss setting to 0 */
+
     habilitar_GPIO_ACT_LED_output();
     apaga_ACT_LED();
-	bgInit(atagsAddr);
+	//bgInit(atagsAddr);
 
     /* Enable the timer interrupt IRQ */
     RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 
     /* Setup the system timer interrupt */
     /* Timer frequency = Clk/256 * 0x400 */
-    RPI_GetArmTimer()->Load = 0x400;
+    RPI_GetArmTimer()->Load = 0x800;
 
     /* Setup the ARM Timer */
     RPI_GetArmTimer()->Control =
@@ -48,14 +60,17 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
             RPI_ARMTIMER_CTRL_INT_ENABLE |
             RPI_ARMTIMER_CTRL_PRESCALE_256;
 
+
+    /*  init scheduler */
+    init_scheduler();
     /* Enable interrupts! */
     _enable_interrupts();
 
 	while(1) {
-		bgRefresh();
-		RPI_esperarMicroSeconds(500000);
-		bgRefresh();
-		RPI_esperarMicroSeconds(500000);
+		//bgRefresh();
+		//RPI_esperarMicroSeconds(500000);
+		//bgRefresh();
+		//RPI_esperarMicroSeconds(500000);
 	}
 
 	return 0;

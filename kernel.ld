@@ -11,6 +11,8 @@ SECTIONS {
 		*(.data)
 		*(.rodata*)
 	}
+	
+  _bss_start = .;	
    .bss : {
     *(.dynbss)
     *(.bss .bss.* .gnu.linkonce.b.*)
@@ -22,6 +24,8 @@ SECTIONS {
        pad the .data section.  */
     . = ALIGN(. != 0 ? 32 / 8 : 1);
    }
+  _bss_end = .;
+  _heap_start = .;
 	
 	/DISCARD/ : {
 		*(*)
