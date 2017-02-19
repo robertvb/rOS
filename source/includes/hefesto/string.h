@@ -51,4 +51,6 @@ uint8_t * strncpy(uint8_t * dest, const uint8_t * src, const uint32_t numChars);
 
 uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n);
 
+int32_t strncmp(const char *s1, const char *s2, uint32_t n);
+
 #endif

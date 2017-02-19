@@ -23,40 +23,30 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MEM_H
-#define MEM_H
+#include "../includes/apolo/uartConsole.h"
 
-# include <stdint.h>
+static uartConsole_t uartConsole;
 
-# define NULL    0x0
-
-/* Virtual memory layout
- *
- * 0x00000000 - 0x7fffffff (0-2GB) = memoria de procesos de usuario
- * 0x80000000 - 0xa0ffffff (2GB) = memoria fisica
- *  incluyendo los periféricos situados en 0x20000000 - 0x20ffffff
- * 0xc0000000 - 0xefffffff = kernel heap/stack
- * 0xf0000000 - 0xffffffff = kernel code
-
- * La memoria a partír de 0x80000000
- * no será accesible para los procesos de usuario
- */
-
-/* Rutina de inicialización de la tabla de páginas
- * y arranque de la mmu.
- */
-void init_vmem(void);
-
-/* Rutina para convertir una dirección virtual en fisica
- *  siguiendo la tabla de páginas.
-
- * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
- * no se encuentra mapeada.
- */
-uint32_t mem_v2p(unsigned int);
-
-#define mem_p2v(X) (X+0x80000000)
-
-
-
-#endif /* SOURCE_INCLUDES_ATENEA_MEM_H_ */
+void init_uartConsole(void) {
+	/* inicializamos buffer */
+	int i = 0;
+	while(i < MAX_INBUFFER) {
+		uartConsole.inBuffer[i] = '\0';
+		i++;
+	}
+	/* inicializamos el interprete de comandos */
+	init_commandInterpreter(&uartConsole.commandInter,uartConsole.outBuffer);
+}
+void readCommand(void) {
+	uart_puts(prompt);
+	char c = 1;
+	int i,j = 0;
+	for(i = 0; i < 500 && (c = uart_getc()) != '-'; i++) {
+		uartConsole.inBuffer[i] = c;
+	}
+	/* se llama a executeCommand */
+	executeCommand(uartConsole.inBuffer);
+	/* la salida se encuentra en el buffer del interprete */
+	uart_puts(uartConsole.outBuffer);
+	uart_puts("\r\n");
+}

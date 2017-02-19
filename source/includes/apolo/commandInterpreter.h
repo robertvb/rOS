@@ -23,40 +23,40 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MEM_H
-#define MEM_H
+#ifndef COMANDS_H
+#define COMANDS_H
 
-# include <stdint.h>
+#include <stdarg.h>
+#include "../hefesto/string.h"
+#include "../atenea/mem.h"
 
-# define NULL    0x0
+#define MAX_COMMANDS			10
+#define MAX_SIZE_COMMAND		16
+#define MAX_SIZE_COMMAND_DESCRP 61
+#define MAX_SIZE_COMMAND_USAGE	31
+#define MAX_COMMAND_OUTPUT 	   500
 
-/* Virtual memory layout
- *
- * 0x00000000 - 0x7fffffff (0-2GB) = memoria de procesos de usuario
- * 0x80000000 - 0xa0ffffff (2GB) = memoria fisica
- *  incluyendo los periféricos situados en 0x20000000 - 0x20ffffff
- * 0xc0000000 - 0xefffffff = kernel heap/stack
- * 0xf0000000 - 0xffffffff = kernel code
+typedef struct {
 
- * La memoria a partír de 0x80000000
- * no será accesible para los procesos de usuario
- */
+	char name[MAX_SIZE_COMMAND];				// Comando
+	char descrp[MAX_SIZE_COMMAND_DESCRP];		// DEscripción
+	char usage[MAX_SIZE_COMMAND_USAGE];			// Uso
+	void (* function)(int argc, char * argv[]); // funcion que "ejecuta" el comando
 
-/* Rutina de inicialización de la tabla de páginas
- * y arranque de la mmu.
- */
-void init_vmem(void);
+} command_t;
 
-/* Rutina para convertir una dirección virtual en fisica
- *  siguiendo la tabla de páginas.
+typedef struct {
 
- * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
- * no se encuentra mapeada.
- */
-uint32_t mem_v2p(unsigned int);
-
-#define mem_p2v(X) (X+0x80000000)
+	command_t commands[MAX_COMMANDS];
+	unsigned int nCommands;
+	char * lastCommandOutPutBuffer;
+	unsigned int lastCommandLen;
 
 
+} commandInterpreter_t;
 
-#endif /* SOURCE_INCLUDES_ATENEA_MEM_H_ */
+void init_commandInterpreter(commandInterpreter_t * commandInter, char * outBuffer);
+char * executeCommand(char * name, ... ); // nombre de comando y argumentos
+
+
+#endif /* SOURCE_INCLUDES_APOLO_COMANDS_H_ */

@@ -27,11 +27,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define RPI_BASE_H
 
 #include <stdint.h>
+#include "../atenea/mem.h"
 
 #ifdef RPI2
     #define PERIPHERAL_BASE     0x3F000000UL
 #else
     #define PERIPHERAL_BASE     0x20000000UL
 #endif
+
+#define VPERIPHERAL_BASE mem_p2v(PERIPHERAL_BASE)
 
 #endif

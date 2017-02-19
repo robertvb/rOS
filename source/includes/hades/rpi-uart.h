@@ -30,6 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "rpi-gpio.h"
 #include "rpi-systimer.h"
 #include "../hefesto/string.h"
+#include "../atenea/mem.h"
 // Controls actuation of pull up/down to ALL GPIO pins.
 #define GPPUD (GPIO_BASE + 0x94)
 
@@ -37,7 +38,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define GPPUDCLK0 (GPIO_BASE + 0x98)
 
 // The base address for UART.
-#define UART0_BASE 0x20201000 // 0x3F201000 for raspi 2 and raspi3
+#define UART0_BASE mem_p2v(0x20201000) // 0x3F201000 for raspi 2 and raspi3
 
 // The offsets for reach register for the UART.
 #define UART0_DR     (UART0_BASE + 0x00)

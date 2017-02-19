@@ -23,40 +23,22 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MEM_H
-#define MEM_H
+#ifndef UARTCONSOLE_H
+#define UARTCONSOLE_H
 
-# include <stdint.h>
+#include "commandInterpreter.h"
+#include "../hades/rpi-uart.h"
 
-# define NULL    0x0
+#define MAX_INBUFFER 50
+static const char prompt[] = "rOS232>";
 
-/* Virtual memory layout
- *
- * 0x00000000 - 0x7fffffff (0-2GB) = memoria de procesos de usuario
- * 0x80000000 - 0xa0ffffff (2GB) = memoria fisica
- *  incluyendo los periféricos situados en 0x20000000 - 0x20ffffff
- * 0xc0000000 - 0xefffffff = kernel heap/stack
- * 0xf0000000 - 0xffffffff = kernel code
+typedef struct {
+	commandInterpreter_t commandInter;
+	char inBuffer[MAX_INBUFFER];
+	char outBuffer[MAX_COMMAND_OUTPUT];
+}uartConsole_t;
 
- * La memoria a partír de 0x80000000
- * no será accesible para los procesos de usuario
- */
+void init_uartConsole(void);
+void readCommand(void);
 
-/* Rutina de inicialización de la tabla de páginas
- * y arranque de la mmu.
- */
-void init_vmem(void);
-
-/* Rutina para convertir una dirección virtual en fisica
- *  siguiendo la tabla de páginas.
-
- * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
- * no se encuentra mapeada.
- */
-uint32_t mem_v2p(unsigned int);
-
-#define mem_p2v(X) (X+0x80000000)
-
-
-
-#endif /* SOURCE_INCLUDES_ATENEA_MEM_H_ */
+#endif /* SOURCE_INCLUDES_APOLO_UARTCONSOLE_H_ */

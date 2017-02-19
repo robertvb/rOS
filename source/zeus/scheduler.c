@@ -77,7 +77,7 @@ static struct proc_queue_node_t * get_next_ready_proc(void) {
  */
 static pid_t add_process(const char *name, uint32_t pc, char **args, waiting_queue_t * queue) {
 
-	struct proc_queue_node_t *proc_queue_node = kmalloc(sizeof(struct proc_queue_node_t));
+	struct proc_queue_node_t *proc_queue_node = 0; // kmalloc(sizeof(struct proc_queue_node_t));
     if (!proc_queue_node)
         return (pid_t) -1;
 
@@ -114,7 +114,7 @@ static pid_t add_process(const char *name, uint32_t pc, char **args, waiting_que
         }
         if (i >= MAX_PROCS)
         {
-            kfree(process);
+            //kfree(process);
             return -1;
         }
     }

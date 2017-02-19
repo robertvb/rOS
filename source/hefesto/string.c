@@ -142,3 +142,10 @@ uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n){
     return ret;
 }
 
+int32_t strncmp(const char *s1, const char *s2, uint32_t n) {
+    while(n--)
+        if(*s1++!=*s2++)
+            return *(unsigned char*)(s1 - 1) - *(unsigned char*)(s2 - 1);
+    return 0;
+}
+
