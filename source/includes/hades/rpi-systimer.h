@@ -29,7 +29,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include "../poseidon/rpi-base.h"
 
-#define RPI_SYSTIMER_BASE  VPERIPHERAL_BASE + 0x20003000
+#define RPI_SYSTIMER_BASE 0x20003000
 
 
 typedef volatile struct {

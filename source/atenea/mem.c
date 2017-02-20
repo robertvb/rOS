@@ -169,7 +169,7 @@ __attribute__((naked)) void init_vmem(void) {
 
 	/* Populate kerneldatatable - see ARM1176JZF-S manual, 6-40
 	 *
-	 * LOs bit APX/AP para una entrada estan en los bits bits 9 y 4&5.
+	 * Los bit APX/AP para una entrada estan en los bits bits 9 y 4&5.
 	 * El significado es el mismo que para una entrada de seccion (1MB).
 	 *
 	 * 0 01 (0x0010) =  read-write privileded modes, no access otherwise
@@ -180,7 +180,7 @@ __attribute__((naked)) void init_vmem(void) {
 	 * 2 = small page (4K), executable	(XN is bit 0)
 	 * 3 = small page (4K), not-executable  (XN is bit 0)
 	 *
-	 * 256 entries, one for each 4KB in the 1MB covered by the table
+	 * 256 entradas de 4KB cada una para mapear el espacio de esta seccion (1MB)
 	 */
 	for(x=0; x<256; x++)
 	{

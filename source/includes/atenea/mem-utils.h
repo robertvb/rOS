@@ -23,12 +23,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef MEM_H
-#define MEM_H
+#ifndef MEM_UTILS_H
+#define MEM_UTILS_H
 
-# include <stdint.h>
-
-# define NULL    0x0
+#include <stdint.h>
 
 /* Virtual memory layout
  *
@@ -42,10 +40,16 @@ OTHER DEALINGS IN THE SOFTWARE.
  * no será accesible para los procesos de usuario
  */
 
-/* Rutina de inicialización de la tabla de páginas
- * y arranque de la mmu.
+#define NULL    0x00000000
+
+/* Rutina para convertir una dirección virtual en fisica
+ *  siguiendo la tabla de páginas.
+
+ * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
+ * no se encuentra mapeada.
  */
-void init_vmem(void);
+uint32_t mem_v2p(unsigned int);
 
+#define mem_p2v(X) (X+0x80000000)
 
-#endif /* SOURCE_INCLUDES_ATENEA_MEM_H_ */
+#endif /* SOURCE_INCLUDES_ATENEA_MEM_UTILS_H_ */
