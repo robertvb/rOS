@@ -6,13 +6,14 @@
 .global _enable_interrupts
 .global _disable_interrupts
 
-// From the ARM ARM (Architecture Reference Manual). Make sure you get the
-// ARMv5 documentation which includes the ARMv6 documentation which is the
-// correct processor type for the Broadcom BCM2835. The ARMv6-M manuals
-// available on the ARM website are for Cortex-M parts only and are very
-// different.
-//
-// See ARM section A2.2 (Processor Modes)
+/* From the ARM ARM (Architecture Reference Manual). Make sure you get the
+ ARMv5 documentation which includes the ARMv6 documentation which is the
+ correct processor type for the Broadcom BCM2835. The ARMv6-M manuals
+ available on the ARM website are for Cortex-M parts only and are very
+ different.
+
+ See ARM section A2.2 (Processor Modes)
+*/
 
 .equ    CPSR_MODE_USER,         0x10
 .equ    CPSR_MODE_FIQ,          0x11
@@ -48,10 +49,10 @@ _interrupt_vector_h:                .word   interrupt_vector
 _fast_interrupt_vector_h:           .word   fast_interrupt_vector
 
 _reset_:
-    // We enter execution in supervisor mode. For more information on
-    // processor modes see ARM Section A2.2 (Processor Modes)
+    /* We enter execution in supervisor mode. For more information on
+     processor modes see ARM Section A2.2 (Processor Modes)
 
-    // salvamos r0,r1 y atagsAddr.
+     salvamos r0,r1 y atagsAddr. */
     mov r10, r0
     mov r11, r1
     mov r12, r2
@@ -63,30 +64,30 @@ _reset_:
     ldmia   r0!,{r2, r3, r4, r5, r6, r7, r8, r9}
     stmia   r1!,{r2, r3, r4, r5, r6, r7, r8, r9}
 
-    // We're going to use interrupt mode, so setup the interrupt mode
-    // stack pointer which differs to the application stack pointer:
+    /* We're going to use interrupt mode, so setup the interrupt mode
+     stack pointer which differs to the application stack pointer: */
     mov r0, #(CPSR_MODE_IRQ | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
     msr cpsr_c, r0
     mov sp, #(63 * 1024 * 1024)
 
-    // Switch back to supervisor mode (our application mode) and
-    // set the stack pointer towards the end of RAM. Remember that the
-    // stack works its way down memory, our heap will work it's way
-    // up memory toward the application stack.
+    /* Switch back to supervisor mode (our application mode) and
+     set the stack pointer towards the end of RAM. Remember that the
+     stack works its way down memory, our heap will work it's way
+     up memory toward the application stack. */
     mov r0, #(CPSR_MODE_SVR | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
     msr cpsr_c, r0
 
-    // Set the stack pointer at some point in RAM that won't harm us
-    // It's different from the IRQ stack pointer above and no matter
-    // what the GPU/CPU memory split, 64MB is available to the CPU
-    // Keep it within the limits and also keep it aligned to a 32-bit
-    // boundary!
+    /* Set the stack pointer at some point in RAM that won't harm us
+     It's different from the IRQ stack pointer above and no matter
+     what the GPU/CPU memory split, 64MB is available to the CPU
+     Keep it within the limits and also keep it aligned to a 32-bit
+     boundary! */
     mov     sp, #(64 * 1024 * 1024)
 
-    // The c-startup function which we never return from. This function will
-    // initialise the ro data section (most things that have the const
-    // declaration) and initialise the bss section variables to 0 (generally
-    // known as automatics). It'll then call main, which should never return.*/
+    /* The c-startup function which we never return from. This function will
+     initialise the ro data section (most things that have the const
+     declaration) and initialise the bss section variables to 0 (generally
+     known as automatics). It'll then call main, which should never return.*/
 
 mov r0,#1024
 mov r1,#768
@@ -94,25 +95,25 @@ mov r2,#16
 bl InitialiseFrameBuffer
 
 
-// recuperamos r1,r2 y atagsAddr
+/* recuperamos r1,r2 y atagsAddr */
 mov r0, r10
 mov r1, r11
 mov r2, r12
 
-// llamada a main
+/* llamada a main */
 bl main
 
-    // If main does return for some reason, just catch it and stay here.
+    /* If main does return for some reason, just catch it and stay here. */
 _inf_loop:
     b       _inf_loop
 
 
 _get_stack_pointer:
-    // Return the stack pointer value
+    /* Return the stack pointer value */
     str     sp, [sp]
     ldr     r0, [sp]
 
-    // Return from the function
+    /* Return from the function */
     mov     pc, lr
 
 
