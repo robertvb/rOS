@@ -35,8 +35,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	uart_init();
+
 	uart_puts("Hello, it is rOS :)!\r\n");
 
+	init_vmem();
+	uart_puts("init_vmem done!\r\n");
 	while(1) {
 		uart_puts("bucle\r\n");
 		uart_puts("bucle2\r\n");

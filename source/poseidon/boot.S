@@ -99,10 +99,6 @@ mov r0, r10
 mov r1, r11
 mov r2, r12
 
-// llamada a init_vmem()
-
-bl init_vmem
-
 // llamada a main
 bl main
 
