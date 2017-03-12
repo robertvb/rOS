@@ -22,8 +22,7 @@
 .equ    CPSR_MODE_ABORT,        0x17
 .equ    CPSR_MODE_UNDEFINED,    0x1B
 .equ    CPSR_MODE_SYSTEM,       0x1F
-
-// See ARM section A2.5 (Program status registers)
+/* See ARM section A2.5 (Program status registers)*/
 .equ    CPSR_IRQ_INHIBIT,       0x80
 .equ    CPSR_FIQ_INHIBIT,       0x40
 .equ    CPSR_THUMB,             0x20

@@ -65,9 +65,7 @@ extern unsigned int _physdatastart, _physbssstart, _physbssend;
 /* Rutina de inicialización de la tabla de páginas
  * y arranque de la mmu.
  */
-__attribute__((naked)) void init_vmem(void) {
-
-	asm volatile("push {r0, r1, r2}");
+void init_vmem(void) {
 
 	register unsigned int x;
 	register unsigned int pt_addr;
@@ -199,9 +197,8 @@ __attribute__((naked)) void init_vmem(void) {
 
 	uart_puts("traza 9\n");
 	/* retorno */
-	asm volatile("pop {r0, r1, r2}");
 	uart_puts("traza 10\n\r");
-	uart_puts("traza 11\n\r");
-	asm volatile("mov pc, lr");
+	return;
+
 
 }

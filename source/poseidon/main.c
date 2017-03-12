@@ -41,9 +41,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	init_vmem();
 	uart_puts("init_vmem done!\r\n");
 	while(1) {
-		uart_puts("bucle\r\n");
-		uart_puts("bucle2\r\n");
-		uart_puts("bucle3\r\n");
 	}
 
 	//init_uartConsole();

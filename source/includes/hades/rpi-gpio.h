@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #ifndef PIN
 #define PIN
-#define GPIO_BASE 0x20000000
+#define GPIO_BASE 0x20200000
 
 #define LED_GPFSEL      GPIO_GPFSEL4
 #define LED_GPFBIT      21
