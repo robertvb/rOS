@@ -114,8 +114,6 @@ void init_vmem(void) {
 
 	initpagetable[x] = x<<20 | 0x0400 | 2;
 
-	uart_puts("traza 1\n");
-
 	/* Mapeamos las direcciones 0x00100000 - 0x001fffff vis a vis en
 	 * memoria virtual. Este será el espacio para los procesos de usuario.
 	 * Sin embargo, en este momento usaremos paginas de 4KB en vez de secciones
@@ -147,7 +145,6 @@ void init_vmem(void) {
 		initpagetable[x] = 0;
 	}
 
-	uart_puts("traza 2\n");
 	/* Inicializacion del .bss
 	 * El bss se encuentra cargado en memoria fisica, pero su contenido
 	 * puede estar sucio. Debe ser puesto a cero antes de usarse.
@@ -161,28 +158,22 @@ void init_vmem(void) {
 
 	pt_addr = (unsigned int) initpagetable;
 
-	uart_puts("traza 3\n");
 
 	/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
 	asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pt_addr));
 
-	uart_puts("traza 4\n");
 	/* Translation table 1 */
 	asm volatile("mcr p15, 0, %[addr], c2, c0, 1" : : [addr] "r" (pt_addr));
 
-	uart_puts("traza 5\n");
 	/* Usar translation table 0 por defecto, por ahora */
 	asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (0));
 
-	uart_puts("traza 6\n");
 
 	/* Set Domain 0 ACL to "Client", enforcing memory permissions
 	 * See ARM1176JZF-S manual, 3-64
 	 * Every mapped section/page is in domain 0
 	 */
 	asm volatile("mcr p15, 0, %[r], c3, c0, 0" : : [r] "r" (0x1));
-
-	uart_puts("traza 7\n");
 
 	/* Obtenemos el registro de control */
 	asm volatile("mrc p15, 0, %[control], c1, c0, 0" : [control] "=r" (control));
@@ -191,13 +182,10 @@ void init_vmem(void) {
 	/* Enable ARMv6 MMU features (disable sub-page AP) */
 	control |= (1<<23);
 
-	uart_puts("traza 8\n");
 	/* Escribimos el valor del registro de nuevo */
 	asm volatile("mcr p15, 0, %[control], c1, c0, 0" : : [control] "r" (control));
 
-	uart_puts("traza 9\n");
 	/* retorno */
-	uart_puts("traza 10\n\r");
 	return;
 
 

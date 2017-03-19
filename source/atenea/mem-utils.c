@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-static unsigned int *pagetable = (unsigned int * const) mem_p2v(0x4000); /* 16k */
+static unsigned int *pagetable = (unsigned int * const) 0x4000; /* 16k */
 
 /* Rutina para convertir una dirección virtual en fisica
  *  siguiendo la tabla de páginas.

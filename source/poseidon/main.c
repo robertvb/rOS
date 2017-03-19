@@ -40,47 +40,32 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	init_vmem();
 	uart_puts("init_vmem done!\r\n");
-	while(1) {
-	}
 
-	//init_uartConsole();
+	create_main_process();
 
-	/*
-	while ( 1 ) {
-		readCommand();
-	}
-	*/
+	kfork("Sample process 1", &sample_process_2);
+	kfork("Sample process 2", &sample_process_2);
 
-    //habilitar_GPIO_ACT_LED_output();
-    //apaga_ACT_LED();
-	//bgInit(atagsAddr);
 
     /* Enable the timer interrupt IRQ */
-    //RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
+    RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 
     /* Setup the system timer interrupt */
     /* Timer frequency = Clk/256 * 0x400 */
-    //RPI_GetArmTimer()->Load = 0x800;
+    RPI_GetArmTimer()->Load = 0x400;
 
     /* Setup the ARM Timer */
-    //RPI_GetArmTimer()->Control =
-    //        RPI_ARMTIMER_CTRL_23BIT |
-     //       RPI_ARMTIMER_CTRL_ENABLE |
-     //       RPI_ARMTIMER_CTRL_INT_ENABLE |
-    //        RPI_ARMTIMER_CTRL_PRESCALE_256;
+    RPI_GetArmTimer()->Control =
+            RPI_ARMTIMER_CTRL_23BIT |
+            RPI_ARMTIMER_CTRL_ENABLE |
+            RPI_ARMTIMER_CTRL_INT_ENABLE |
+            RPI_ARMTIMER_CTRL_PRESCALE_256;
 
-
-    /*  init scheduler */
-    //init_scheduler();
     /* Enable interrupts! */
-   //_enable_interrupts();
+   _enable_interrupts();
 
-	//while(1) {
-		//bgRefresh();
-		//RPI_esperarMicroSeconds(500000);
-		//bgRefresh();
-		//RPI_esperarMicroSeconds(500000);
-	//}
+	while(1) {
+	}
 
 	return 0;
 }

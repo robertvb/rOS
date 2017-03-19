@@ -11,7 +11,7 @@
 static rpi_irq_controller_t* rpiIRQController =
         (rpi_irq_controller_t*)RPI_INTERRUPT_CONTROLLER_BASE;
 
-
+static volatile unsigned int *armTimerIRQClear = (unsigned int *) 0x2000b40c;
 /**
     @brief Return the IRQ Controller register set
 */
@@ -54,12 +54,25 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
     The CPU will start executing this function. Just trap here as a debug
     solution.
 */
-void __attribute__((interrupt("SWI"))) software_interrupt_vector(void)
+// Software interrupt
+__attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 {
-    while( 1 )
-    {
-        /* Do Nothing! */
-    }
+	unsigned int addr;
+	unsigned int swi;
+
+	// Read link register into addr - contains the address of the instruction after the SWI
+	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+
+	addr -= 4;
+
+	// Bottom 24 bits of the SWI instruction are the SWI number
+	swi = *((unsigned int *)addr) & 0x00ffffff;
+
+	// Changing processor mode
+	asm volatile("cps #0x1f");
+
+	// Handle syscall
+	syscall(swi);
 }
 
 
@@ -95,29 +108,68 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
     importantly clear the interrupt flag so that the interrupt won't
     immediately put us back into the start of the handler again.
 */
-void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
+// IRQ
+__attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void)
 {
+	// Esta rutina empieza en modo IRQ
 
-	static int lit = 0;
+	// Se guardan todos los registros en la IRQ STACK (R13)
+	asm volatile("push {R0-R12}");
 
-    /* Clear the ARM Timer interrupt - it's the only interrupt we have
-       enabled, so we want don't have to work out which interrupt source
-       caused us to interrupt */
-    RPI_GetArmTimer()->IRQClear = 1;
+	// Put LR del IRQ mode (Que es el PC del proceso interrumpido) en R0
+	asm volatile("MOV R0, LR");
 
-    /* Flip the LED */
-    if( lit )
-    {
-        enciende_ACT_LED();
-        lit = 0;
-    }
-    else
-    {
-        apaga_ACT_LED();
-        lit = 1;
-    }
 
-    dispatch();
+	// Cambio de modo a System mode
+	asm volatile("cps #0x1f");
+
+	// Push R0 (PC del proceso interrumpido) a la pila del system mode
+	asm volatile("push {R0}");
+
+
+	// Return to IRQ mode
+	asm volatile("cps #0x12");
+
+	// Pop all registers again
+	asm volatile("pop {R0-R12}");
+
+
+	// Return to system mode
+	asm volatile("cps #0x1f");
+
+	// Push todos los registeos pero esta vez dentro de la system mode stack
+	asm volatile("push {R0-R12}");
+
+	// Push de LR del proceso interrumpido a la system mode stack
+	asm volatile("push {LR}");
+
+	// Copy the Saved Program Status Register to R0
+	// http://lioncash.github.io/ARMBook/the_apsr,_cpsr,_and_the_difference_between_them.html
+    asm volatile("MRS R0, SPSR");
+
+    // Se guarda el SPSR en la system mode stack
+    asm volatile("push {R0}");
+
+
+    // Return to IRQ mode
+    asm volatile("cps #0x12");
+
+	// Copy LR to R0
+	asm volatile("MOV R0, LR");
+
+	// Back to system mode
+	asm volatile("cps #0x1f");
+
+	unsigned int pc;
+
+    unsigned int stack_pointer;
+
+	// PC y SP
+	asm volatile ("MOV %0, R0\n\t" : "=r" (pc) );
+    asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
+
+	// Se invoca al dispatcher para el cambio de contexto
+	schedule_timeout(stack_pointer, pc);
 }
 
 
@@ -149,4 +201,10 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void)
 void __attribute__((interrupt("FIQ"))) fast_interrupt_vector(void)
 {
 
+}
+
+void timer_reset(void)
+{
+    RPI_GetArmTimer()->IRQClear = 0;
+    *armTimerIRQClear = 0;
 }

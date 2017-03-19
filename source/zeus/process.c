@@ -25,24 +25,38 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/zeus/process.h"
 
-pid_t init_process(proc_t * process, const char *name, uint32_t pc, pid_t ppid, char **args, uint32_t sp, uint32_t stack_index) {
+// Just some counting for easy debug on the screen. Simulate user process.
+void sample_process_1() {
 
-    static pid_t nextPid = 0;
+    uart_puts("Starting process 1 ");
 
-	process->name = name;
-	process->pid = nextPid;
-	nextPid++;
-	process->ppid = ppid;
-	process->pc = pc;
-	process->sp = sp;
-	process->stack_index = stack_index;
-	process->rounds = 0;
-	process->waited = 0;
-	int argc;
-	for (argc = 0; args[argc]; argc++);
-	process->r0 = (uint32_t)argc;
-	process->r1 = (uint32_t)args;
+    int to = 300;
 
-	return 0;
+    int i, j;
+    for (i=0; i<to; i++) {
+        for (j=0; j<to*to; j++) {
+			asm volatile("NOP");
+		}
+    }
 
+    // Call software interrupt #0 (terminate)
+    asm volatile("SWI #0");
+}
+
+// Just some counting for easy debug on the screen. Simulate user process.
+void sample_process_2() {
+
+	uart_puts("Starting process 2 ");
+
+    int to = 300;
+
+    int i, j;
+    for (i=0; i<to; i++) {
+        for (j=0; j<to*to; j++) {
+			asm volatile("NOP");
+		}
+    }
+
+    // Call software interrupt #0 (terminate)
+    asm volatile("SWI #0");
 }

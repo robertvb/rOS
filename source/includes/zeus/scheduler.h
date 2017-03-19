@@ -27,36 +27,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SCHEDULER_H
 
 #include "process.h"
-#include "../hades/gpuFrameBuffer.h"
+#include "../hades/rpi-uart.h"
 
-#define MAX_PROCS 1024
+void create_main_process(void);
+//void kfork(char * name, unsigned long addr);
+void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
+void terminate_process();
+void halt();
 
-/*
- * Nodo de cola de procesos
- */
-struct proc_queue_node_t {
-	struct proc_t proc;
-	struct proc_queue_node_t * next;
-};
-
-/*
- * Colas de procesos preparados y bloqueados
- */
-typedef struct proc_queue_t {
-	struct proc_queue_node_t * firstProc;
-	struct proc_queue_node_t * lastProc;
-	uint32_t counter;
-} waiting_queue_t, blocked_queue_t;
-
-int init_scheduler(void);
-void dispatch(void);
-
-/* TEST */
-
-void processA(void);
-void processB(void);
-void processC(void);
-void processD(void);
-void loop(void);
-
-#endif /* SOURCE_INCLUDES_ZEUS_SCHEDULER_H_ */
+#endif

@@ -30,13 +30,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /* Virtual memory layout
  *
- * 0x00000000 - 0x7fffffff (0-2GB) = memoria de procesos de usuario
- * 0x80000000 - 0xa0ffffff (2GB) = memoria fisica
- *  incluyendo los periféricos situados en 0x20000000 - 0x20ffffff
- * 0xc0000000 - 0xefffffff = kernel heap/stack
- * 0xf0000000 - 0xffffffff = kernel code
-
- * La memoria a partír de 0x80000000
+ * 0x00000000 - 0x000fffff (  1 MB) = Sistema operativo (code + data + heap + stack)
+ * 0x00100000 - 0x001fffff (511 MB) = User process space
+ * 0x02000000 - Perifericos
+ *
+ * La memoria a partír de 0x00000000 hasta 0x000fffff y de 0x02000000 en adelante
  * no será accesible para los procesos de usuario
  */
 
@@ -49,7 +47,5 @@ OTHER DEALINGS IN THE SOFTWARE.
  * no se encuentra mapeada.
  */
 uint32_t mem_v2p(unsigned int);
-
-#define mem_p2v(X) (X+0x80000000)
 
 #endif /* SOURCE_INCLUDES_ATENEA_MEM_UTILS_H_ */

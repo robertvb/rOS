@@ -23,30 +23,21 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef SYSCALLS_H
+#define SYSCALLS_H
+
+#ifndef SYSCALL_H
+#define	SYSCALL_H
+
+// DEBUG
 #include "../hades/rpi-uart.h"
 
-#ifndef PROCESS_H
-#define	PROCESS_H
+#define SYSCALL_TERMINATE_PROCESS		0
 
-#define PROCESS_STATUS_RUNNING		0	// En ejecucion
-#define PROCESS_STATUS_WAITING		1	// Esperando su turno de ejecucion
-#define PROCESS_STATUS_ZOMBIE		2	// Muerto, pero esperando a algun hijo
-#define PROCESS_STATUS_TERMINATED	3	// Terminado satisfactoriamente
-#define PROCESS_STATUS_ABORTED		4	// Terminado abruptamente
+void syscall(unsigned int swi);
 
-typedef struct {
-    unsigned int 	pid;
-    char * 			name;
-    unsigned int 	ppid;
-    unsigned int 	stack_pointer;
-	unsigned int 	pc;
-    unsigned int 	times_loaded;
-    unsigned int 	status;
-} process;
+#endif	/* SYSCALL_H */
 
-void sample_process_1();
 
-void sample_process_2();
 
-#endif	/* PROCESS_H */
-
+#endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */

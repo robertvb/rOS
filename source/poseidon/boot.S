@@ -5,6 +5,7 @@
 .global _exception_table
 .global _enable_interrupts
 .global _disable_interrupts
+.global _main_endloop
 
 /* From the ARM ARM (Architecture Reference Manual). Make sure you get the
  ARMv5 documentation which includes the ARMv6 documentation which is the
@@ -103,8 +104,8 @@ mov r2, r12
 bl main
 
     /* If main does return for some reason, just catch it and stay here. */
-_inf_loop:
-    b       _inf_loop
+_main_endloop:
+    b       _main_endloop
 
 
 _get_stack_pointer:
