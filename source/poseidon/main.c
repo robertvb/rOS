@@ -30,7 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/zeus/scheduler.h"
 #include "../includes/hades/rpi-uart.h"
 #include "../includes/apolo/uartConsole.h"
-#include "../includes/atenea/mem.h"
+#include "../includes/atenea/kmem.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 

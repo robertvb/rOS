@@ -23,19 +23,53 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RPI_BASE_H
-#define RPI_BASE_H
+#include "../includes/atenea/pmem.h"
 
-#include <stdint.h>
+static frameList_t frameList;
 
-#include "../atenea/kmem.h"
+void init_pmem() {
+	/* inicializamos la lista de huecos */
+	int i;
+	for(i = 0; i < MAX_FRAMES; i++) {
+		frameList.totalFrames[i] = i+1;
+	}
+	frameList.emptyList = 0;
+}
 
-#ifdef RPI2
-    #define PERIPHERAL_BASE     0x3F000000UL
-#else
-    #define PERIPHERAL_BASE     0x20000000UL
-#endif
+dir_t instance_process(pid_t solicitante,unsigned int size) {
+	unsigned int pframes = (size / FRAME_SIZE);
+	/* de momento con marcos de  4 KB TODO */
 
-#define VPERIPHERAL_BASE mem_p2v(PERIPHERAL_BASE)
+	/* Se crea su tabla de paginas */
 
-#endif
+	dir_t pagetable = get16kframe(solicitante);
+
+	pagetable[0] = 0<<20 | 0x8c00 | 2;
+
+	while(pframes > 0) {
+
+	}
+}
+
+dir_t get4kframe(pid_t solicitante) {
+	frame_t nextEmptyFrame = frameList.emptyList;
+	frameList.emptyList = frameList.totalFrames[nextEmptyFrame];
+	frameList.totalFrames[nextEmptyFrame] = solicitante;
+	return (dir_t) frame2dir(nextEmptyFrame);
+}
+
+// TODO
+dir_t get16KBlock(pid_t solicitante) {
+	return 0;
+}
+
+// TODO
+dir_t get1MBlock(pid_t solicitante) {
+	return 0;
+}
+
+// TODO
+dir_t get16MBlock(pid_t solicitante) {
+	return 0;
+}
+

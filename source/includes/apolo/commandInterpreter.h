@@ -27,8 +27,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define COMANDS_H
 
 #include <stdarg.h>
+
+#include "../atenea/mem-utils.h"
 #include "../hefesto/string.h"
-#include "../atenea/mem.h"
 
 #define MAX_COMMANDS			10
 #define MAX_SIZE_COMMAND		16

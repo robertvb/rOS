@@ -23,9 +23,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../includes/atenea/mem.h"
-
-/* TODO DEBUG */
+#include "../includes/atenea/kmem.h"
 
 #include "../includes/hades/rpi-uart.h"
 

@@ -30,7 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "rpi-gpio.h"
 #include "rpi-systimer.h"
 #include "../hefesto/string.h"
-#include "../atenea/mem.h"
+
 // Controls actuation of pull up/down to ALL GPIO pins.
 #define GPPUD (GPIO_BASE + 0x94)
 
