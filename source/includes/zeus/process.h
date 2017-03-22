@@ -34,12 +34,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define PROCESS_STATUS_TERMINATED	3	// Terminado satisfactoriamente
 #define PROCESS_STATUS_ABORTED		4	// Terminado abruptamente
 
-typedef unsigned int pid_t;
+typedef unsigned int Pid_t;
 
 typedef struct {
-	pid_t 			pid;
+	Pid_t 			pid;
     char * 			name;
-    pid_t 			ppid;
+    Pid_t 			ppid;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;
     unsigned int 	times_loaded;

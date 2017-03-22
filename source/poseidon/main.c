@@ -31,6 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/hades/rpi-uart.h"
 #include "../includes/apolo/uartConsole.h"
 #include "../includes/atenea/kmem.h"
+#include "../includes/atenea/pmem.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -45,7 +46,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	kfork("Sample process 1", &sample_process_2);
 	kfork("Sample process 2", &sample_process_2);
-
 
     /* Enable the timer interrupt IRQ */
     RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;

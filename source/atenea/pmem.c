@@ -25,51 +25,56 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/atenea/pmem.h"
 
-static frameList_t frameList;
+static ProcFrameManager_t pframeManager;
+static FlDescManager_t fldManager;
 
-void init_pmem() {
-	/* inicializamos la lista de huecos */
+void init_pmem(void) {
+
 	int i;
-	for(i = 0; i < MAX_FRAMES; i++) {
-		frameList.totalFrames[i] = i+1;
+	/* inicializamos la lista de huecos */
+	for (i = 0; i < MAX_PROCS; ++i) {
+		fldManager.totalflDescs[i] = i+1;
 	}
-	frameList.emptyList = 0;
-}
 
-dir_t instance_process(pid_t solicitante,unsigned int size) {
-	unsigned int pframes = (size / FRAME_SIZE);
-	/* de momento con marcos de  4 KB TODO */
-
-	/* Se crea su tabla de paginas */
-
-	dir_t pagetable = get16kframe(solicitante);
-
-	pagetable[0] = 0<<20 | 0x8c00 | 2;
-
-	while(pframes > 0) {
-
+	/* inicializamos la lista de huecos */
+	for (i = 0; i < MAX_PROC_FRAMES; ++i) {
+		pframeManager.totalFrames[i] = i+1;
 	}
+
+	fldManager.emptyList = pframeManager.emptyList = 0;
+
 }
 
-dir_t get4kframe(pid_t solicitante) {
-	frame_t nextEmptyFrame = frameList.emptyList;
-	frameList.emptyList = frameList.totalFrames[nextEmptyFrame];
-	frameList.totalFrames[nextEmptyFrame] = solicitante;
-	return (dir_t) frame2dir(nextEmptyFrame);
+Dir_t instance_process(Pid_t solicitante, unsigned int size) {
+
+	// TODO
+	if(fldManager.emptyList >= MAX_PROCS || pframeManager.emptyList >= MAX_PROC_FRAMES) {
+		return 0x0;
+	}
+
+	Fld_t nextEmptyAux = fldManager.totalflDescs[fldManager.emptyList];
+
+
+}
+
+Dir_t get4kframe(Pid_t solicitante) {
+	//frame_t nextEmptyFrame = frameManager.emptyList;
+	//frameManager.emptyList = frameManager.totalFrames[nextEmptyFrame];
+	//frameManager.totalFrames[nextEmptyFrame] = solicitante;
+	//return (dir_t) frame2dir(nextEmptyFrame);
 }
 
 // TODO
-dir_t get16KBlock(pid_t solicitante) {
+Dir_t get16KBlock(Pid_t solicitante) {
 	return 0;
 }
 
 // TODO
-dir_t get1MBlock(pid_t solicitante) {
+Dir_t get1MBlock(Pid_t solicitante) {
 	return 0;
 }
 
 // TODO
-dir_t get16MBlock(pid_t solicitante) {
+Dir_t get16MBlock(Pid_t solicitante) {
 	return 0;
 }
-

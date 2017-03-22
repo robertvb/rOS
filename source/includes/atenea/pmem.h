@@ -29,28 +29,45 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../zeus/process.h"
 
 /*
- * Se contemplan 125 K marcos de 4 kB para procesos de usuario:
+ * Se contemplan 125 K marcos de 4 KB para procesos de usuario:
  * Espacio total de procesos de usuario igual a 500 MB.
  * En 1 MB se hubican 256 marcos de 4 KB. Por tanto:
  * MAX_FRAMES = 125 K = 128000 = 256 * 500.
  */
 
-#define MAX_PS_FRAMES      0x0001f400 /* 125 KMarcos */
-#define PS_FRAME_SIZE      0x00001000 /* 4 KB */
-#define PS_BASE_ADDRESS    0x00100000 /* 1 MB */
+#define MAX_PROC_FRAMES   0x0001f400 /* 125 KMarcos */
+#define PROC_FRAME_SIZE   0x00001000 /* 4 KB */
+#define PROC_BASE_ADDRESS 0x00100000 /* @1 MB */
 
-/* First Level Descriptors Address */
-#define FL_DSCRPTS_ADDRESS 0x1f500000 /* 501 MB */
+#define procFrame2dir(frame) PROC_BASE_ADDRESS + (PROC_FRAME_SIZE * frame) /* 1 MB  + (4 KB * Marco) */
 
-#define frame2dir(frame) BASE_ADDRESS + (FRAME_SIZE * frame) /* 1 MB  + (4 KB * Marco) */
+/*
+ * Se contemplan 704 procesos de usuario como maximo:
+ * Espacio total de Descriptores de primer nivel (FLD) igual a 11 MB.
+ * En 1 MB se hubican 64 bloques de 16 KB. Por tanto:
+ * MAX_PROC = 125 K = 128000 = 256 * 500.
+ */
+#define MAX_PROCS                 704 /* Maximo numero de procesos determinado por maximo numero de FLD */
+#define FLD_SIZE           0x00004000 /* 16 KB */
+#define FLD_ADDRESS        0x1f500000 /* @501 MB */
 
-typedef unsigned int * dir_t;
-typedef unsigned int frame_t;
+#define flDesc2dir(flDesc) FL_DESCS_ADDRESS + (FLD_SIZE * flDesc) /* @501 MB  + (16 KB * descriptor) */
+
+typedef unsigned int * Dir_t;
+typedef int Frame_t;
+typedef short Fld_t;
 
 typedef struct {
-	frame_t totalFrames[MAX_PS_FRAMES];
-	dir_t emptyList;
-} frameManager_t;
+	Frame_t totalFrames[MAX_PROC_FRAMES];
+	Frame_t emptyList;
+} ProcFrameManager_t;
+
+typedef struct {
+	Fld_t totalflDescs[MAX_PROCS];
+	Fld_t emptyList;
+} FlDescManager_t;
+
+void init_pmem(void);
 
 /*
  * Los procesos pueden reservar memoria en bloques de memoria mayores a 4 KB:
@@ -61,16 +78,14 @@ typedef struct {
  * 256 bloques de 4 KB + los necesarios para su mapeo (y aqui esta el ahorro)
  */
 
-void init_pmem();
+Dir_t instance_process(Pid_t solicitante, unsigned int size);
 
-dir_t instance_process(pid_t solicitante, unsigned int size);
+Dir_t get4kframe(Pid_t solicitante);
 
-dir_t get4kframe(pid_t solicitante);
+Dir_t get16KBlock(Pid_t solicitante);
 
-dir_t get16KBlock(pid_t solicitante);
+Dir_t get1MBlock(Pid_t solicitante);
 
-dir_t get1MBlock(pid_t solicitante);
-
-dir_t get16MBlock(pid_t solicitante);
+Dir_t get16MBlock(Pid_t solicitante);
 
 #endif /* SOURCE_INCLUDES_ATENEA_PMEM_H_ */
