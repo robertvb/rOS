@@ -47,13 +47,20 @@ void init_pmem(void) {
 
 Dir_t instance_process(Pid_t solicitante, unsigned int size) {
 
-	// TODO
+	/* si se ha alcanzado el numero maximo de descriptores o no quedan marcos de uso general
+	 * se retorna NULL.
+	 */
 	if(fldManager.emptyList >= MAX_PROCS || pframeManager.emptyList >= MAX_PROC_FRAMES) {
 		return 0x0;
 	}
 
-	Fld_t nextEmptyAux = fldManager.totalflDescs[fldManager.emptyList];
+	Fld_t nextFldEmptyAux = fldManager.totalflDescs[fldManager.emptyList];
 
+	unsigned int * fld = (unsigned int *) fld2dir(nextFldEmptyAux);
+
+	/* se mapea el espacio del kernel */
+
+	fld[0] = 0<<20 | 0x0400 | 2;
 
 }
 

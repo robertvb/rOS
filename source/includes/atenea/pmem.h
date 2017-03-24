@@ -49,9 +49,9 @@ OTHER DEALINGS IN THE SOFTWARE.
  */
 #define MAX_PROCS                 704 /* Maximo numero de procesos determinado por maximo numero de FLD */
 #define FLD_SIZE           0x00004000 /* 16 KB */
-#define FLD_ADDRESS        0x1f500000 /* @501 MB */
+#define FLD_BASE_ADDRESS   0x1f500000 /* @501 MB */
 
-#define flDesc2dir(flDesc) FL_DESCS_ADDRESS + (FLD_SIZE * flDesc) /* @501 MB  + (16 KB * descriptor) */
+#define fld2dir(flDesc) FLD_BASE_ADDRESS + (FLD_SIZE * flDesc) /* @501 MB  + (16 KB * descriptor) */
 
 typedef unsigned int * Dir_t;
 typedef int Frame_t;
