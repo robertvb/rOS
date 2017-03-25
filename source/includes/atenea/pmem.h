@@ -27,6 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define PMEM_H
 
 #include "../zeus/process.h"
+#include "mem-utils.h"
 
 /*
  * Se contemplan 125 K marcos de 4 KB para procesos de usuario:
@@ -40,6 +41,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define PROC_BASE_ADDRESS 0x00100000 /* @1 MB */
 
 #define procFrame2dir(frame) PROC_BASE_ADDRESS + (PROC_FRAME_SIZE * frame) /* 1 MB  + (4 KB * Marco) */
+#define dir2procFrame(dir) (dir - PROC_BASE_ADDRESS) / PROC_FRAME_SIZE /* (dir - 1 MB) / 4kb   */
 
 /*
  * Se contemplan 704 procesos de usuario como maximo:
@@ -79,6 +81,10 @@ void init_pmem(void);
  */
 
 Dir_t instance_process(Pid_t solicitante, unsigned int size);
+
+void free4kframe(Frame_t frame);
+
+Dir_t getNextFld(Pid_t solicitant);
 
 Dir_t get4kframe(Pid_t solicitante);
 

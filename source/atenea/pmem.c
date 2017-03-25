@@ -45,43 +45,132 @@ void init_pmem(void) {
 
 }
 
-Dir_t instance_process(Pid_t solicitante, unsigned int size) {
+/*
+ * Retorna la direccion de la primera instruccion del proceso o NULL en caso de memoria insuficiente
+ */
+Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 
 	/* si se ha alcanzado el numero maximo de descriptores o no quedan marcos de uso general
 	 * se retorna NULL.
 	 */
 	if(fldManager.emptyList >= MAX_PROCS || pframeManager.emptyList >= MAX_PROC_FRAMES) {
-		return 0x0;
+		return NULL;
 	}
 
-	Fld_t nextFldEmptyAux = fldManager.totalflDescs[fldManager.emptyList];
+	unsigned int numFrames = (size / PROC_FRAME_SIZE) + 1;
+	Dir_t sld = get4kframe(solicitant);
 
-	unsigned int * fld = (unsigned int *) fld2dir(nextFldEmptyAux);
+	unsigned int cont;
+	for(cont = 0; cont < 256; cont++) {
+		* sld = NULL;
+	}
 
-	/* se mapea el espacio del kernel */
+	Dir_t lastUsedFrameDir = sld;
+	Dir_t gotFramesListPointer = NULL;
 
-	fld[0] = 0<<20 | 0x0400 | 2;
+	while(numFrames-- > 0) {
+		gotFramesListPointer = get4kframe(solicitant);
+		if(gotFramesListPointer == NULL) {
+			/* nos hemos quedado sin memoria!
+			 * por tanto, vamos a devolver la que hemos asignado.
+			 */
+			while(lastUsedFrameDir != NULL) {
+				free4kframe(dir2procFrame((unsigned int) lastUsedFrameDir));
+				lastUsedFrameDir = (Dir_t) * lastUsedFrameDir;
+			}
+			return NULL;
+		}
+		else {
+			* gotFramesListPointer = (unsigned int) lastUsedFrameDir;
+		}
+	}
 
+	/*
+	 * Conseguido suficientes marcos para el proceso
+	 * Vamos a construir ahora su tabla de paginas.
+	 */
+
+	Dir_t fldPagetable = getNextFld(solicitant);
+
+	unsigned int x = 0;
+
+	for(x=0; x < 4096 ; x++) {
+		fldPagetable[x] = x<<20 | 0x400 | 2;
+	}
+
+	/*
+	 * Agrupamos marcos por entradas de primer nivel (1MB):
+	 */
+
+	unsigned int currentCourseTablePagle;
+	Dir_t currentFramePointer;
+	Dir_t lastFramePointer;
+	Dir_t firstChangedFrame;
+
+	firstChangedFrame = gotFramesListPointer;
+	do {
+		currentCourseTablePagle = (unsigned int) gotFramesListPointer >> 20;
+		gotFramesListPointer = currentFramePointer = lastFramePointer = firstChangedFrame;
+
+		while(currentFramePointer != sld) {
+			if(currentCourseTablePagle == ((unsigned int) currentFramePointer) >> 20) {
+				sld[currentCourseTablePagle << 20] = (unsigned int) gotFramesListPointer; // TODO bits de control
+				lastFramePointer = currentFramePointer;
+				currentFramePointer = (Dir_t) * currentFramePointer;
+			}
+			else if (firstChangedFrame == gotFramesListPointer){
+				firstChangedFrame = currentFramePointer;
+			}
+		}
+
+		fldPagetable[currentCourseTablePagle] = (unsigned int) sld; // TODO BITS DE CONTROL
+		sld = get4kframe(solicitant);
+
+	} while(firstChangedFrame != gotFramesListPointer);
 }
 
-Dir_t get4kframe(Pid_t solicitante) {
-	//frame_t nextEmptyFrame = frameManager.emptyList;
-	//frameManager.emptyList = frameManager.totalFrames[nextEmptyFrame];
-	//frameManager.totalFrames[nextEmptyFrame] = solicitante;
-	//return (dir_t) frame2dir(nextEmptyFrame);
+void free4kframe(Frame_t frame) {
+	pframeManager.totalFrames[frame] = pframeManager.emptyList;
+	pframeManager.emptyList = frame;
+}
+
+Dir_t get4kframe(Pid_t solicitant) {
+
+	Frame_t nextEmptyFrame = pframeManager.emptyList;
+	if(nextEmptyFrame == MAX_PROC_FRAMES) {
+		return NULL;
+	}
+
+	pframeManager.emptyList = pframeManager.totalFrames[nextEmptyFrame];
+	pframeManager.totalFrames[nextEmptyFrame] = solicitant;
+
+	return (Dir_t) procFrame2dir(nextEmptyFrame);
+}
+
+Dir_t getNextFld(Pid_t solicitant) {
+
+	Fld_t nextFreeFld = fldManager.emptyList;
+	if(nextFreeFld == MAX_PROCS) {
+		return NULL;
+	}
+
+	fldManager.emptyList = fldManager.totalflDescs[nextFreeFld];
+	fldManager.totalflDescs[nextFreeFld] = solicitant;
+
+	return (Dir_t) fld2dir(nextFreeFld);
 }
 
 // TODO
-Dir_t get16KBlock(Pid_t solicitante) {
-	return 0;
+Dir_t get16KBlock(Pid_t solicitant) {
+	return NULL;
 }
 
 // TODO
-Dir_t get1MBlock(Pid_t solicitante) {
-	return 0;
+Dir_t get1MBlock(Pid_t solicitant) {
+	return NULL;
 }
 
 // TODO
-Dir_t get16MBlock(Pid_t solicitante) {
-	return 0;
+Dir_t get16MBlock(Pid_t solicitant) {
+	return NULL;
 }

@@ -104,7 +104,7 @@ static void reg(unsigned char * r) {
 
 	strcpy(commandInterpreter->lastCommandOutPutBuffer+3,"= 0x");
 
-	uintToString(value,HEXADECIMAL,commandInterpreter->lastCommandOutPutBuffer+7);
+	 uintToStringStr(value,HEXADECIMAL,commandInterpreter->lastCommandOutPutBuffer+7);
 
 
 }
@@ -123,9 +123,7 @@ static command_t * searchCommand(const char * name) {
 	for(i = 0; i < commandInterpreter->nCommands
 	&& !strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
 	uart_puts("Se ha buscado el comando, valor de i: ");
-	char buf[]  = {"            \0"};
-	uintToString(i,DECIMAL,buf);
-	uart_puts(buf);
+	uart_puts(uintToString(i,DECIMAL));
 
 	return (i >= commandInterpreter->nCommands ? NULL : &(commandInterpreter->commands[i]));
 

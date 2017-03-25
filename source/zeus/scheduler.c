@@ -60,9 +60,7 @@ void create_main_process() {
 
 	// Output DEBUG
 	uart_puts("Main stack is 0x");
-	char  buff [] = {"            \0"};
-	uintToString(stack_pointer,HEXADECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     // Se guarda el proceso en la tabla de procesos
@@ -90,8 +88,7 @@ void kfork(char * name, unsigned int * pc) {
 	// DEBUG
 	uart_puts("Forked stack is 0x");
 	char  buff [] = {"            \0"};
-	uintToString(forked_stack_pointer,HEXADECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(forked_stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     fork_process.pid = process_count;
@@ -159,24 +156,20 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	}
 
     // DEBUG CODE
-	char  buff [] = {"            \0"};
     uart_puts("\n");
 	uart_puts("\n\r");
     uart_puts("Schedule timeout. Current active pid is ");
-	uintToString(process_list[active_process_index].pid,DECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(process_list[active_process_index].pid,DECIMAL));
     uart_puts(" with name ");
     uart_puts(process_list[active_process_index].name);
     uart_puts(". Switching to next process.\n\r");
 
     uart_puts("stack saved, was 0x");
-	uintToString(stack_pointer,HEXADECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
 	uart_puts("Saving pc...");
-	uintToString(pc,DECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(pc,DECIMAL));
 	uart_puts("\n\r");
 
     // Obtenemos el siguiente proceso
@@ -197,13 +190,11 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
     process_list[active_process_index].status = PROCESS_STATUS_RUNNING;
 
     uart_puts("Restoring stack 0x");
-	uintToString(stack_pointer,HEXADECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     uart_puts("Restoring pc 0x");
-	uintToString(pc,DECIMAL,buff);
-    uart_puts(buff);
+    uart_puts(uintToString(pc,DECIMAL));
 	uart_puts("\n\r");
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar

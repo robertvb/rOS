@@ -27,11 +27,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 /* Parsea num a char *, guarda el resultado en str */
-int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
+int8_t  uintToStringStr(uint32_t num, uint8_t base, uint8_t * str){
 
-	uint8_t divCont;				
+	uint8_t divCont;
 	uint8_t reminder;
-	uint8_t i;						
+	uint8_t i;
 
 	if(base > 16)							// Se comprueba la base
 		return -1;
@@ -40,7 +40,7 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 		return -2;
 
 	if(num==0) {
-		
+
 		str[0]='0';
 		str[1]='\0';
 		return 1;
@@ -72,17 +72,75 @@ int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str){
 	}
 
 	str[divCont] = '\0';
-									// Siempre acaba en una división más de la cuenta (D = 0)	
+									// Siempre acaba en una división más de la cuenta (D = 0)
 									// En el caso hexadecimal no incluye el '0x'
 
-	for(i = 0; i < --divCont; i++) {				// Reordenamos el array			
-		
+	for(i = 0; i < --divCont; i++) {				// Reordenamos el array
+
 		reminder     = str[i];					// Reutilizamos la variable, ahora como var aux para el intercambio.
 		str[i] 	     = str[divCont];
 		str[divCont] = reminder;
 	}
 
 	return 0;
+
+}
+
+
+char * uintToString(unsigned int num, char base){
+
+	char divCont;
+	char reminder;
+	char i;
+	static char buff [] = {"            \0"};
+
+	if(base > 16)							// Se comprueba la base
+		return NULL;
+
+	if(num==0) {
+		
+		buff[0]='0';
+		buff[1]='\0';
+		return NULL;
+	}
+
+	divCont = 0;							// Llevamos la cuenta de la sucesivas divisiones
+
+	if(base==HEXADECIMAL)
+		while(num) {						// Se divide hasta que el ńumero sea 0
+
+			reminder = num % base;
+
+			if(reminder < 10)
+				buff[divCont] = '0' + reminder;
+			else
+				buff[divCont] = 'a' + reminder - DECIMAL;	// Números y letras no son adyacentes en ASCII
+									// 'a' representa el inicio de las minúsculas en la tabla ASCII (adyacentes)
+			divCont++;
+			num /= base;					// Le restamos el resto y loop.
+		}
+
+	else
+		while(num) {						// Se divide hasta que el ńumero sea 0
+
+		reminder = num % base;
+		buff[divCont] = '0' + reminder;
+		divCont++;
+		num /= base;						// Le restamos el resto y loop.
+	}
+
+	buff[divCont] = '\0';
+									// Siempre acaba en una división más de la cuenta (D = 0)	
+									// En el caso hexadecimal no incluye el '0x'
+
+	for(i = 0; i < --divCont; i++) {				// Reordenamos el array			
+		
+		reminder      = buff[i];					// Reutilizamos la variable, ahora como var aux para el intercambio.
+		buff[i] 	  = buff[divCont];
+		buff[divCont] = reminder;
+	}
+
+	return buff;
 
 }
 

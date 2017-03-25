@@ -272,9 +272,9 @@ void displayBgInfo(void) {
 	if(actualMsecond >= bgInfo->onTime * 1000000) {
 
 		bgInfo->onTime += 1;
-		uintToString(bgInfo->onTime / 60,DECIMAL,onTimeMinute);
+		 uintToStringStr(bgInfo->onTime / 60,DECIMAL,onTimeMinute);
 		strncat(onTimeMinute, "m",12);
-		uintToString(bgInfo->onTime % 60,DECIMAL,onTimeSecond);
+		 uintToStringStr(bgInfo->onTime % 60,DECIMAL,onTimeSecond);
 		strncat(onTimeSecond,"s",12);
 		eraseString(bgInfo->bgColor,currentX2,currentY,10);
 		currentX2 += drawString(onTimeMinute,12,currentX2,currentY)*CHAR_WIDTH;

@@ -27,13 +27,16 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define STRING_H
 
 #include <stdint.h>
+#include "../atenea/mem-utils.h"
 
 #define Binary			 	 2
 #define DECIMAL				10
 #define HEXADECIMAL			16
 
 
-int8_t uintToString(uint32_t num, uint8_t base, uint8_t * str);
+int8_t uintToStringStr(uint32_t num, uint8_t base, uint8_t * str);
+
+char * uintToString(unsigned int num, char base);
 
 uint8_t * stringToUint(char * str, uint8_t base);
 
