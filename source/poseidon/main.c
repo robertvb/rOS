@@ -40,6 +40,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts("Hello, it is rOS :)!\r\n");
 
 	init_vmem();
+	init_pmem();
 	uart_puts("init_vmem done!\r\n");
 
 	create_main_process();

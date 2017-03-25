@@ -27,6 +27,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SCHEDULER_H
 
 #include "process.h"
+#include "../atenea/pmem.h"
+
+// todo DEBUG
 #include "../hades/rpi-uart.h"
 
 void create_main_process(void);

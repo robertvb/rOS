@@ -57,6 +57,8 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 		return NULL;
 	}
 
+	uart_puts("instanciando proceso! \n\r");
+
 	unsigned int numFrames = (size / PROC_FRAME_SIZE) + 1;
 	Dir_t sld = get4kframe(solicitant);
 
@@ -67,6 +69,10 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 
 	Dir_t lastUsedFrameDir = sld;
 	Dir_t gotFramesListPointer = NULL;
+
+	uart_puts("marcos necesarios:");
+	uart_puts(uintToString(numFrames,DECIMAL));
+	uart_puts("\r\n");
 
 	while(numFrames-- > 0) {
 		gotFramesListPointer = get4kframe(solicitant);
@@ -127,6 +133,17 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 		sld = get4kframe(solicitant);
 
 	} while(firstChangedFrame != gotFramesListPointer);
+
+	uart_puts("estado pframeManager.totalFrames[0]=");
+	uart_puts(uintToString(pframeManager.totalFrames[0],DECIMAL));
+	uart_puts(" estado pframeManager.emptyList=");
+	uart_puts(uintToString(pframeManager.emptyList,DECIMAL));
+	uart_puts("\r\n");
+	uart_puts("estado fldManager.totalflDescs[0]=");
+	uart_puts(uintToString(fldManager.totalflDescs[0],DECIMAL));
+	uart_puts(" estado fldManager.emptyList=");
+	uart_puts(uintToString(fldManager.emptyList,DECIMAL));
+	uart_puts("\r\n");
 }
 
 void free4kframe(Frame_t frame) {

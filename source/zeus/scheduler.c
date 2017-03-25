@@ -77,7 +77,7 @@ void create_main_process() {
  * Procedure to fork this process, creating a new one, pointing the pc
  * to the memory address of the desired procedure
  */
-void kfork(char * name, unsigned int * pc) {
+void kfork(char * name, Dir_t pc) {
 
     process fork_process;
 
@@ -87,18 +87,18 @@ void kfork(char * name, unsigned int * pc) {
 
 	// DEBUG
 	uart_puts("Forked stack is 0x");
-	char  buff [] = {"            \0"};
-    uart_puts(uintToString(forked_stack_pointer,HEXADECIMAL));
+    uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     fork_process.pid = process_count;
     fork_process.name = name;
-    fork_process.pc = pc;
+    fork_process.pc = (Pid_t) pc;
     fork_process.ppid = active_process_index;
     fork_process.times_loaded = 0;
-    fork_process.stack_pointer = forked_stack_pointer;
+    fork_process.stack_pointer = (unsigned int) forked_stack_pointer;
     fork_process.status = PROCESS_STATUS_WAITING;
 
+    instance_process(fork_process.pid, 14);
     process_list[process_count] = fork_process;
 
     process_count++;
