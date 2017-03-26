@@ -105,7 +105,8 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	}
 
 	/*
-	 * Agrupamos marcos por entradas de primer nivel (1MB):
+	 * Agrupamos marcos por entradas de primer nivel (1MB)
+	 * y construimos la tabla de paginas del proceso
 	 */
 
 	unsigned int currentCourseTablePagle;
@@ -160,6 +161,11 @@ Dir_t get4kframe(Pid_t solicitant) {
 
 	pframeManager.emptyList = pframeManager.totalFrames[nextEmptyFrame];
 	pframeManager.totalFrames[nextEmptyFrame] = solicitant;
+
+	// TODO DEBUG
+	uart_puts("Dando 4kFrame: ");
+	uart_puts(uintToString(pframeManager.emptyList,DECIMAL));
+	uart_puts("\r\n");
 
 	return (Dir_t) procFrame2dir(nextEmptyFrame);
 }
