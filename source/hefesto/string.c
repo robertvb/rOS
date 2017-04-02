@@ -94,14 +94,14 @@ char * uintToString(unsigned int num, char base){
 	char i;
 	static char buff [] = {"            \0"};
 
-	if(base > 16)							// Se comprueba la base
-		return NULL;
-
+	if(base > 16) {							// Se comprueba la base
+		buff[0] = '\0';
+		return buff;
+	}
 	if(num==0) {
-		
 		buff[0]='0';
 		buff[1]='\0';
-		return NULL;
+		return buff;
 	}
 
 	divCont = 0;							// Llevamos la cuenta de la sucesivas divisiones

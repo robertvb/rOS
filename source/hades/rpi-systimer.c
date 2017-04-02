@@ -41,3 +41,17 @@ void RPI_esperarMicroSeconds( uint32_t us )
 
     while( ( rpiSystemTimer->counter_lo - ts ) < us );
 }
+
+uint64_t get_time(void)
+{
+    uint64_t time = rpiSystemTimer->counter_hi;
+    time <<= 32;
+    time |= rpiSystemTimer->counter_lo;
+    return time;
+}
+
+void wait(uint32_t musec)
+{
+    uint32_t t = rpiSystemTimer->counter_lo;
+    while (rpiSystemTimer->counter_lo - t < musec);
+}

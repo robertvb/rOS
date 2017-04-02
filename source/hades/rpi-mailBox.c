@@ -23,37 +23,39 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef STRING_H
-#define STRING_H
+#ifndef RPI_MAILBOX_C
+#define RPI_MAILBOX_C
 
-#include <stdint.h>
-#include "../atenea/mem-utils.h"
+#include "../includes/hades/rpi-mailBox.h"
 
-#define BINARY			 	 2
-#define DECIMAL				10
-#define HEXADECIMAL			16
+void write_mailbox(uint8_t chan, uint32_t data)
+{
+    while (read_mmio(MAILBOX_BASE + MAILBOX_STATE) & MAILBOX_FULL) {}
+    sync_mem();
+    write_mmio((MAILBOX_BASE + MAILBOX_WRITE), chan | (data & DATAMASK32));
+    sync_mem();
+}
 
+uint32_t read_mailbox(uint8_t chan)
+{
+    uint32_t timeout = 0;
+    uint32_t data = 0;
 
-int8_t uintToStringStr(uint32_t num, uint8_t base, uint8_t * str);
+    while (1)
+    {
+        while (read_mmio(MAILBOX_BASE + MAILBOX_STATE) & MAILBOX_EMPTY)
+            if (timeout++ >= MAILBOX_TIMEOUT)
+                return ERROR32;
 
-char * uintToString(unsigned int num, char base);
+        sync_mem();
+        data = read_mmio(MAILBOX_BASE);
+        sync_mem();
 
-uint8_t * stringToUint(char * str, uint8_t base);
+        if ((data & 0xF) == chan)
+            break;
+    }
 
-uint8_t intToString(int32_t num, uint8_t base, uint8_t * str);
+    return (data & DATAMASK32);
+}
 
-int8_t * stringToInt(char * str, uint8_t base);
-
-uint8_t stringLength(const uint8_t * str);
-
-uint32_t searchStringPattern(uint8_t * pattern, const uint8_t * str);
-
-uint8_t * strcpy(uint8_t * dest, const uint8_t *  src);
-
-uint8_t * strncpy(uint8_t * dest, const uint8_t * src, const uint32_t numChars);
-
-uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n);
-
-int32_t strncmp(const char *s1, const char *s2, uint32_t n);
-
-#endif
+#endif /* SOURCE_HADES_RPI_MAILBOX_C_ */

@@ -83,3 +83,14 @@ uint32_t mem_v2p(unsigned int virtualaddr) {
 	/* Large (64k) page */
 	return (cpt_data & 0xffff0000) + (virtualaddr & 0xffff);
 }
+
+void memncpy(void *dest, void *src, unsigned int n) {
+   // Typecast src and dest addresses to (char *)
+   char *csrc = (char *)src;
+   char *cdest = (char *)dest;
+
+   // Copy contents of src[] to dest[]
+   unsigned int i;
+   for(i=0; i<n; i++)
+       cdest[i] = csrc[i];
+}

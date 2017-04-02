@@ -45,5 +45,6 @@ typedef volatile struct {
 
 rpi_sys_timer_t* RPI_GetSystemTimer(void);
 void RPI_esperarMicroSeconds( uint32_t us );
+uint64_t get_time(void);
 
 #endif

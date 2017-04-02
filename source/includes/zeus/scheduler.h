@@ -33,7 +33,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../hades/rpi-uart.h"
 
 void create_main_process(void);
-//void kfork(char * name, unsigned long addr);
+void kfork(char * name, Dir_t addr);
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
 void terminate_process();
 void halt();

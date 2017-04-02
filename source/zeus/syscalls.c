@@ -32,6 +32,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 void syscall(unsigned int swi) {
 
 	uart_puts("Handling syscall: ");
+	uart_puts(uintToString(swi,DECIMAL));
 	uart_puts("\n\r");
 
 	switch (swi) {
@@ -43,6 +44,10 @@ void syscall(unsigned int swi) {
 			// LLamada a la rutina intra-kernel pertinente
 			terminate_process();
 			break;
+
+		default:
+			uart_puts("[ERROR]: syscall no reconocida!");
+			uart_puts("\n\r");
 	}
 
 	uart_puts("Turning interrupt on again");

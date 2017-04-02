@@ -7,6 +7,8 @@
 #include "../includes/poseidon/rpi-armtimer.h"
 #include "../includes/zeus/scheduler.h"
 
+extern void _main_endloop();
+
 /** @brief The BCM2835 Interupt controller peripheral at it's base address */
 static rpi_irq_controller_t* rpiIRQController =
         (rpi_irq_controller_t*)RPI_INTERRUPT_CONTROLLER_BASE;
@@ -30,7 +32,24 @@ rpi_irq_controller_t* RPI_GetIrqController( void )
 */
 void __attribute__((interrupt("ABORT"))) reset_vector(void)
 {
+	register unsigned int addr, far;
+	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+	/* Read fault address register */
+	asm volatile("mrc p15, 0, %[addr], c6, c0, 0": [addr] "=r" (far) );
 
+
+	uart_puts("Data abort! (RESET VECTOR)\n");
+	uart_puts("Instruction address: 0x");
+	/* addr = lr, but the very start of the abort routine does
+	 * sub lr, lr, #4
+	 * lr = address of aborted instruction, plus 8
+	 */
+    uart_puts(uintToString(addr,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("  fault address: 0x");
+    uart_puts(uintToString(far,HEXADECIMAL));
+	uart_puts("\n\r");
 }
 
 /**
@@ -84,19 +103,64 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 */
 void __attribute__((interrupt("ABORT"))) prefetch_abort_vector(void)
 {
+	register unsigned int addr;
+	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 
+	uart_puts("[ERROR] Prefetch abort!!!!!!!!\n\r");
+	uart_puts("Instruction address: 0x");
+	/* lr = address of aborted instruction, plus 4
+	 * addr = lr, but the very start of the abort routine does
+	 * sub lr, lr, #4
+	 */
+    uart_puts(uintToString(addr,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	/* Set the return address to be the function main_endloop(), by
+	 * putting its address into the program counter
+	 *
+	 * THIS IS JUST A TEST - you can't normally do this as it doesn't
+	 * restore the registers or put the stack pointer back where it was,
+	 * so repeated aborts will overflow the stack.
+	 */
+	uart_puts("JUMPING TO END LOOP\n\r");
+	asm volatile("movs pc, %[addr]" : :
+		[addr] "r" ((unsigned int)(&_main_endloop)) );
+
+	/* Doesn't reach this point */
 }
 
 
-/**
-    @brief The Data Abort interrupt handler
-
-    The CPU will start executing this function. Just trap here as a debug
-    solution.
-*/
+/*
+ * Faltas de pagina
+ */
 void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 {
+	register unsigned int addr, far;
+	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+	/* Read fault address register */
+	asm volatile("mrc p15, 0, %[addr], c6, c0, 0": [addr] "=r" (far) );
 
+
+	uart_puts("Data abort!\n\r");
+	uart_puts("Instruction address: 0x");
+	/* addr = lr, but the very start of the abort routine does
+	 * sub lr, lr, #4
+	 * lr = address of aborted instruction, plus 8
+	 */
+    uart_puts(uintToString(addr,HEXADECIMAL));
+
+	uart_puts("  fault address: 0x");
+    uart_puts(uintToString(far,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	/* Routine terminates by returning to LR-4, which is the instruction
+	 * after the aborted one
+	 * GCC doesn't properly deal with data aborts in its interrupt
+	 * handling - no option to return to the failed instruction
+	 */
+
+	asm volatile("cps #0x1f");
+	asm volatile("cpsid aif");
 }
 
 

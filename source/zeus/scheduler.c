@@ -98,7 +98,13 @@ void kfork(char * name, Dir_t pc) {
     fork_process.stack_pointer = (unsigned int) forked_stack_pointer;
     fork_process.status = PROCESS_STATUS_WAITING;
 
-    instance_process(fork_process.pid, 14);
+    // TODO CHAPUZA DEBUG COPIAR CODIGO de una funcion
+    fork_process.pc = (unsigned int) instance_process(fork_process.pid, 14);
+	uart_puts("----> pc despues de instanciar = ");
+    uart_puts(uintToString(fork_process.pc,HEXADECIMAL));
+	uart_puts("\n\r");
+    memncpy((Dir_t) fork_process.pc,pc,14);
+    // END CHAPUZA
     process_list[process_count] = fork_process;
 
     process_count++;
@@ -169,7 +175,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	uart_puts("\n\r");
 
 	uart_puts("Saving pc...");
-    uart_puts(uintToString(pc,DECIMAL));
+    uart_puts(uintToString(pc,HEXADECIMAL));
 	uart_puts("\n\r");
 
     // Obtenemos el siguiente proceso
@@ -194,7 +200,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	uart_puts("\n\r");
 
     uart_puts("Restoring pc 0x");
-    uart_puts(uintToString(pc,DECIMAL));
+    uart_puts(uintToString(process_list[active_process_index].pc,HEXADECIMAL));
 	uart_puts("\n\r");
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar

@@ -23,37 +23,40 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef STRING_H
-#define STRING_H
+#ifndef RPI_MAILBOX_H
+#define RPI_MAILBOX_H
 
 #include <stdint.h>
-#include "../atenea/mem-utils.h"
+#include "mmio.h"
 
-#define BINARY			 	 2
-#define DECIMAL				10
-#define HEXADECIMAL			16
+/* Masks */
+#define MASK32     0x00000000
+#define DATAMASK32 0xFFFFFFF0
 
+/* Status */
+#define ERROR32    0xFFFFFFFF
 
-int8_t uintToStringStr(uint32_t num, uint8_t base, uint8_t * str);
+# define MAILBOX_BASE    0x2000B880
 
-char * uintToString(unsigned int num, char base);
+# define MAILBOX_READ    0x00
+# define MAILBOX_WRITE   0x20
+# define MAILBOX_STATE   0x18
 
-uint8_t * stringToUint(char * str, uint8_t base);
+# define MAILBOX_PROP    8
 
-uint8_t intToString(int32_t num, uint8_t base, uint8_t * str);
+# define MAILBOX_FULL    0x80000000
+# define MAILBOX_EMPTY   0x40000000
 
-int8_t * stringToInt(char * str, uint8_t base);
+# define MAILBOX_TIMEOUT (1 << 20)
 
-uint8_t stringLength(const uint8_t * str);
+# define REP_SUCCESS     0x80000000
+# define REP_FAILURE     0x80000001
 
-uint32_t searchStringPattern(uint8_t * pattern, const uint8_t * str);
+# define CLOCK_TAG       0x00030002
+# define POWERGET_TAG    0x00020001
+# define POWERSET_TAG    0x00028001
 
-uint8_t * strcpy(uint8_t * dest, const uint8_t *  src);
+void write_mailbox(uint8_t chan, uint32_t data);
+uint32_t read_mailbox(uint8_t chan);
 
-uint8_t * strncpy(uint8_t * dest, const uint8_t * src, const uint32_t numChars);
-
-uint8_t *strncat(uint8_t *dest, const uint8_t *src, uint32_t n);
-
-int32_t strncmp(const char *s1, const char *s2, uint32_t n);
-
-#endif
+#endif /* SOURCE_INCLUDES_HADES_RPI_MAILBOX_H_ */

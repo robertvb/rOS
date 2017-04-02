@@ -32,21 +32,57 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/apolo/uartConsole.h"
 #include "../includes/atenea/kmem.h"
 #include "../includes/atenea/pmem.h"
+#include "../includes/hades/emmc.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	uart_init();
-
 	uart_puts("Hello, it is rOS :)!\r\n");
 
+#if(1)
+	uart_puts("Inicializando driver emmc......\r\n");
+
+	struct block_device *bd = NULL;
+    if(emmc_card_init(&bd) == 0) {
+    	uart_puts("emmc_sd_card_driver inicializado!!!!!!\r\n");
+    	uart_puts("block Size = ");
+    	uart_puts(uintToString(bd->block_size,DECIMAL));
+       	uart_puts("\r\n");
+    }
+    else {
+    	uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
+    }
+    uint8_t buffer [512];
+    size_t * pointer = (size_t *) buffer;
+    unsigned int i;
+    for (i = 0; i < 512; ++i) {
+		buffer[i] = 0;
+	}
+    if(emmc_read(bd,buffer,bd->block_size,0) == -1) {
+    	uart_puts("[ERROR] emmc_bd error en la lectura!!!!!\r\n");
+    }
+    else {
+    	uart_puts("Bloque leido con exito!!!!!\r\n");
+    	uart_puts("Dumpeo hexadecimal del MBR: \r\n");
+
+        for (i = 0; i < 128; ++i) {
+    		uart_puts(uintToString(i*4,DECIMAL));
+    		uart_puts(":[");
+    		uart_puts(uintToString(pointer[i],HEXADECIMAL));
+    		uart_puts("]\r\n");
+    	}
+    }
+#endif
+
+#if(0)
 	init_vmem();
 	init_pmem();
 	uart_puts("init_vmem done!\r\n");
 
 	create_main_process();
 
-	kfork("Sample process 1", &sample_process_2);
-	kfork("Sample process 2", &sample_process_2);
+	kfork("Sample process 1", (Dir_t) &sample_process_1);
+	kfork("Sample process 2", (Dir_t) &sample_process_2);
 
     /* Enable the timer interrupt IRQ */
     RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
@@ -67,6 +103,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	while(1) {
 	}
+#endif
 
 	return 0;
 }

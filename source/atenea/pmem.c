@@ -53,6 +53,8 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	/* si se ha alcanzado el numero maximo de descriptores o no quedan marcos de uso general
 	 * se retorna NULL.
 	 */
+	Dir_t returnValue = NULL;
+
 	if(fldManager.emptyList >= MAX_PROCS || pframeManager.emptyList >= MAX_PROC_FRAMES) {
 		return NULL;
 	}
@@ -91,6 +93,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 		}
 	}
 
+	returnValue = gotFramesListPointer;
 	/*
 	 * Conseguido suficientes marcos para el proceso
 	 * Vamos a construir ahora su tabla de paginas.
@@ -131,7 +134,10 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 		}
 
 		fldPagetable[currentCourseTablePagle] = (unsigned int) sld; // TODO BITS DE CONTROL
-		sld = get4kframe(solicitant);
+
+		if(firstChangedFrame != gotFramesListPointer) {
+			sld = get4kframe(solicitant);
+		}
 
 	} while(firstChangedFrame != gotFramesListPointer);
 
@@ -145,6 +151,8 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	uart_puts(" estado fldManager.emptyList=");
 	uart_puts(uintToString(fldManager.emptyList,DECIMAL));
 	uart_puts("\r\n");
+
+	return returnValue;
 }
 
 void free4kframe(Frame_t frame) {
@@ -196,4 +204,9 @@ Dir_t get1MBlock(Pid_t solicitant) {
 // TODO
 Dir_t get16MBlock(Pid_t solicitant) {
 	return NULL;
+}
+
+// TODO
+void mapMem(void) {
+	return;
 }

@@ -6,6 +6,9 @@
 #include <stdint.h>
 #include "rpi-base.h"
 
+// TODO DEBUG
+#include "../hades/rpi-uart.h"
+
 /** @brief See Section 7.5 of the BCM2836 ARM Peripherals documentation, the base
     address of the controller is actually xxxxB000, but there is a 0x200 offset
     to the first addressable register for the interrupt controller, so offset the

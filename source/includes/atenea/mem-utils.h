@@ -48,4 +48,6 @@ OTHER DEALINGS IN THE SOFTWARE.
  */
 uint32_t mem_v2p(unsigned int);
 
+void memncpy(void *dest, void *src, unsigned int n);
+
 #endif /* SOURCE_INCLUDES_ATENEA_MEM_UTILS_H_ */

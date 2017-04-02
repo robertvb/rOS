@@ -94,4 +94,6 @@ Dir_t get1MBlock(Pid_t solicitante);
 
 Dir_t get16MBlock(Pid_t solicitante);
 
+void mapMem(void);
+
 #endif /* SOURCE_INCLUDES_ATENEA_PMEM_H_ */
