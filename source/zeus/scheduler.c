@@ -33,6 +33,10 @@ static unsigned int active_process_index;
 extern void _main_endloop();
 extern void timer_reset();
 
+Pid_t getNextPid(void) {
+	return process_count;
+}
+
 void terminate_process() {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	process_list[active_process_index].status = PROCESS_STATUS_TERMINATED;

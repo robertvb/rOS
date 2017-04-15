@@ -23,45 +23,21 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef SOURCE_INCLUDES_ATENEA_FS_H_
+#define SOURCE_INCLUDES_ATENEA_FS_H_
 
-#include "../includes/zeus/scheduler.h"
-#include "../includes/zeus/syscalls.h"
-/*
- * Rutina de manejo de interrupciones software
- */
-void syscall(unsigned int swi) {
+#include "../hades/emmc.h"
+#include "fat32.h"
+#include "../hades/rpi-uart.h"
+#include "../atenea/elf32.h"
+#include "../atenea/pmem.h"
 
-	uart_puts("Handling syscall: ");
-	uart_puts(uintToString(swi,DECIMAL));
-	uart_puts("\n\r");
+void prgm2proc(struct block_device * bd, unsigned int cluster,
+		unsigned int fichTam, uint32_t * fat, unsigned int primerSectorDirRaiz);
 
-	switch (swi) {
 
-		case SYSCALL_TERMINATE_PROCESS:
-			uart_puts("Invoking syscall terminate_process()");
-			uart_puts("\n\r");
+/* TODO DEBUG */
+void verFich(struct block_device * bd, unsigned int cluster,
+		unsigned int fichTam, uint32_t * fat, unsigned int primerSectorDirRaiz);
 
-			// LLamada a la rutina intra-kernel pertinente
-			terminate_process();
-			break;
-
-		case SYSCALL_UART_WRITE:
-			uart_puts("Invoking syscall UART_WRITE()");
-			break;
-
-		default:
-			uart_puts("[ERROR]: syscall no reconocida!");
-			uart_puts("\n\r");
-	}
-
-	uart_puts("Turning interrupt on again");
-	uart_puts("\n\r");
-
-	// Se rehabilitan las interrupciones
-	asm volatile("cpsie i");
-
-	// Esperar a la siguiente interrupción.
-	// (provisional, Esto problamente no sea lo mas indicado TODO)....
-	halt();
-
-}
+#endif /* SOURCE_INCLUDES_ATENEA_FS_H_ */

@@ -23,45 +23,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
+void _exit(unsigned int arg) {
+    asm volatile("SWI #0");
+}
 
-#include "../includes/zeus/scheduler.h"
-#include "../includes/zeus/syscalls.h"
-/*
- * Rutina de manejo de interrupciones software
- */
-void syscall(unsigned int swi) {
+void main() {
 
-	uart_puts("Handling syscall: ");
-	uart_puts(uintToString(swi,DECIMAL));
-	uart_puts("\n\r");
+    asm volatile("SWI #1");
 
-	switch (swi) {
+    int to = 300;
 
-		case SYSCALL_TERMINATE_PROCESS:
-			uart_puts("Invoking syscall terminate_process()");
-			uart_puts("\n\r");
+    int i, j;
+    for (i=0; i<to; i++) {
+        for (j=0; j<to*to; j++) {
+			asm volatile("NOP");
+		}
+    }
 
-			// LLamada a la rutina intra-kernel pertinente
-			terminate_process();
-			break;
+    asm volatile("SWI #1");
 
-		case SYSCALL_UART_WRITE:
-			uart_puts("Invoking syscall UART_WRITE()");
-			break;
-
-		default:
-			uart_puts("[ERROR]: syscall no reconocida!");
-			uart_puts("\n\r");
-	}
-
-	uart_puts("Turning interrupt on again");
-	uart_puts("\n\r");
-
-	// Se rehabilitan las interrupciones
-	asm volatile("cpsie i");
-
-	// Esperar a la siguiente interrupción.
-	// (provisional, Esto problamente no sea lo mas indicado TODO)....
-	halt();
-
+    // Call software interrupt #0 (terminate)
 }

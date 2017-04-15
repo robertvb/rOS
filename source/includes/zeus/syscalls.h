@@ -33,6 +33,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../hades/rpi-uart.h"
 
 #define SYSCALL_TERMINATE_PROCESS		0
+#define SYSCALL_UART_WRITE				1
 
 void syscall(unsigned int swi);
 

@@ -33,6 +33,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/atenea/kmem.h"
 #include "../includes/atenea/pmem.h"
 #include "../includes/hades/emmc.h"
+#include "../includes/atenea/fat32.h"
+#include "../includes/atenea/fs.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -71,6 +73,87 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
     		uart_puts(uintToString(pointer[i],HEXADECIMAL));
     		uart_puts("]\r\n");
     	}
+
+    	uart_puts("Vamos a leer el PBR:!!!!!\r\n");
+    	mbr_t * ptrmbr = buffer;
+
+    	uart_puts("SIZEOF MBR =");
+    	uart_puts(uintToString(sizeof(mbr_t),DECIMAL));
+		uart_puts("\r\n");
+    	uart_puts("Primer sector de la particion =");
+
+    	uint32_t primerSector = ptrmbr->descParticion[0].primerSector;
+
+    	uart_puts(uintToString(primerSector,HEXADECIMAL));
+		uart_puts("\r\n");
+
+        if(emmc_read(bd,buffer,bd->block_size,primerSector) == -1) {
+        	uart_puts("[ERROR] emmc_bd error en la lectura!!!!!\r\n");
+        }
+        else {
+        	pbr_t * ptrpbr = buffer;
+        	uint32_t primerSectorFAT = primerSector + ptrpbr->bpb.sectoresReservados;
+
+        	uart_puts("Sectores de la particion =");
+        	uart_puts(uintToString(ptrpbr->bpb.sectores,DECIMAL));
+    		uart_puts("\r\n");
+
+        	/* un cluster es una agruàcion de sectores contiguos, en este caso 64 */
+
+        	/* 15515648 Sectores particion / 64 Sectores/cluster = 242432 clusters particion */
+
+        	uint32_t fat[242432];
+
+        	for(i = 0; i < 242432 / (512/4); i++) {
+        		emmc_read(bd,&fat[i*(512/4)],512,primerSectorFAT+i);
+        	}
+
+        	/* ya tenemos la FAT ahora vamos a buscar el directorio raiz */
+
+        	dword_t primerSectorDirRaiz = primerSectorFAT+ptrpbr->bpb.sectoresPorFAT32*ptrpbr->bpb.numeroDeFATs;
+        	uart_puts("Primer sector directorio raiz =0x");
+        	uart_puts(uintToString(primerSectorDirRaiz,HEXADECIMAL));
+    		uart_puts("\r\n");
+        	/* cargo en buffer el sector del dir raiz */
+
+        	uint8_t buffer2[512];
+        	int k;
+        	for(k = 0; k < 64; k++){
+				emmc_read(bd,buffer2,512,primerSectorDirRaiz+k);
+				entrada_dir_t *ptred = buffer2;
+
+				for(i = 0; i < 16; i++) {
+					if(ptred[i].nombre[0] == '\0')
+						break;
+
+					uart_puts(" nombre = ");
+					int j;
+					for(j=0; j<8;j++) {
+						uart_putc(ptred[i].nombre[j]);
+					}
+					//uart_puts("\r\n");
+
+					uart_puts(" extension = ");
+					for(j=0; j<3;j++) {
+						uart_putc(ptred[i].ext[j]);
+					}
+					//uart_puts("\r\n");
+
+					uart_puts(" cluster = 0x");
+					uart_puts(uintToString(ptred[i].clusterHigh,HEXADECIMAL));
+					uart_puts(uintToString(ptred[i].clusterLow,HEXADECIMAL));
+					//uart_puts("\r\n");
+
+					uart_puts(" tamanio = 0x");
+					uart_puts(uintToString(ptred[i].tam,DECIMAL));
+					uart_puts("\r\n");
+				}
+
+			}
+
+        	verFich(bd,0x021c,0x1067,fat,primerSectorDirRaiz);
+        }
+
     }
 #endif
 

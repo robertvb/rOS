@@ -32,6 +32,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 // todo DEBUG
 #include "../hades/rpi-uart.h"
 
+Pid_t getNextPid(void);
 void create_main_process(void);
 void kfork(char * name, Dir_t addr);
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc);

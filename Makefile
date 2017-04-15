@@ -52,7 +52,7 @@ $(BUILD)%.o: $(SOURCE)%.s $(BUILD)
 	$(ARMGNU)-as -g -I $(SOURCE) $< -o $@
 
 $(BUILD):
-	mkdir $@
+	mkdir $@z
 
 # Rule to clean files.
 clean : 
