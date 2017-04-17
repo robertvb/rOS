@@ -43,7 +43,7 @@ typedef struct {			/********************FORMATO CABECERA ELF********************
   uint16_t e_shentsize;		/* Tamanio de la SHT.										*/
   uint16_t e_shnum;			/* Numero de la entradas de la SHT. 						*/
   uint16_t e_shstrndx;		/* Indice de la SHT que contiene los nombres de secciones.  */
-} Elf32Hdr_t;					/************************************************************/
+} Elf32Hdr_t;				/************************************************************/
 
 /* Program Header */
 

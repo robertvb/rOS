@@ -23,14 +23,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-void _exit(unsigned int arg) {
-    asm volatile("SWI #0");
-}
-
 void main() {
 
     asm volatile("SWI #1");
 
+    /*
     int to = 300;
 
     int i, j;
@@ -39,8 +36,11 @@ void main() {
 			asm volatile("NOP");
 		}
     }
-
+*/
     asm volatile("SWI #1");
+
+    // llamada al sistema para terminar ejecucion
+    asm volatile("SWI #0");
 
     // Call software interrupt #0 (terminate)
 }

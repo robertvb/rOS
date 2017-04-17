@@ -34,7 +34,7 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 
 	/* Paso 2: reservamos memoria para el proceso sin contar la cabecera ELF */
 
-	Dir_t pdir = instance_process(pid,fichTam - sizeof(Elf32Hdr_t));
+	Dir_t pdir = instance_process(pid,fichTam);
 
 	/* Si no hay memoria suficiente, se retorna */
 	if(pdir == NULL) {
@@ -65,7 +65,8 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
     		uart_puts("sector leido!\n\r");
 			/* Cargamos en memoria el sector */
 	        for (j = 0; j < 512; ++j) {
-	        	pdir[i*512 + j] =pointer[j];
+	        	uint8_t * ldir = (uint8_t *) pdir;
+	        	ldir[i*512 + j] = pointer[j];
 	    	}
 		cont-=512;
 		if(cont <= 0)
@@ -74,6 +75,10 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 		cluster = fat[cluster];
 		sect = primerSectorDirRaiz + 64 * (cluster - 2);
 	}while(cont > 0);
+
+	/* Paso 4: forkeamos */
+
+	kfork("sp1 test",pdir + sizeof(Elf32Hdr_t));
 
 }
 

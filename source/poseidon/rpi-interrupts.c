@@ -60,6 +60,7 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
 */
 void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
+	uart_puts("[ERROR] UNDEF INTERRUPT");
     while( 1 )
     {
         /* Do Nothing! */
@@ -115,6 +116,32 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_vector(void)
     uart_puts(uintToString(addr,HEXADECIMAL));
 	uart_puts("\n\r");
 
+	uart_puts("                               ________________\n\r");
+	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
+	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
+	uart_puts("                       ((     (   )(    )  )   (   )  )\n\r");
+	uart_puts("                     ((/  ( _(   )   (   _) ) (  () )  )\n\r");
+	uart_puts("                    ( (  ( (_)   ((    (   )  .((_ ) .  )_\n\r");
+	uart_puts("                   ( (  )    (      (  )    )   ) . ) (   )\n\r");
+	uart_puts("                  (  (   (  (   ) (  _  ( _) ).  ) . ) ) ( )\n\r");
+	uart_puts("                  ( (  (   ) (  )   (  ))     ) _)(   )  )  )\n\r");
+	uart_puts("                 ( (  ( \\ ) (    (_  ( ) ( )  )   ) )  )) ( )\n\r");
+	uart_puts("                 (  (   (  (   (_ ( ) ( _    )  ) (  )  )   )\n\r");
+	uart_puts("                 ( (  ( (  (  )     (_  )  ) )  _)   ) _( ( )\n\r");
+	uart_puts("                  ((  (   )(    (     _    )   _) _(_ (  (_ )\n\r");
+	uart_puts("                   (_((__(_(__(( ( ( |  ) ) ) )_))__))_)___)\n\r");
+	uart_puts("                  ((__)        \\\\||lll|l||///          \\_))\n\r");
+	uart_puts("                            (   /(/ (  )  ) )\\   )\n\r");
+	uart_puts("                         (    ( ( ( | | ) ) )\\   )\n\r");
+	uart_puts("                            (   /(| / ( )) ) ) )) )\n\r");
+	uart_puts("                         (     ( ((((_(|)_)))))     )\n\r");
+	uart_puts("                          (      ||\\(|(|)|/||     )\n\r");
+	uart_puts("                        (        |(||(||)||||        )\n\r");
+	uart_puts("                          (     //|/l|||)|\\\\ \\     )\n\r");
+	uart_puts("                        (/ / //  /|//||||\\\\  \\ \\  \\ _)\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
 	/* Set the return address to be the function main_endloop(), by
 	 * putting its address into the program counter
 	 *
@@ -140,8 +167,7 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 	/* Read fault address register */
 	asm volatile("mrc p15, 0, %[addr], c6, c0, 0": [addr] "=r" (far) );
 
-
-	uart_puts("Data abort!\n\r");
+	uart_puts("[SWI] Data abort! (Falta de pagina): ");
 	uart_puts("Instruction address: 0x");
 	/* addr = lr, but the very start of the abort routine does
 	 * sub lr, lr, #4
@@ -264,7 +290,7 @@ __attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void)
 */
 void __attribute__((interrupt("FIQ"))) fast_interrupt_vector(void)
 {
-
+	uart_puts("[ERROR] FIQ INTERRUPT");
 }
 
 void timer_reset(void)
