@@ -29,6 +29,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 static unsigned int *pagetable = (unsigned int * const) 0x4000; /* 16k */
 
+void invalidate_TLB0(void) {
+	asm volatile("mcr p15, 0, %[zero], c1, c0, 0" : : [zero] "r" (0));
+}
+
 /* Rutina para convertir una dirección virtual en fisica
  *  siguiendo la tabla de páginas.
 

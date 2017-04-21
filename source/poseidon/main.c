@@ -241,11 +241,15 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 					if(ptred[i].nombre[0] == '\0')
 					break;
 
+					uart_puts("primer car: ");
+					printByte(ptred[i].nombre[0]);
+
 					uart_puts(" nombre = ");
 					int j;
 					for(j=0; j<8;j++) {
 						uart_putc(ptred[i].nombre[j]);
 					}
+
 					//uart_puts("\r\n");
 
 					uart_puts(" extension = ");
@@ -255,8 +259,10 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 					//uart_puts("\r\n");
 
 					uart_puts(" cluster = 0x");
-					uart_puts(uintToString(ptred[i].clusterHigh,HEXADECIMAL));
-					uart_puts(uintToString(ptred[i].clusterLow,HEXADECIMAL));
+					uint32_t cluster = (((uint32_t) ptred[i].clusterHigh) << 16) + ptred[i].clusterLow;
+					//uart_puts(uintToString(ptred[i].clusterHigh,HEXADECIMAL));
+					//uart_puts(uintToString(ptred[i].clusterLow,HEXADECIMAL));
+					uart_puts(uintToString(cluster,HEXADECIMAL));
 					//uart_puts("\r\n");
 
 					uart_puts(" tamanio = 0x");
@@ -266,7 +272,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			}
 
-			init_vmem();
+			//init_vmem();
 			init_pmem();
 			uart_puts("init_vmem done!\r\n");
 
@@ -275,9 +281,20 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			//kfork("Sample process 1", (Dir_t) &sample_process_1);
 			//kfork("Sample process 2", (Dir_t) &sample_process_2);
 
-			prgm2proc(bd, 0x022d, 0x470, fat, primerSector);
+			verFich(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+
+			prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
+
+			/* print marko */
+
+			uart_puts("primera instruccion: ");
+			unsigned int instruct = *((unsigned int * ) (0x00104000 + 54));
+
+			uart_puts(uintToString(instruct,HEXADECIMAL));
+
+			asm volatile("MOV PC, %[addr]" : : [addr] "r" (0x00104000 + 54) );
 		}
 	}
 

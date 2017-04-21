@@ -60,6 +60,33 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
 */
 void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
+	uart_puts("                               ________________\n\r");
+	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
+	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
+	uart_puts("                       ((     (   )(    )  )   (   )  )\n\r");
+	uart_puts("                     ((/  ( _(   )   (   _) ) (  () )  )\n\r");
+	uart_puts("                    ( (  ( (_)   ((    (   )  .((_ ) .  )_\n\r");
+	uart_puts("                   ( (  )    (      (  )    )   ) . ) (   )\n\r");
+	uart_puts("                  (  (   (  (   ) (  _  ( _) ).  ) . ) ) ( )\n\r");
+	uart_puts("                  ( (  (   ) (  )   (  ))     ) _)(   )  )  )\n\r");
+	uart_puts("                 ( (  ( \\ ) (    (_  ( ) ( )  )   ) )  )) ( )\n\r");
+	uart_puts("                 (  (   (  (   (_ ( ) ( _    )  ) (  )  )   )\n\r");
+	uart_puts("                 ( (  ( (  (  )     (_  )  ) )  _)   ) _( ( )\n\r");
+	uart_puts("                  ((  (   )(    (     _    )   _) _(_ (  (_ )\n\r");
+	uart_puts("                   (_((__(_(__(( ( ( |  ) ) ) )_))__))_)___)\n\r");
+	uart_puts("                  ((__)        \\\\||lll|l||///          \\_))\n\r");
+	uart_puts("                            (   /(/ (  )  ) )\\   )\n\r");
+	uart_puts("                         (    ( ( ( | | ) ) )\\   )\n\r");
+	uart_puts("                            (   /(| / ( )) ) ) )) )\n\r");
+	uart_puts("                         (     ( ((((_(|)_)))))     )\n\r");
+	uart_puts("                          (      ||\\(|(|)|/||     )\n\r");
+	uart_puts("                        (        |(||(||)||||        )\n\r");
+	uart_puts("                          (     //|/l|||)|\\\\ \\     )\n\r");
+	uart_puts("                        (/ / //  /|//||||\\\\  \\ \\  \\ _)\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+
 	uart_puts("[ERROR] UNDEF INTERRUPT");
     while( 1 )
     {

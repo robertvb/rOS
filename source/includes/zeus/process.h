@@ -24,6 +24,7 @@ OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "../hades/rpi-uart.h"
+#include "../atenea/pmem.h"
 
 #ifndef PROCESS_H
 #define	PROCESS_H
@@ -39,6 +40,8 @@ typedef unsigned int Pid_t;
 typedef struct {
 	Pid_t 			pid;
     char * 			name;
+    char * 			fileName;
+    //Dir_t 			tablePage;
     Pid_t 			ppid;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;

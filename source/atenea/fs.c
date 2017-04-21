@@ -25,6 +25,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/atenea/fs.h"
 
+void printByte(uint8_t value) {
+	char buffer[17] = "0123456789ABCDEF";
+	uart_putc(buffer[value>>4]);
+	uart_putc(buffer[value & 0x0F]);
+}
+
 void prgm2proc(struct block_device * bd, unsigned int cluster,
 		unsigned int fichTam, uint32_t * fat, unsigned int primerSectorDirRaiz) {
 
@@ -49,6 +55,12 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 	unsigned int sect;
 
 	sect = primerSectorDirRaiz + 64 * (cluster - 2); /* porque el primer cluster es el 2!!!!!!!!!!!!! */
+	uart_puts(" sect ----> ");
+	uart_puts(uintToString(sect,HEXADECIMAL));
+	uart_puts(" primersectRaiz ----> ");
+	uart_puts(uintToString(primerSectorDirRaiz,HEXADECIMAL));
+	uart_puts(" cluster ----> ");
+	uart_puts(uintToString(cluster,HEXADECIMAL));
 	int cont = fichTam;
 	uint8_t * pointer = buffer;
 	do{
@@ -67,6 +79,8 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 	        for (j = 0; j < 512; ++j) {
 	        	uint8_t * ldir = (uint8_t *) pdir;
 	        	ldir[i*512 + j] = pointer[j];
+	        	printByte( pointer[j]);
+	        	uart_puts(" ");
 	    	}
 		cont-=512;
 		if(cont <= 0)
@@ -78,14 +92,11 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 
 	/* Paso 4: forkeamos */
 
-	kfork("sp1 test",pdir + sizeof(Elf32Hdr_t));
+	uart_puts("Direccion pdir + ELfHdr: ");
+	uart_puts(uintToString((unsigned int) pdir + sizeof(Elf32Hdr_t),HEXADECIMAL));
 
-}
+	kfork("sp1 test",(unsigned int) pdir + sizeof(Elf32Hdr_t));
 
-static void printByte(uint8_t value) {
-	char buffer[17] = "0123456789ABCDEF";
-	uart_putc(buffer[value>>4]);
-	uart_putc(buffer[value & 0x0F]);
 }
 
 void verFich(struct block_device * bd, unsigned int cluster,

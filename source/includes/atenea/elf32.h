@@ -28,6 +28,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 /* Cabecera ELF */
 
+#pragma pack(1)
 typedef struct {			/********************FORMATO CABECERA ELF********************/
   uint8_t  e_ident[16];		/* identidad. Para ver si efectivamente se trata de un ELF.	*/
   uint16_t e_type;      	/* 1 = relocatable. 2 = executable 3 = shared 4 = core.		*/
@@ -44,6 +45,7 @@ typedef struct {			/********************FORMATO CABECERA ELF********************
   uint16_t e_shnum;			/* Numero de la entradas de la SHT. 						*/
   uint16_t e_shstrndx;		/* Indice de la SHT que contiene los nombres de secciones.  */
 } Elf32Hdr_t;				/************************************************************/
+#pragma pop
 
 /* Program Header */
 

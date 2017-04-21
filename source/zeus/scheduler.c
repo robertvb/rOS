@@ -103,11 +103,11 @@ void kfork(char * name, Dir_t pc) {
     fork_process.status = PROCESS_STATUS_WAITING;
 
     // TODO CHAPUZA DEBUG COPIAR CODIGO de una funcion
-    fork_process.pc = (unsigned int) instance_process(fork_process.pid, 14);
-	uart_puts("----> pc despues de instanciar = ");
-    uart_puts(uintToString(fork_process.pc,HEXADECIMAL));
-	uart_puts("\n\r");
-    memncpy((Dir_t) fork_process.pc,pc,14);
+    //fork_process.pc = (unsigned int) instance_process(fork_process.pid, 14);
+	//uart_puts("----> pc despues de instanciar = ");
+   // uart_puts(uintToString(fork_process.pc,HEXADECIMAL));
+	//uart_puts("\n\r");
+   //memncpy((Dir_t) fork_process.pc,pc,14);
     // END CHAPUZA
     process_list[process_count] = fork_process;
 

@@ -46,6 +46,9 @@ OTHER DEALINGS IN THE SOFTWARE.
  * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
  * no se encuentra mapeada.
  */
+
+void invalidate_TLB0(void);
+
 uint32_t mem_v2p(unsigned int);
 
 void memncpy(void *dest, void *src, unsigned int n);
