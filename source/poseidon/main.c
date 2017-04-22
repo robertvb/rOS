@@ -294,7 +294,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			uart_puts(uintToString(instruct,HEXADECIMAL));
 
-			asm volatile("MOV PC, %[addr]" : : [addr] "r" (0x00104000 + 54) );
+			//asm volatile("MOV PC, %[addr]" : : [addr] "r" (0x00104000 + 54) );
 		}
 	}
 

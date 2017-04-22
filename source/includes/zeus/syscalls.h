@@ -29,13 +29,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SYSCALL_H
 #define	SYSCALL_H
 
+#include "../atenea/pmem.h"
+
 // DEBUG
 #include "../hades/rpi-uart.h"
 
 #define SYSCALL_TERMINATE_PROCESS		0
 #define SYSCALL_UART_WRITE				1
 
-void syscall(unsigned int swi);
+void syscall(unsigned int swi, Dir_t addr);
 
 #endif	/* SYSCALL_H */
 

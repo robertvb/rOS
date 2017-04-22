@@ -110,16 +110,14 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 
-	addr -= 4;
-
 	// Bottom 24 bits of the SWI instruction are the SWI number
-	swi = *((unsigned int *)addr) & 0x00ffffff;
+	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
 
 	// Changing processor mode
 	asm volatile("cps #0x1f");
 
 	// Handle syscall
-	syscall(swi);
+	syscall(swi,addr);
 }
 
 

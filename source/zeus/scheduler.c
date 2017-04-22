@@ -40,6 +40,76 @@ Pid_t getNextPid(void) {
 void terminate_process() {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	process_list[active_process_index].status = PROCESS_STATUS_TERMINATED;
+
+	// ejecutamos el siguiente proceso.
+
+    int next_process = next_waiting_process_index();
+
+    // If -1, halt
+    if (next_process < 0) {
+		uart_puts("No more waiting processes, halting.");
+		uart_puts("\n\r");
+		halt();
+	}
+
+    // Actualizamos al siguiente proceso en ejecucion
+    active_process_index = next_process;
+
+    // Incremetamos estadisticas y cambiamos status a RUNNING
+    process_list[active_process_index].times_loaded++;
+    process_list[active_process_index].status = PROCESS_STATUS_RUNNING;
+
+    // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
+	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(process_list[active_process_index].stack_pointer)) );
+
+	// Si no es la primera vez que se ejecuta el proceso
+	if (process_list[active_process_index].times_loaded > 1) {
+
+		timer_reset();
+
+		// Rescatamos registros y flags de la pila
+		asm volatile("pop {R0}");
+		/* Saved Program Status Register
+		 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
+		 * mode the exception is taken to.
+		   This is useful because the exception handler is able to restore the CPSR
+		   to the value prior to taking the exception,
+		   as well as being able to examine the CPSR in general.
+		   MSR = MOVE SYSTEM REGYSTER
+		 */
+		asm volatile("MSR   SPSR_cxsf, R0");
+		asm volatile("pop {LR}");
+		asm volatile("pop {R0 - R12}");
+
+		/* Rehabilitacion de interrupciones
+		 * CPS change procesor state IE interrupt and i ENABLE
+		 */
+		asm volatile("cpsie i");
+
+		// Rescatamos el contador de programa y renaudamos la ejecucion
+		asm volatile("pop {PC}");
+
+	} else {
+
+		// Se salva el contador de programa en la pila
+		unsigned int addr = (unsigned int )(process_list[active_process_index].pc);
+		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
+		asm volatile("push {R0}");
+
+		timer_reset();
+
+		/* Rehabilitacion de interrupciones
+		 * CPS change procesor state IE interrupt and i ENABLE
+		 */
+		asm volatile("cpsie i");
+
+		/* rescatamos PC y comienza la ejecucion del proceso */
+		asm volatile("pop {PC}");
+
+	}
+
+
+
 }
 
 // Funcion para crear el proceso base.

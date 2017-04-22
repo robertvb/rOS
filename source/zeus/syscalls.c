@@ -29,7 +29,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 /*
  * Rutina de manejo de interrupciones software
  */
-void syscall(unsigned int swi) {
+void syscall(unsigned int swi, Dir_t addr) {
 
 	uart_puts("Handling syscall: ");
 	uart_puts(uintToString(swi,DECIMAL));
@@ -60,8 +60,8 @@ void syscall(unsigned int swi) {
 	// Se rehabilitan las interrupciones
 	asm volatile("cpsie i");
 
-	// Esperar a la siguiente interrupción.
-	// (provisional, Esto problamente no sea lo mas indicado TODO)....
-	halt();
+	// Continua la ejecución del proceso
+	asm volatile("MOV PC, %[Addr]" : : [Addr] "r" (addr) );
+
 
 }
