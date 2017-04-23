@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 static process process_list[1024];
 static unsigned int stack_base;
-static unsigned int process_count = 0;
+static unsigned int process_count;
 static unsigned int active_process_index;
 
 extern void _main_endloop();
@@ -118,6 +118,7 @@ void create_main_process() {
 
     process main_process;
 
+    process_count = 0;
     main_process.pid = process_count;
     main_process.name = "Main";
     // El proceso simplemente ejecuta un while true

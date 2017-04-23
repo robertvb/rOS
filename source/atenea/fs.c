@@ -92,7 +92,7 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 
 	/* Paso 4: forkeamos */
 
-	uart_puts("Direccion pdir + ELfHdr: ");
+	uart_puts("\n\rDireccion pdir + ELfHdr: ");
 	uart_puts(uintToString((unsigned int) pdir + sizeof(Elf32Hdr_t),HEXADECIMAL));
 
 	kfork("sp1 test",(unsigned int) pdir + sizeof(Elf32Hdr_t));

@@ -285,7 +285,15 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
 
+			//uart_puts("PROCESO CARGADO!\r\n");
+
+			//prgm2proc(bd, 0x277, 795, fat, primerSectorDirRaiz);
+
 			uart_puts("PROCESO CARGADO!\r\n");
+
+			//prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+
+			//prgm2proc(bd, 0x264, 574, fat, primerSectorDirRaiz);
 
 			/* print marko */
 

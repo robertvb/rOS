@@ -29,7 +29,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 /*
  * Rutina de manejo de interrupciones software
  */
-void syscall(unsigned int swi, Dir_t addr) {
+void syscall(unsigned int swi, Dir_t addr, unsigned int arg0) {
 
 	uart_puts("Handling syscall: ");
 	uart_puts(uintToString(swi,DECIMAL));
@@ -46,7 +46,9 @@ void syscall(unsigned int swi, Dir_t addr) {
 			break;
 
 		case SYSCALL_UART_WRITE:
-			uart_puts("Invoking syscall UART_WRITE()");
+			uart_puts("Invoking syscall UART_WRITE: \"");
+			uart_puts(&arg0);
+			uart_puts("\"");
 			break;
 
 		default:

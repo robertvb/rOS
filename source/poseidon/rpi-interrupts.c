@@ -106,9 +106,12 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 {
 	unsigned int addr;
 	unsigned int swi;
+	unsigned int arg0;
 
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+
+	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
 
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
@@ -117,7 +120,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	asm volatile("cps #0x1f");
 
 	// Handle syscall
-	syscall(swi,addr);
+	syscall(swi,addr,arg0);
 }
 
 

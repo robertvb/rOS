@@ -62,11 +62,14 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	uart_puts("instanciando proceso! \n\r");
 
 	unsigned int numFrames = (size / PROC_FRAME_SIZE) + 1;
-	Dir_t sld = get4kframe(solicitant);
+	Dir_t sld = (Dir_t) get4kframe(solicitant);
+	uart_puts("Obtenido 4k marco, dir: ");
+	uart_puts(uintToString(sld,HEXADECIMAL));
+	uart_puts("\r\n");
 
 	unsigned int cont;
 	for(cont = 0; cont < 256; cont++) {
-		* sld = NULL;
+		*sld = NULL;
 	}
 
 	Dir_t lastUsedFrameDir = sld;
@@ -77,19 +80,23 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	uart_puts("\r\n");
 
 	while(numFrames-- > 0) {
-		gotFramesListPointer = get4kframe(solicitant);
+
+		gotFramesListPointer = (Dir_t) get4kframe(solicitant);
+		uart_puts("Obtenido 4k marco, dir: ");
+		uart_puts(uintToString((unsigned int) gotFramesListPointer,HEXADECIMAL));
+		uart_puts("\r\n");
 		if(gotFramesListPointer == NULL) {
 			/* nos hemos quedado sin memoria!
 			 * por tanto, vamos a devolver la que hemos asignado.
 			 */
 			while(lastUsedFrameDir != NULL) {
 				free4kframe(dir2procFrame((unsigned int) lastUsedFrameDir));
-				lastUsedFrameDir = (Dir_t) * lastUsedFrameDir;
+				lastUsedFrameDir = (Dir_t) *lastUsedFrameDir;
 			}
 			return NULL;
 		}
 		else {
-			* gotFramesListPointer = (unsigned int) lastUsedFrameDir;
+			*gotFramesListPointer = (unsigned int) lastUsedFrameDir;
 		}
 	}
 
@@ -99,7 +106,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	 * Vamos a construir ahora su tabla de paginas.
 	 */
 
-	Dir_t fldPagetable = getNextFld(solicitant);
+	Dir_t fldPagetable = (Dir_t) getNextFld(solicitant);
 
 	unsigned int x = 0;
 
@@ -136,7 +143,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 		fldPagetable[currentCourseTablePagle] = (unsigned int) sld; // TODO BITS DE CONTROL
 
 		if(firstChangedFrame != gotFramesListPointer) {
-			sld = get4kframe(solicitant);
+			sld = (Dir_t) get4kframe(solicitant);
 		}
 
 	} while(firstChangedFrame != gotFramesListPointer);
@@ -160,7 +167,7 @@ void free4kframe(Frame_t frame) {
 	pframeManager.emptyList = frame;
 }
 
-Dir_t get4kframe(Pid_t solicitant) {
+unsigned int get4kframe(Pid_t solicitant) {
 
 	Frame_t nextEmptyFrame = pframeManager.emptyList;
 	if(nextEmptyFrame == MAX_PROC_FRAMES) {
@@ -172,13 +179,13 @@ Dir_t get4kframe(Pid_t solicitant) {
 
 	// TODO DEBUG
 	uart_puts("Dando 4kFrame: ");
-	uart_puts(uintToString(pframeManager.emptyList,DECIMAL));
+	uart_puts(uintToString(nextEmptyFrame,DECIMAL));
 	uart_puts("\r\n");
 
-	return (Dir_t) procFrame2dir(nextEmptyFrame);
+	return procFrame2dir(nextEmptyFrame);
 }
 
-Dir_t getNextFld(Pid_t solicitant) {
+unsigned int getNextFld(Pid_t solicitant) {
 
 	Fld_t nextFreeFld = fldManager.emptyList;
 	if(nextFreeFld == MAX_PROCS) {
@@ -188,21 +195,21 @@ Dir_t getNextFld(Pid_t solicitant) {
 	fldManager.emptyList = fldManager.totalflDescs[nextFreeFld];
 	fldManager.totalflDescs[nextFreeFld] = solicitant;
 
-	return (Dir_t) fld2dir(nextFreeFld);
+	return fld2dir(nextFreeFld);
 }
 
 // TODO
-Dir_t get16KBlock(Pid_t solicitant) {
+unsigned int get16KBlock(Pid_t solicitant) {
 	return NULL;
 }
 
 // TODO
-Dir_t get1MBlock(Pid_t solicitant) {
+unsigned int get1MBlock(Pid_t solicitant) {
 	return NULL;
 }
 
 // TODO
-Dir_t get16MBlock(Pid_t solicitant) {
+unsigned int get16MBlock(Pid_t solicitant) {
 	return NULL;
 }
 

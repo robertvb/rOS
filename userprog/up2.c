@@ -23,24 +23,31 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SYSCALLS_H
-#define SYSCALLS_H
+void write(char * str) {
+	asm volatile("push {r0}");
+	asm volatile("MOV r0, %[str]" : : [str] "r" (&str) );
+	asm volatile("SWI #1");
+	asm volatile("pop {r0}");
+}
 
-#ifndef SYSCALL_H
-#define	SYSCALL_H
+void main() {
 
-#include "../atenea/pmem.h"
-
-// DEBUG
-#include "../hades/rpi-uart.h"
-
-#define SYSCALL_TERMINATE_PROCESS		0
-#define SYSCALL_UART_WRITE				1
-
-void syscall(unsigned int swi, Dir_t addr, unsigned int arg0);
-
-#endif	/* SYSCALL_H */
+    write("Hola mundo!");
 
 
+    int to = 300;
 
-#endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */
+    int i, j;
+    for (i=0; i<to; i++) {
+        for (j=0; j<to*to; j++) {
+			asm volatile("NOP");
+		}
+    }
+
+    write("He terminado mi bucle, adios!");
+
+    // llamada al sistema para terminar ejecucion
+    asm volatile("SWI #0");
+
+    // Call software interrupt #0 (terminate)
+}

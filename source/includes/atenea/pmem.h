@@ -84,15 +84,15 @@ Dir_t instance_process(Pid_t solicitante, unsigned int size);
 
 void free4kframe(Frame_t frame);
 
-Dir_t getNextFld(Pid_t solicitant);
+unsigned int getNextFld(Pid_t solicitant);
 
-Dir_t get4kframe(Pid_t solicitante);
+unsigned int get4kframe(Pid_t solicitante);
 
-Dir_t get16KBlock(Pid_t solicitante);
+unsigned int get16KBlock(Pid_t solicitante);
 
-Dir_t get1MBlock(Pid_t solicitante);
+unsigned int get1MBlock(Pid_t solicitante);
 
-Dir_t get16MBlock(Pid_t solicitante);
+unsigned int get16MBlock(Pid_t solicitante);
 
 void mapMem(void);
 
