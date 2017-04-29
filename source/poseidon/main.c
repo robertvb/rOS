@@ -35,6 +35,7 @@
 #include "../includes/hades/emmc.h"
 #include "../includes/atenea/fat32.h"
 #include "../includes/atenea/fs.h"
+#include "../includes/atenea/mem-utils.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -272,7 +273,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			}
 
-			//init_vmem();
+			init_vmem();
 			init_pmem();
 			uart_puts("init_vmem done!\r\n");
 
@@ -281,13 +282,13 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			//kfork("Sample process 1", (Dir_t) &sample_process_1);
 			//kfork("Sample process 2", (Dir_t) &sample_process_2);
 
-			verFich(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+			//verFich(bd, 0x022d, 470, fat, primerSectorDirRaiz);
 
-			prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+			//prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
 
 			//uart_puts("PROCESO CARGADO!\r\n");
 
-			//prgm2proc(bd, 0x277, 795, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x2b4, 795, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 
@@ -298,11 +299,22 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			/* print marko */
 
 			uart_puts("primera instruccion: ");
-			unsigned int instruct = *((unsigned int * ) (0x00104000 + 54));
+			unsigned int instruct = *((unsigned int * ) (0x00101000 + 54));
 
 			uart_puts(uintToString(instruct,HEXADECIMAL));
 
-			//asm volatile("MOV PC, %[addr]" : : [addr] "r" (0x00104000 + 54) );
+			uart_puts(" testing first FLD: ");
+			uart_puts("\r\n");
+
+			int d;
+			for(d = 0; d < 0x00200000; d+=0x1000) {
+				uart_puts(" dir virtual : 0x");
+				uart_puts(uintToString(d,HEXADECIMAL));
+				uart_puts(" dir fisica : 0x");
+				uart_puts(uintToString(mem_v2p(d,(unsigned int *) 0x1f500000),HEXADECIMAL));
+				uart_puts("\r\n");
+			}
+
 		}
 	}
 

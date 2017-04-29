@@ -25,10 +25,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/atenea/mem-utils.h"
 
-
-
-static unsigned int *pagetable = (unsigned int * const) 0x4000; /* 16k */
-
 void invalidate_TLB0(void) {
 	asm volatile("mcr p15, 0, %[zero], c1, c0, 0" : : [zero] "r" (0));
 }
@@ -39,7 +35,7 @@ void invalidate_TLB0(void) {
  * Retorna la dirección fisica o 0xffffffff si dicha dir. virtual
  * no se encuentra mapeada.
  */
-uint32_t mem_v2p(unsigned int virtualaddr) {
+uint32_t mem_v2p(unsigned int virtualaddr, unsigned int * pagetable) {
 	unsigned int pt_data = pagetable[virtualaddr >> 20];
 	unsigned int cpt_data, physaddr;
 

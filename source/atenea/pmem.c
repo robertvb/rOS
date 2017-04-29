@@ -69,7 +69,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 
 	unsigned int cont;
 	for(cont = 0; cont < 256; cont++) {
-		*sld = NULL;
+		sld[cont] = NULL;
 	}
 
 	Dir_t lastUsedFrameDir = sld;
@@ -110,8 +110,10 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 
 	unsigned int x = 0;
 
-	for(x=0; x < 4096 ; x++) {
-		fldPagetable[x] = x<<20 | 0x400 | 2;
+	fldPagetable[x] = x<<20 | 0x0400 | 2;
+
+	for(x=1; x < 4096 ; x++) {
+		fldPagetable[x] = 0; // fault page all the space
 	}
 
 	/*
@@ -123,24 +125,37 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	Dir_t currentFramePointer;
 	Dir_t lastFramePointer;
 	Dir_t firstChangedFrame;
-
+	(unsigned int) sld;
 	firstChangedFrame = gotFramesListPointer;
 	do {
-		currentCourseTablePagle = (unsigned int) gotFramesListPointer >> 20;
+		currentCourseTablePagle = (unsigned int) gotFramesListPointer >> 12;
 		gotFramesListPointer = currentFramePointer = lastFramePointer = firstChangedFrame;
 
 		while(currentFramePointer != sld) {
-			if(currentCourseTablePagle == ((unsigned int) currentFramePointer) >> 20) {
-				sld[currentCourseTablePagle << 20] = (unsigned int) gotFramesListPointer; // TODO bits de control
+			if(currentCourseTablePagle == ((unsigned int) currentFramePointer) >> 12) {
+				uart_puts("got framelist pointer = ");
+				uart_puts(uintToString((unsigned int) gotFramesListPointer,HEXADECIMAL));
+				uart_puts("\r\n");
+				uart_puts("asginando marco virtual 0x");
+				uart_puts(uintToString((currentCourseTablePagle & 0x00000003),HEXADECIMAL));
+				uart_puts("\r\n");
+				uart_puts("currentFramePointer 0x");
+				uart_puts(uintToString((currentFramePointer),HEXADECIMAL));
+				uart_puts("\r\n");
+				sld[currentCourseTablePagle & 0x00000003] = (unsigned int) currentFramePointer | 0x0030 | 2; // TODO test full access
 				lastFramePointer = currentFramePointer;
-				currentFramePointer = (Dir_t) * currentFramePointer;
+				currentFramePointer = (Dir_t) *currentFramePointer;
 			}
 			else if (firstChangedFrame == gotFramesListPointer){
 				firstChangedFrame = currentFramePointer;
 			}
 		}
 
-		fldPagetable[currentCourseTablePagle] = (unsigned int) sld; // TODO BITS DE CONTROL
+		uart_puts("dir SLD 0x");
+		uart_puts(uintToString((unsigned int) sld,HEXADECIMAL));
+		uart_puts("\r\n");
+
+		fldPagetable[(unsigned int) gotFramesListPointer >> 20] = (unsigned int) sld | 1; // TODO test course table page in sld
 
 		if(firstChangedFrame != gotFramesListPointer) {
 			sld = (Dir_t) get4kframe(solicitant);

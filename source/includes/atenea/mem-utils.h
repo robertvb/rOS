@@ -26,6 +26,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef MEM_UTILS_H
 #define MEM_UTILS_H
 
+#include "pmem.h"
 #include <stdint.h>
 
 /* Virtual memory layout
@@ -49,7 +50,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 void invalidate_TLB0(void);
 
-uint32_t mem_v2p(unsigned int);
+uint32_t mem_v2p(unsigned int virtualaddr, unsigned int * pagetable);
 
 void memncpy(void *dest, void *src, unsigned int n);
 

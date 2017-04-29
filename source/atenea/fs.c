@@ -38,7 +38,7 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 
 	Pid_t pid = getNextPid();
 
-	/* Paso 2: reservamos memoria para el proceso sin contar la cabecera ELF */
+	/* Paso 2: reservamos memoria para el proceso */
 
 	Dir_t pdir = instance_process(pid,fichTam);
 

@@ -23,18 +23,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-void write(char * str) {
-	asm volatile("push {r0}");
-	asm volatile("MOV r0, %[str]" : : [str] "r" (&str) );
-	asm volatile("SWI #1");
-	asm volatile("pop {r0}");
-}
+void write(char * str);
 
 void main() {
 
     write("Hola mundo!");
 
-
+/*
     int to = 300;
 
     int i, j;
@@ -43,11 +38,18 @@ void main() {
 			asm volatile("NOP");
 		}
     }
-
+*/
     write("He terminado mi bucle, adios!");
 
     // llamada al sistema para terminar ejecucion
     asm volatile("SWI #0");
 
     // Call software interrupt #0 (terminate)
+}
+
+void write(char * str) {
+	asm volatile("push {r0}");
+	asm volatile("MOV r0, %[str]" : : [str] "r" (str) );
+	asm volatile("SWI #1");
+	asm volatile("pop {r0}");
 }

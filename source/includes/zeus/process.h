@@ -41,7 +41,7 @@ typedef struct {
 	Pid_t 			pid;
     char * 			name;
     char * 			fileName;
-    //Dir_t 			tablePage;
+    unsigned int	tablePageDir;
     Pid_t 			ppid;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;

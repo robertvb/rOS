@@ -167,19 +167,13 @@ void kfork(char * name, Dir_t pc) {
 
     fork_process.pid = process_count;
     fork_process.name = name;
-    fork_process.pc = (Pid_t) pc;
+    fork_process.pc = (unsigned int) pc;
     fork_process.ppid = active_process_index;
     fork_process.times_loaded = 0;
     fork_process.stack_pointer = (unsigned int) forked_stack_pointer;
     fork_process.status = PROCESS_STATUS_WAITING;
+    fork_process.tablePageDir = 0x1f500000;    //TODO TEST
 
-    // TODO CHAPUZA DEBUG COPIAR CODIGO de una funcion
-    //fork_process.pc = (unsigned int) instance_process(fork_process.pid, 14);
-	//uart_puts("----> pc despues de instanciar = ");
-   // uart_puts(uintToString(fork_process.pc,HEXADECIMAL));
-	//uart_puts("\n\r");
-   //memncpy((Dir_t) fork_process.pc,pc,14);
-    // END CHAPUZA
     process_list[process_count] = fork_process;
 
     process_count++;
@@ -284,6 +278,15 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	// Si no es la primera vez que se ejecuta el proceso
 	if (process_list[active_process_index].times_loaded > 1) {
 
+		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
+		invalidate_TLB0();
+		unsigned int pagetable = process_list[active_process_index].tablePageDir;
+		asm volatile("mcr p15, 0, %[pagetable], c1, c0, 0" : : [pagetable] "r" (pagetable));
+	    uart_puts("setting PAGETABLE to: ");
+	    uart_puts(uintToString(pagetable,HEXADECIMAL));
+		uart_puts("\n\r");
+		/* end*/
+
 		timer_reset();
 
 		// Rescatamos registros y flags de la pila
@@ -315,11 +318,21 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
 		asm volatile("push {R0}");
 
+		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
+		invalidate_TLB0();
+		unsigned int pagetable = process_list[active_process_index].tablePageDir;
+		asm volatile("mcr p15, 0, %[pagetable], c1, c0, 0" : : [pagetable] "r" (pagetable));
+	    uart_puts("setting PAGETABLE to: ");
+	    uart_puts(uintToString(pagetable,HEXADECIMAL));
+		uart_puts("\n\r");
+		/* end*/
+
 		timer_reset();
 
 		/* Rehabilitacion de interrupciones
 		 * CPS change procesor state IE interrupt and i ENABLE
 		 */
+
 		asm volatile("cpsie i");
 
 		/* rescatamos PC y comienza la ejecucion del proceso */

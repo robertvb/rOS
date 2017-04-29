@@ -110,7 +110,7 @@ void init_vmem(void) {
 
 	/* Mapeamos la primera seccion de 1MB para el kernel */
 
-	initpagetable[x] = x<<20 | 0x0400 | 2;
+	initpagetable[0] = 0<<20 | 0x0400 | 2;
 
 	/* Mapeamos las direcciones 0x00100000 - 0x001fffff vis a vis en
 	 * memoria virtual. Este será el espacio para los procesos de usuario.
@@ -140,7 +140,8 @@ void init_vmem(void) {
 	for(x= (0x21000000>>20); x < 4096 ; x++)
 	{
 		/* a partir de aqui no paginamos */
-		initpagetable[x] = 0;
+		/* test kernel access for emmc driver */
+		initpagetable[x] = x<<20 | 0x0400 | 2;
 	}
 
 	/* Inicializacion del .bss

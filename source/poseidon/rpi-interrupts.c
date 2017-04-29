@@ -111,7 +111,12 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 
+	/* cargamos un parametro */
 	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
+
+	uart_puts("Valor de arg0 en poseidon: 0x");
+    uart_puts(uintToString(arg0,HEXADECIMAL));
+	uart_puts("\n\r");
 
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;

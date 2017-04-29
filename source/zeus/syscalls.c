@@ -35,6 +35,10 @@ void syscall(unsigned int swi, Dir_t addr, unsigned int arg0) {
 	uart_puts(uintToString(swi,DECIMAL));
 	uart_puts("\n\r");
 
+	uart_puts("Handling ARG0: 0x");
+	uart_puts(uintToString(arg0,HEXADECIMAL));
+	uart_puts("\n\r");
+
 	switch (swi) {
 
 		case SYSCALL_TERMINATE_PROCESS:
@@ -47,7 +51,7 @@ void syscall(unsigned int swi, Dir_t addr, unsigned int arg0) {
 
 		case SYSCALL_UART_WRITE:
 			uart_puts("Invoking syscall UART_WRITE: \"");
-			uart_puts(&arg0);
+			uart_puts((unsigned char *) arg0);
 			uart_puts("\"");
 			break;
 
