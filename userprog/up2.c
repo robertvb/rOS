@@ -29,7 +29,7 @@ void main() {
 
     write("Hola mundo!");
 
-/*
+
     int to = 300;
 
     int i, j;
@@ -38,7 +38,7 @@ void main() {
 			asm volatile("NOP");
 		}
     }
-*/
+
     write("He terminado mi bucle, adios!");
 
     // llamada al sistema para terminar ejecucion

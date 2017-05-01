@@ -34,7 +34,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 Pid_t getNextPid(void);
 void create_main_process(void);
-void kfork(char * name, Dir_t addr);
+void kfork(char * name, Dir_t addr, Dir_t sp);
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
 void terminate_process();
 void halt();

@@ -2,7 +2,8 @@ ENTRY(_start)
 
 SECTIONS {
    
-	.text 0x0: {
+	.text 0x00101036: {
+		_start = .;
 		*(.text.startup)
 		*(.text)
 	}

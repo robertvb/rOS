@@ -282,13 +282,14 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			//kfork("Sample process 1", (Dir_t) &sample_process_1);
 			//kfork("Sample process 2", (Dir_t) &sample_process_2);
 
-			//verFich(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+			uart_puts("ver fich!!!!!!!!!!\r\n");
+			verFich(bd, 0x328, 815, fat, primerSectorDirRaiz);
 
 			//prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
 
 			//uart_puts("PROCESO CARGADO!\r\n");
 
-			prgm2proc(bd, 0x2b4, 795, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x328, 815, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 
@@ -296,15 +297,15 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			//prgm2proc(bd, 0x264, 574, fat, primerSectorDirRaiz);
 
-			/* print marko */
-
 			uart_puts("primera instruccion: ");
 			unsigned int instruct = *((unsigned int * ) (0x00101000 + 54));
 
 			uart_puts(uintToString(instruct,HEXADECIMAL));
 
+/*
 			uart_puts(" testing first FLD: ");
 			uart_puts("\r\n");
+
 
 			int d;
 			for(d = 0; d < 0x00200000; d+=0x1000) {
@@ -315,6 +316,12 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 				uart_puts("\r\n");
 			}
 
+			uart_puts(" dir virtual : 0x");
+			uart_puts(uintToString(0x20201000,HEXADECIMAL));
+			uart_puts(" dir fisica : 0x");
+			uart_puts(uintToString(mem_v2p(0x20201000,(unsigned int *) 0x1f500000),HEXADECIMAL));
+			uart_puts("\r\n");
+			*/
 		}
 	}
 
@@ -337,6 +344,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	_enable_interrupts();
 
 	while (1) {
+		//uart_puts("Main while!\r\n");
 	}
 #endif
 

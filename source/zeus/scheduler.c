@@ -30,8 +30,11 @@ static unsigned int stack_base;
 static unsigned int process_count;
 static unsigned int active_process_index;
 
-extern void _main_endloop();
 extern void timer_reset();
+
+static void mainProcLoop() {
+	uart_puts("Bucle del proceso main!\r\n");
+}
 
 Pid_t getNextPid(void) {
 	return process_count;
@@ -122,7 +125,7 @@ void create_main_process() {
     main_process.pid = process_count;
     main_process.name = "Main";
     // El proceso simplemente ejecuta un while true
-    main_process.pc = (unsigned int) &_main_endloop;
+    main_process.pc = (unsigned int) &mainProcLoop;
     main_process.times_loaded = 1;
     main_process.status = PROCESS_STATUS_ZOMBIE;
 
@@ -152,13 +155,12 @@ void create_main_process() {
  * Procedure to fork this process, creating a new one, pointing the pc
  * to the memory address of the desired procedure
  */
-void kfork(char * name, Dir_t pc) {
+void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 
     process fork_process;
 
 	// Basic memory organization to get new stack addr.
     // Se añade 1024 bytes al anterior stack_base
-	unsigned int * forked_stack_pointer = (unsigned int *) stack_base + (process_count * 1024);
 
 	// DEBUG
 	uart_puts("Forked stack is 0x");
@@ -265,7 +267,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
     process_list[active_process_index].status = PROCESS_STATUS_RUNNING;
 
     uart_puts("Restoring stack 0x");
-    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+    uart_puts(uintToString(process_list[active_process_index].stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     uart_puts("Restoring pc 0x");
@@ -279,12 +281,15 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	if (process_list[active_process_index].times_loaded > 1) {
 
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		invalidate_TLB0();
 		unsigned int pagetable = process_list[active_process_index].tablePageDir;
-		asm volatile("mcr p15, 0, %[pagetable], c1, c0, 0" : : [pagetable] "r" (pagetable));
-	    uart_puts("setting PAGETABLE to: ");
-	    uart_puts(uintToString(pagetable,HEXADECIMAL));
-		uart_puts("\n\r");
+		/* Use translation table 0 up to 64MB */
+		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
+		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
+		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
+		/* Invalidate the translation lookaside buffer (TLB)
+		 * ARM1176JZF-S manual, p. 3-86
+		 */
+		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
 		/* end*/
 
 		timer_reset();
@@ -319,12 +324,16 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		asm volatile("push {R0}");
 
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		invalidate_TLB0();
 		unsigned int pagetable = process_list[active_process_index].tablePageDir;
-		asm volatile("mcr p15, 0, %[pagetable], c1, c0, 0" : : [pagetable] "r" (pagetable));
-	    uart_puts("setting PAGETABLE to: ");
-	    uart_puts(uintToString(pagetable,HEXADECIMAL));
-		uart_puts("\n\r");
+		/* Use translation table 0 up to 64MB */
+		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
+		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
+		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
+		/* Invalidate the translation lookaside buffer (TLB)
+		 * ARM1176JZF-S manual, p. 3-86
+		 */
+		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
+
 		/* end*/
 
 		timer_reset();

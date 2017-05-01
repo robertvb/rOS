@@ -68,7 +68,7 @@ _reset_:
      stack pointer which differs to the application stack pointer: */
     mov r0, #(CPSR_MODE_IRQ | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
     msr cpsr_c, r0
-    mov sp, #(63 * 1024 * 1024)
+    mov sp, #(0x00100000)
 
     /* Switch back to supervisor mode (our application mode) and
      set the stack pointer towards the end of RAM. Remember that the
@@ -82,7 +82,7 @@ _reset_:
      what the GPU/CPU memory split, 64MB is available to the CPU
      Keep it within the limits and also keep it aligned to a 32-bit
      boundary! */
-    mov     sp, #(64 * 1024 * 1024)
+    mov     sp, #(0x00ff000)
 
     /* The c-startup function which we never return from. This function will
      initialise the ro data section (most things that have the const

@@ -26,7 +26,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../includes/atenea/mem-utils.h"
 
 void invalidate_TLB0(void) {
-	asm volatile("mcr p15, 0, %[zero], c1, c0, 0" : : [zero] "r" (0));
+	asm volatile("mcr p15, 0, %[zero], c8, c7, 0" : : [zero] "r" (0));
 }
 
 /* Rutina para convertir una dirección virtual en fisica

@@ -122,6 +122,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	 */
 
 	unsigned int currentCourseTablePagle;
+	unsigned int vAddress4kCount = PROC_BASE_ADDRESS;
 	Dir_t currentFramePointer;
 	Dir_t lastFramePointer;
 	Dir_t firstChangedFrame;
@@ -143,6 +144,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 				uart_puts(uintToString((currentFramePointer),HEXADECIMAL));
 				uart_puts("\r\n");
 				sld[currentCourseTablePagle & 0x00000003] = (unsigned int) currentFramePointer | 0x0030 | 2; // TODO test full access
+				vAddress4kCount+=0x1000;
 				lastFramePointer = currentFramePointer;
 				currentFramePointer = (Dir_t) *currentFramePointer;
 			}
@@ -173,6 +175,12 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	uart_puts(" estado fldManager.emptyList=");
 	uart_puts(uintToString(fldManager.emptyList,DECIMAL));
 	uart_puts("\r\n");
+
+	uart_puts(" sp del proceso =");
+	uart_puts(uintToString(((unsigned int) gotFramesListPointer) + 0x0ffc,DECIMAL));
+	uart_puts("\r\n");
+
+	kfork("proceso",(Dir_t)((unsigned int) returnValue + 54),(unsigned int) gotFramesListPointer + 0x0ffc);
 
 	return returnValue;
 }
