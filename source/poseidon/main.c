@@ -191,7 +191,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 		}
 
 		uart_puts("Vamos a leer el PBR:!!!!!\r\n");
-		mbr_t * ptrmbr = buffer;
+		mbr_t * ptrmbr = (mbr_t *) buffer;
 
 		uart_puts("SIZEOF MBR =");
 		uart_puts(uintToString(sizeof(mbr_t), DECIMAL));
@@ -206,7 +206,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 		if (emmc_read(bd, buffer, bd->block_size, primerSector) == -1) {
 			uart_puts("[ERROR] emmc_bd error en la lectura!!!!!\r\n");
 		} else {
-			pbr_t * ptrpbr = buffer;
+			pbr_t * ptrpbr = (pbr_t *) buffer;
 			uint32_t primerSectorFAT = primerSector
 					+ ptrpbr->bpb.sectoresReservados;
 
@@ -221,7 +221,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			uint32_t fat[242432];
 
 			for (i = 0; i < 242432 / (512 / 4); i++) {
-				emmc_read(bd, &fat[i * (512 / 4)], 512, primerSectorFAT + i);
+				emmc_read(bd, (uint8_t *)&fat[i * (512 / 4)], 512, primerSectorFAT + i);
 			}
 
 			/* ya tenemos la FAT ahora vamos a buscar el directorio raiz */
@@ -236,7 +236,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			int k;
 			for(k = 0; k < 64; k++) {
 				emmc_read(bd,buffer2,512,primerSectorDirRaiz+k);
-				entrada_dir_t *ptred = buffer2;
+				entrada_dir_t * ptred = (entrada_dir_t *) buffer2;
 
 				for(i = 0; i < 16; i++) {
 					if(ptred[i].nombre[0] == '\0')
@@ -273,7 +273,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			}
 
-			init_vmem();
+			//init_vmem();
 			init_pmem();
 			uart_puts("init_vmem done!\r\n");
 
@@ -282,46 +282,26 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			//kfork("Sample process 1", (Dir_t) &sample_process_1);
 			//kfork("Sample process 2", (Dir_t) &sample_process_2);
 
-			uart_puts("ver fich!!!!!!!!!!\r\n");
-			verFich(bd, 0x328, 815, fat, primerSectorDirRaiz);
 
-			//prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
+			bd = NULL;
+			if (emmc_card_init(&bd) != 0) {
+				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
+			}
 
-			//uart_puts("PROCESO CARGADO!\r\n");
-
-			prgm2proc(bd, 0x328, 815, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x16a, 657, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
+			uart_puts("\r\n\r\n\r\n\r\n");
+			RPI_esperarMicroSeconds(1000000);
 
-			//prgm2proc(bd, 0x022d, 470, fat, primerSectorDirRaiz);
-
-			//prgm2proc(bd, 0x264, 574, fat, primerSectorDirRaiz);
+			/* print marko */
 
 			uart_puts("primera instruccion: ");
 			unsigned int instruct = *((unsigned int * ) (0x00101000 + 54));
 
 			uart_puts(uintToString(instruct,HEXADECIMAL));
 
-/*
-			uart_puts(" testing first FLD: ");
-			uart_puts("\r\n");
-
-
-			int d;
-			for(d = 0; d < 0x00200000; d+=0x1000) {
-				uart_puts(" dir virtual : 0x");
-				uart_puts(uintToString(d,HEXADECIMAL));
-				uart_puts(" dir fisica : 0x");
-				uart_puts(uintToString(mem_v2p(d,(unsigned int *) 0x1f500000),HEXADECIMAL));
-				uart_puts("\r\n");
-			}
-
-			uart_puts(" dir virtual : 0x");
-			uart_puts(uintToString(0x20201000,HEXADECIMAL));
-			uart_puts(" dir fisica : 0x");
-			uart_puts(uintToString(mem_v2p(0x20201000,(unsigned int *) 0x1f500000),HEXADECIMAL));
-			uart_puts("\r\n");
-			*/
+			//asm volatile("MOV PC, %[addr]" : : [addr] "r" (0x00104000 + 54) );
 		}
 	}
 

@@ -23,41 +23,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
+void main() {
 
-#include "../includes/zeus/scheduler.h"
-#include "../includes/zeus/syscalls.h"
-/*
- * Rutina de manejo de interrupciones software
- */
-void syscall(unsigned int swi, Dir_t addr, unsigned int arg0) {
+    asm volatile("SWI #1");
 
-	uart_puts("Handling syscall: ");
-	uart_puts(uintToString(swi,DECIMAL));
-	uart_puts("\n\r");
+    int to = 20;
 
-	uart_puts("Handling ARG0: 0x");
-	uart_puts(uintToString(arg0,HEXADECIMAL));
-	uart_puts("\n\r");
+    char * string = "hola mundo!";
+	asm volatile("MOV R0, %[addr]" : : [addr] "r" (string) );
+    asm volatile("SWI #1");
 
-	switch (swi) {
+    int i;
+    for (i=0; i<to; i++) {
+    	asm volatile("SWI #1");
+    }
 
-		case SYSCALL_TERMINATE_PROCESS:
-			uart_puts("Invoking syscall terminate_process()");
-			uart_puts("\n\r");
+    // llamada al sistema para terminar ejecucion
+    asm volatile("SWI #0");
 
-			// LLamada a la rutina intra-kernel pertinente
-			terminate_process();
-			break;
-
-		case SYSCALL_UART_WRITE:
-			uart_puts("Invoking syscall UART_WRITE: \"");
-			uart_puts((unsigned char *) arg0);
-			uart_puts("\"");
-			break;
-
-		default:
-			uart_puts("[ERROR]: syscall no reconocida!");
-			uart_puts("\n\r");
-	}
-
+    // Call software interrupt #0 (terminate)
 }
+

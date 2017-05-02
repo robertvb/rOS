@@ -64,7 +64,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	unsigned int numFrames = (size / PROC_FRAME_SIZE) + 1;
 	Dir_t sld = (Dir_t) get4kframe(solicitant);
 	uart_puts("Obtenido 4k marco, dir: ");
-	uart_puts(uintToString(sld,HEXADECIMAL));
+	uart_puts(uintToString((unsigned int) sld,HEXADECIMAL));
 	uart_puts("\r\n");
 
 	unsigned int cont;
@@ -141,7 +141,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 				uart_puts(uintToString((currentCourseTablePagle & 0x00000003),HEXADECIMAL));
 				uart_puts("\r\n");
 				uart_puts("currentFramePointer 0x");
-				uart_puts(uintToString((currentFramePointer),HEXADECIMAL));
+				uart_puts(uintToString((unsigned int) (currentFramePointer),HEXADECIMAL));
 				uart_puts("\r\n");
 				sld[currentCourseTablePagle & 0x00000003] = (unsigned int) currentFramePointer | 0x0030 | 2; // TODO test full access
 				vAddress4kCount+=0x1000;

@@ -108,11 +108,18 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	unsigned int swi;
 	unsigned int arg0;
 
+	// save registers
+	//asm volatile("push {r0-r12}");
+
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 
 	/* cargamos un parametro */
 	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
+
+	uart_puts("Valor de lr en poseidon: 0x");
+    uart_puts(uintToString(addr,HEXADECIMAL));
+	uart_puts("\n\r");
 
 	uart_puts("Valor de arg0 en poseidon: 0x");
     uart_puts(uintToString(arg0,HEXADECIMAL));
@@ -121,11 +128,22 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
 
-	// Changing processor mode
+	// Changing processor mode to handle the syscall
 	asm volatile("cps #0x1f");
 
 	// Handle syscall
 	syscall(swi,addr,arg0);
+
+	uart_puts("Turning interrupt on again");
+	uart_puts("\n\r");
+
+	// pop de los registros del proceso
+	//asm volatile("pop {r0-r12}");
+
+	// Se rehabilitan las interrupciones
+	asm volatile("cpsie i");
+
+	asm volatile("MOV PC, %[Addr]" : : [Addr] "r" (addr) );
 }
 
 

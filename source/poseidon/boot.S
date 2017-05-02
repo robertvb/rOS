@@ -68,14 +68,14 @@ _reset_:
      stack pointer which differs to the application stack pointer: */
     mov r0, #(CPSR_MODE_IRQ | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
     msr cpsr_c, r0
-    mov sp, #(0x00100000)
+    mov sp, #(63 * 1024 * 1024)
 
     /* Switch back to supervisor mode (our application mode) and
      set the stack pointer towards the end of RAM. Remember that the
      stack works its way down memory, our heap will work it's way
      up memory toward the application stack. */
     mov r0, #(CPSR_MODE_SVR | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
-    msr cpsr_c, r0
+    mov sp, #(64 * 1024 * 1024)
 
     /* Set the stack pointer at some point in RAM that won't harm us
      It's different from the IRQ stack pointer above and no matter
