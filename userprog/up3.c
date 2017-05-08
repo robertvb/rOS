@@ -29,8 +29,11 @@ void main() {
 
     int to = 20;
 
-    char * string = "hola mundo!";
-	asm volatile("MOV R0, %[addr]" : : [addr] "r" (string) );
+
+    char * string = "hola mundo!\0";
+    unsigned int dir = (unsigned int) string;
+	asm volatile("MOV R0, %[dir]" : : [dir] "r" (dir) );
+
     asm volatile("SWI #1");
 
     int i;
