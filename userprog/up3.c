@@ -27,12 +27,12 @@ void main() {
 
     asm volatile("SWI #1");
 
-    int to = 20;
+    int to = 5;
 
+    volatile char * string = "hola mundo!\0";
+    unsigned int addr = (unsigned int) string;
 
-    char * string = "hola mundo!\0";
-    unsigned int dir = (unsigned int) string;
-	asm volatile("MOV R0, %[dir]" : : [dir] "r" (dir) );
+	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
 
     asm volatile("SWI #1");
 
