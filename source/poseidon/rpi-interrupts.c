@@ -125,6 +125,17 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
     uart_puts(uintToString(arg0,HEXADECIMAL));
 	uart_puts("\n\r");
 
+	uart_puts("String de arg0: \"");
+	uint8_t i;
+	for(i = 0; ((uint8_t *) arg0)[i] != 0; i++ ) {
+		printByte(((uint8_t *) arg0)[i]);
+	}
+	uart_puts("\"\n\r");
+
+	uart_puts("String de 0x101084");
+    uart_puts((unsigned char*) 0x101084);
+	uart_puts("\n\r");
+
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
 

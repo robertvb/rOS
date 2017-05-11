@@ -1,9 +1,10 @@
 ENTRY(_start)
 
 SECTIONS {
-   
-   	_start = .;
-	.text 0x00101038: {
+
+	. = 0x00101000 + SIZEOF_HEADERS;
+	.text : {
+	   	_start = .;
 		*(.text.startup)
 		*(.text)
 	}
