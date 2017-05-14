@@ -107,6 +107,9 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	unsigned int addr;
 	unsigned int swi;
 	unsigned int arg0;
+	unsigned int arg1;
+	unsigned int arg2;
+	unsigned int arg3;
 
 	// save registers
 	//asm volatile("push {r0-r12}");
@@ -114,8 +117,11 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 
-	/* cargamos un parametro */
+	/* cargamos los parametros */
 	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
+	asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
+	asm volatile("mov %[arg2], r0" : [arg2] "=r" (arg2) );
+	asm volatile("mov %[arg3], r0" : [arg3] "=r" (arg3) );
 
 	uart_puts("Valor de lr en poseidon: 0x");
     uart_puts(uintToString(addr,HEXADECIMAL));
@@ -143,7 +149,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	asm volatile("cps #0x1f");
 
 	// Handle syscall
-	syscall(swi,addr,arg0);
+	syscall_handler(swi,arg0,arg1,arg2,arg3);
 
 	uart_puts("Turning interrupt on again");
 	uart_puts("\n\r");

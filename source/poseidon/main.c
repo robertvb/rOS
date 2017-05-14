@@ -273,9 +273,10 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			}
 
-			//init_vmem();
+			init_vmem();
 			init_pmem();
-			uart_puts("init_vmem done!\r\n");
+			init_syscalls();
+			uart_puts("inits have been done!\r\n");
 
 			create_main_process();
 
@@ -288,7 +289,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
 			}
 
-			prgm2proc(bd, 0x192, 597, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x19d, 597, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 			uart_puts("\r\n\r\n\r\n\r\n");

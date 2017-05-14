@@ -25,7 +25,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/zeus/scheduler.h"
 
-static process process_list[1024];
+static Process_t process_list[1024];
 static unsigned int stack_base;
 static unsigned int process_count;
 static unsigned int active_process_index;
@@ -38,6 +38,14 @@ static void mainProcLoop() {
 
 Pid_t getNextPid(void) {
 	return process_count;
+}
+
+Pid_t getCurrentProcessPid(void) {
+	return process_list[active_process_index].pid;
+}
+
+Pid_t getCurrentProcessPpid(void) {
+	return process_list[active_process_index].ppid;
 }
 
 void terminate_process() {
@@ -119,7 +127,7 @@ void terminate_process() {
 // El equivalente en UNIX sería el proceso INIT
 void create_main_process() {
 
-    process main_process;
+    Process_t main_process;
 
     process_count = 0;
     main_process.pid = process_count;
@@ -157,7 +165,7 @@ void create_main_process() {
  */
 void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 
-    process fork_process;
+    Process_t fork_process;
 
 	// Basic memory organization to get new stack addr.
     // Se añade 1024 bytes al anterior stack_base
@@ -173,7 +181,7 @@ void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
     fork_process.ppid = active_process_index;
     fork_process.times_loaded = 0;
     fork_process.stack_pointer = (unsigned int) forked_stack_pointer;
-    fork_process.status = PROCESS_STATUS_WAITING;
+    fork_process.status = PROCESS_STATUS_READY;
     fork_process.tablePageDir = 0x1f500000;    //TODO TEST
 
     process_list[process_count] = fork_process;
@@ -199,10 +207,10 @@ int next_waiting_process_index() {
 			next_process_index = 0;
 		}
 
-	} while ((process_list[next_process_index].status != PROCESS_STATUS_WAITING) && (next_process_index != active_process_index));
+	} while ((process_list[next_process_index].status != PROCESS_STATUS_READY) && (next_process_index != active_process_index));
 
 	// If the found process isnt waiting
-	if (process_list[next_process_index].status != PROCESS_STATUS_WAITING) {
+	if (process_list[next_process_index].status != PROCESS_STATUS_READY) {
 		return -1;
 	}
 
@@ -229,7 +237,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 
     // Se actualiza su status a WAITING
     if (process_list[active_process_index].status == PROCESS_STATUS_RUNNING) {
-		process_list[active_process_index].status = PROCESS_STATUS_WAITING;
+		process_list[active_process_index].status = PROCESS_STATUS_READY;
 	}
 
     // DEBUG CODE

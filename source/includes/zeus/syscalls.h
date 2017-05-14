@@ -26,21 +26,31 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SYSCALLS_H
 #define SYSCALLS_H
 
-#ifndef SYSCALL_H
-#define	SYSCALL_H
 
 #include "../atenea/pmem.h"
-
-// DEBUG
+#include "scheduler.h"
 #include "../hades/rpi-uart.h"
 
-#define SYSCALL_TERMINATE_PROCESS		0
-#define SYSCALL_UART_WRITE				1
 
-void syscall(unsigned int swi, Dir_t addr, unsigned int arg0);
+#define SC_EXIT						0
+#define SC_UART_WRITE				1
+#define SC_SLEEP					2
+#define SC_GET_PID					3
+#define SC_GET_PPID					4
 
-#endif	/* SYSCALL_H */
+typedef int system_call_t(uint32_t param0, uint32_t param1, uint32_t param2, uint32_t param3);
+
+typedef struct system_call_entry {
+	uint32_t swi;
+    char* name;
+    void* function;
+    uint32_t flags;
+    uint32_t params;
+} system_call_entry_t;
 
 
+void init_syscalls(void);
+
+int syscall_handler(unsigned int swi, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3);
 
 #endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */

@@ -32,11 +32,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 // todo DEBUG
 #include "../hades/rpi-uart.h"
 
+
+Pid_t getCurrentProcessPid(void);
+Pid_t getCurrentProcessPpid(void);
 Pid_t getNextPid(void);
 void create_main_process(void);
 void kfork(char * name, Dir_t addr, Dir_t sp);
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
-void terminate_process();
-void halt();
+void terminate_process(void);
+void halt(void);
 
 #endif

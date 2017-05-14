@@ -30,10 +30,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define	PROCESS_H
 
 #define PROCESS_STATUS_RUNNING		0	// En ejecucion
-#define PROCESS_STATUS_WAITING		1	// Esperando su turno de ejecucion
-#define PROCESS_STATUS_ZOMBIE		2	// Muerto, pero esperando a algun hijo
-#define PROCESS_STATUS_TERMINATED	3	// Terminado satisfactoriamente
-#define PROCESS_STATUS_ABORTED		4	// Terminado abruptamente
+#define PROCESS_STATUS_READY		1	// Esperando su turno de ejecucion
+#define PROCESS_STATUS_BLOCKED		2	// Esperando su turno en la cola de bloqueados
+#define PROCESS_STATUS_ZOMBIE		3	// Muerto, pero esperando a algun hijo
+#define PROCESS_STATUS_TERMINATED	4	// Terminado satisfactoriamente
+#define PROCESS_STATUS_ABORTED		5	// Terminado abruptamente
 
 typedef unsigned int Pid_t;
 
@@ -47,7 +48,7 @@ typedef struct {
 	unsigned int 	pc;
     unsigned int 	times_loaded;
     unsigned int 	status;
-} process;
+} Process_t;
 
 void sample_process_1();
 

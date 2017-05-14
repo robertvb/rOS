@@ -23,41 +23,51 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
-#include "../includes/zeus/scheduler.h"
 #include "../includes/zeus/syscalls.h"
+
+static void SC_DO_NOTHING(void) {
+	return;
+}
+
+/*
+ * Entradas de la tabla de llamadas al sistema
+ */
+static system_call_entry_t system_call_table[] = {
+	    {SC_EXIT,"exit",terminate_process,0,0},
+	    {SC_UART_WRITE,"write",SC_DO_NOTHING,0,0},					// TODO
+	    {SC_SLEEP,"sleep",SC_DO_NOTHING,0,0},							// TODO
+	    {SC_GET_PID,"getpid", getCurrentProcessPid, 0,0},
+	    {SC_GET_PPID,"getppid", getCurrentProcessPpid, 0,0}
+};
+
+static uint32_t MAX_SYSCALLS = 0;
+
+void init_syscalls(void) {
+	MAX_SYSCALLS = sizeof(system_call_table) / sizeof(system_call_table[0]);
+}
+
 /*
  * Rutina de manejo de interrupciones software
  */
-void syscall(unsigned int swi, Dir_t addr, unsigned int arg0) {
+int syscall_handler(unsigned int swi, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3) {
+
+    system_call_t* syscall;
+    system_call_entry_t* syscall_entry;
 
 	uart_puts("Handling syscall: ");
-	uart_puts(uintToString(swi,DECIMAL));
+	uart_puts(system_call_table[swi].name);
 	uart_puts("\n\r");
 
-	uart_puts("Handling ARG0: 0x");
-	uart_puts(uintToString(arg0,HEXADECIMAL));
-	uart_puts("\n\r");
-
-	switch (swi) {
-
-		case SYSCALL_TERMINATE_PROCESS:
-			uart_puts("Invoking syscall terminate_process()");
-			uart_puts("\n\r");
-
-			// LLamada a la rutina intra-kernel pertinente
-			terminate_process();
-			break;
-
-		case SYSCALL_UART_WRITE:
-			uart_puts("Invoking syscall UART_WRITE: \"");
-			uart_puts((unsigned char *) arg0);
-			uart_puts("\"");
-			break;
-
-		default:
-			uart_puts("[ERROR]: syscall no reconocida!");
-			uart_puts("\n\r");
+	if(swi >= MAX_SYSCALLS) {
+		// SYSCALL no recenocida.
+		uart_puts("[ERROR] SYSCALL NO RECONOCIDA!\n\r");
+		return -1;
 	}
+
+    syscall_entry = &system_call_table[swi];
+    syscall = ( system_call_t* )syscall_entry->function;
+
+    // Llamamos a la rutina del kernel encargada de dicha llamada al sistema
+    return syscall(param0,param1,param2,param3);
 
 }
