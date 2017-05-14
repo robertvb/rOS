@@ -131,6 +131,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
     uart_puts(uintToString(arg0,HEXADECIMAL));
 	uart_puts("\n\r");
 
+	/*
 	uart_puts("String de arg0: \"");
 	uint8_t i;
 	for(i = 0; ((uint8_t *) arg0)[i] != 0; i++ ) {
@@ -141,7 +142,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	uart_puts("String de 0x101084");
     uart_puts((unsigned char*) 0x101084);
 	uart_puts("\n\r");
-
+*/
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
 
@@ -149,7 +150,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	asm volatile("cps #0x1f");
 
 	// Handle syscall
-	syscall_handler(swi,arg0,arg1,arg2,arg3);
+	syscall_handler(swi,addr,arg0,arg1,arg2,arg3);
 
 	uart_puts("Turning interrupt on again");
 	uart_puts("\n\r");
@@ -235,7 +236,7 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
 	/* Read fault address register */
 	asm volatile("mrc p15, 0, %[addr], c6, c0, 0": [addr] "=r" (far) );
 
-	uart_puts("[SWI] Data abort! (Falta de pagina): ");
+	uart_puts("[ERROR] Data abort! (Falta de pagina): ");
 	uart_puts("Instruction address: 0x");
 	/* addr = lr, but the very start of the abort routine does
 	 * sub lr, lr, #4

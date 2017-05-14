@@ -49,7 +49,7 @@ void init_syscalls(void) {
 /*
  * Rutina de manejo de interrupciones software
  */
-int syscall_handler(unsigned int swi, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3) {
+int syscall_handler(unsigned int swi, unsigned int addr, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3) {
 
     system_call_t* syscall;
     system_call_entry_t* syscall_entry;
@@ -68,6 +68,6 @@ int syscall_handler(unsigned int swi, unsigned int param0, unsigned int param1, 
     syscall = ( system_call_t* )syscall_entry->function;
 
     // Llamamos a la rutina del kernel encargada de dicha llamada al sistema
-    return syscall(param0,param1,param2,param3);
+    return syscall(addr,param0,param1,param2,param3);
 
 }
