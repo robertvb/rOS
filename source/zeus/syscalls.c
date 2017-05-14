@@ -35,7 +35,7 @@ static void SC_DO_NOTHING(void) {
 static system_call_entry_t system_call_table[] = {
 	    {SC_EXIT,"exit",terminate_process,0,0},
 	    {SC_UART_WRITE,"write",SC_DO_NOTHING,0,0},					// TODO
-	    {SC_SLEEP,"sleep",SC_DO_NOTHING,0,0},							// TODO
+	    {SC_SLEEP,"sleep",sleepCurrentProc,0,0},					// TODO
 	    {SC_GET_PID,"getpid", getCurrentProcessPid, 0,0},
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid, 0,0}
 };

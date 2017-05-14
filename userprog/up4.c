@@ -23,24 +23,30 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
+void main() {
 
-#include "process.h"
-#include "../atenea/pmem.h"
+    asm volatile("SWI #1");
 
-// todo DEBUG
-#include "../hades/rpi-uart.h"
+    int to = 5;
 
+    volatile char * string = "hola mundo!\0";
+    unsigned int addr = (unsigned int) string;
 
-Pid_t getCurrentProcessPid(void);
-Pid_t getCurrentProcessPpid(void);
-Pid_t getNextPid(void);
-void create_main_process(void);
-void kfork(char * name, Dir_t addr, Dir_t sp);
-void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
-void sleepCurrentProc(unsigned int tics);
-void terminate_process(void);
-void halt(void);
+	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
 
-#endif
+    asm volatile("SWI #1");
+
+    int i;
+    for (i=0; i<to; i++) {
+    	asm volatile("SWI #1");
+    }
+
+    unsigned int sleep = 5;
+	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+    asm volatile("SWI #2");
+
+    // llamada al sistema para terminar ejecucion
+    asm volatile("SWI #0");
+
+    // Call software interrupt #0 (terminate)
+}

@@ -29,6 +29,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef PROCESS_H
 #define	PROCESS_H
 
+/*
+ * Estados del proceso
+ */
 #define PROCESS_STATUS_RUNNING		0	// En ejecucion
 #define PROCESS_STATUS_READY		1	// Esperando su turno de ejecucion
 #define PROCESS_STATUS_BLOCKED		2	// Esperando su turno en la cola de bloqueados
@@ -36,19 +39,37 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define PROCESS_STATUS_TERMINATED	4	// Terminado satisfactoriamente
 #define PROCESS_STATUS_ABORTED		5	// Terminado abruptamente
 
+/*
+ * Motivos de bloqueo:
+ * Los dos bits más significativos indican el motivo de bloqueo.
+ * El resto se utilizan para calculos, flags, contadores, ej:
+ * waiting_for = 0x00001000 -> el proceso esta en esperando pasivamente 4K microsegundos
+ */
+#define BLKD_PASIVE_WAITING			0
+#define BLKD_DISK_IO				1
+#define BLKD_USER_IO				2
+#define BLKD_WAIT_PID				3
+
+#define GET_BLKD_REASON(WAITING_FOR) WAITING_FOR >> 29
+#define GET_BLKD_ARGS(WAITING_FOR) WAITING_FOR & 0x3FFFFFFF
+
 typedef unsigned int Pid_t;
 
-typedef struct {
+typedef struct Process_t Process_t;
+
+struct Process_t {
 	Pid_t 			pid;
+    Pid_t 			ppid;
     char * 			name;
     char * 			fileName;
     unsigned int	tablePageDir;
-    Pid_t 			ppid;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;
     unsigned int 	times_loaded;
     unsigned int 	status;
-} Process_t;
+    unsigned int	waiting_for;	// Recurso por el que se está esperando cuando el proceso esta bloqueado
+    Process_t * 	nextProc;		// Siguiente proceso de la cola
+};
 
 void sample_process_1();
 

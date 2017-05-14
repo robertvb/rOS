@@ -25,10 +25,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/zeus/scheduler.h"
 
-static Process_t process_list[1024];
+static Process_t process_list[MAX_PROCS];
+static Process_t * ready_queue;
+static Process_t * last_executed;
+static Process_t * bloqued_queue;
+static Process_t * active_process;
 static unsigned int stack_base;
 static unsigned int process_count;
-static unsigned int active_process_index;
 
 extern void timer_reset();
 
@@ -41,40 +44,36 @@ Pid_t getNextPid(void) {
 }
 
 Pid_t getCurrentProcessPid(void) {
-	return process_list[active_process_index].pid;
+	return active_process->pid;
 }
 
 Pid_t getCurrentProcessPpid(void) {
-	return process_list[active_process_index].ppid;
+	return active_process->ppid;
 }
 
 void terminate_process() {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
-	process_list[active_process_index].status = PROCESS_STATUS_TERMINATED;
+	active_process->status = PROCESS_STATUS_TERMINATED;
 
-	// ejecutamos el siguiente proceso.
-
-    int next_process = next_waiting_process_index();
+    // Obtenemos el siguiente proceso
+	active_process = ready_queue;
 
     // If -1, halt
-    if (next_process < 0) {
+    if (active_process == NULL) {
 		uart_puts("No more waiting processes, halting.");
 		uart_puts("\n\r");
 		halt();
 	}
 
-    // Actualizamos al siguiente proceso en ejecucion
-    active_process_index = next_process;
-
     // Incremetamos estadisticas y cambiamos status a RUNNING
-    process_list[active_process_index].times_loaded++;
-    process_list[active_process_index].status = PROCESS_STATUS_RUNNING;
+    active_process->times_loaded++;
+    active_process->status = PROCESS_STATUS_RUNNING;
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(process_list[active_process_index].stack_pointer)) );
+	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
 
 	// Si no es la primera vez que se ejecuta el proceso
-	if (process_list[active_process_index].times_loaded > 1) {
+	if (active_process->times_loaded > 1) {
 
 		timer_reset();
 
@@ -103,7 +102,7 @@ void terminate_process() {
 	} else {
 
 		// Se salva el contador de programa en la pila
-		unsigned int addr = (unsigned int )(process_list[active_process_index].pc);
+		unsigned int addr = (unsigned int )(active_process->pc);
 		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
 		asm volatile("push {R0}");
 
@@ -119,23 +118,22 @@ void terminate_process() {
 
 	}
 
-
-
 }
 
 // Funcion para crear el proceso base.
 // El equivalente en UNIX sería el proceso INIT
 void create_main_process() {
 
-    Process_t main_process;
-
     process_count = 0;
-    main_process.pid = process_count;
-    main_process.name = "Main";
+    process_list[process_count].pid = process_count;
+    process_list[process_count].name = "Main";
     // El proceso simplemente ejecuta un while true
-    main_process.pc = (unsigned int) &mainProcLoop;
-    main_process.times_loaded = 1;
-    main_process.status = PROCESS_STATUS_ZOMBIE;
+    process_list[process_count].pc = (unsigned int) &halt;
+    process_list[process_count].times_loaded = 1;
+    process_list[process_count].status = PROCESS_STATUS_ZOMBIE;
+    process_list[process_count].tablePageDir = NULL; 	// El proceso main no tiene tabla de paginas.
+    process_list[process_count].nextProc = NULL;		// En este punto no hay otros procesos en la cola
+    ready_queue = bloqued_queue = NULL;					// El proceso main es el primero en ejecutarse
 
     // Se obtiene la dirección actual de la pila
     unsigned int stack_pointer;
@@ -149,11 +147,8 @@ void create_main_process() {
     uart_puts(uintToString(stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
-    // Se guarda el proceso en la tabla de procesos
-    process_list[process_count] = main_process;
-
     // Se establece como proceso activo en este momento
-    active_process_index = process_count;
+    active_process = &process_list[process_count];
 
     // Se incrementa el contador de procesos
     process_count++;
@@ -165,56 +160,29 @@ void create_main_process() {
  */
 void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 
-    Process_t fork_process;
+	if(process_count >= MAX_PROCS) {
+		uart_puts("ERROR! ALCANZADO MAX_PROCS");
+		return;
+	}
 
-	// Basic memory organization to get new stack addr.
-    // Se añade 1024 bytes al anterior stack_base
+    process_count++;
 
 	// DEBUG
 	uart_puts("Forked stack is 0x");
     uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
-    fork_process.pid = process_count;
-    fork_process.name = name;
-    fork_process.pc = (unsigned int) pc;
-    fork_process.ppid = active_process_index;
-    fork_process.times_loaded = 0;
-    fork_process.stack_pointer = (unsigned int) forked_stack_pointer;
-    fork_process.status = PROCESS_STATUS_READY;
-    fork_process.tablePageDir = 0x1f500000;    //TODO TEST
+	process_list[process_count].pid = process_count;
+	process_list[process_count].name = name;
+	process_list[process_count].pc = (unsigned int) pc;
+	process_list[process_count].ppid = active_process->ppid;
+	process_list[process_count].times_loaded = 0;
+	process_list[process_count].stack_pointer = (unsigned int) forked_stack_pointer;
+	process_list[process_count].status = PROCESS_STATUS_READY;
+	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
 
-    process_list[process_count] = fork_process;
-
-    process_count++;
-}
-
-/*
- * Rutina de obtencion el siguiente proceso preparado
- */
-int next_waiting_process_index() {
-
-	// Start in the active index
-	int next_process_index = active_process_index;
-
-	// Do this while the actual process isnt in the waiting status and not reach the actual running process
-	// Obtenemos el siguiente proceso con status WAITING, si se llega de nuevo al proceso actual, se ejecuta otra vez.
-	do {
-		next_process_index++;
-
-		// rewind the list
-		if (next_process_index == process_count) {
-			next_process_index = 0;
-		}
-
-	} while ((process_list[next_process_index].status != PROCESS_STATUS_READY) && (next_process_index != active_process_index));
-
-	// If the found process isnt waiting
-	if (process_list[next_process_index].status != PROCESS_STATUS_READY) {
-		return -1;
-	}
-
-	return next_process_index;
+	process_list[process_count].nextProc = active_process;
+    ready_queue = &process_list[process_count];
 }
 
 /*
@@ -232,21 +200,54 @@ void halt() {
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 
 	// Se salva PC y STACK del proceso en ejecucion
-    process_list[active_process_index].stack_pointer = stack_pointer;
-    process_list[active_process_index].pc = pc;
+	active_process->stack_pointer = stack_pointer;
+    active_process->pc = pc;
 
-    // Se actualiza su status a WAITING
-    if (process_list[active_process_index].status == PROCESS_STATUS_RUNNING) {
-		process_list[active_process_index].status = PROCESS_STATUS_READY;
+    // Se actualiza su status a READY y se pone al final de la cola
+    if (active_process->status == PROCESS_STATUS_RUNNING) {
+		active_process->status = PROCESS_STATUS_READY;
+
+		// Colocamos el proceso actual al final de la cola de preparados
+		last_executed->nextProc = active_process;
+		last_executed = active_process;
+		active_process-> nextProc = NULL;
 	}
+
+    // Actuamos la cola de bloqueados
+    Process_t * proc;
+    Process_t * procAnt;
+    uart_puts("Actuando sobre la cola de bloqueados: \n\r");
+    for(procAnt = proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
+        uart_puts("encontrado un proc en bloqueados! \n\r");
+        unsigned int reason = GET_BLKD_REASON(proc->waiting_for);
+    	if(BLKD_PASIVE_WAITING == GET_BLKD_REASON(proc->waiting_for)) {
+    		unsigned int newValue = GET_BLKD_ARGS(proc->waiting_for);
+    		newValue--;
+    		if(newValue == 0) {
+    			if(bloqued_queue == procAnt) {
+    				bloqued_queue = procAnt = proc->nextProc;
+    			} else {
+    				procAnt->nextProc = proc->nextProc;
+    			}
+    			// lo metemos en la cola de preparados
+    			last_executed->nextProc = proc;
+    			proc->nextProc = NULL;
+    		} else {
+    			proc->waiting_for = (reason << 29) & newValue;
+    	    	procAnt = proc;
+    		}
+    	}
+    }
+
+    uart_puts("Done! \n\r");
 
     // DEBUG CODE
     uart_puts("\n");
 	uart_puts("\n\r");
     uart_puts("Schedule timeout. Current active pid is ");
-    uart_puts(uintToString(process_list[active_process_index].pid,DECIMAL));
+    uart_puts(uintToString(active_process->pid,DECIMAL));
     uart_puts(" with name ");
-    uart_puts(process_list[active_process_index].name);
+    uart_puts(active_process->name);
     uart_puts(". Switching to next process.\n\r");
 
     uart_puts("stack saved, was 0x");
@@ -258,38 +259,38 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	uart_puts("\n\r");
 
     // Obtenemos el siguiente proceso
-    int next_process = next_waiting_process_index();
+	active_process = ready_queue;
 
     // If -1, halt
-    if (next_process < 0) {
+    if (active_process == NULL) {
 		uart_puts("No more waiting processes, halting.");
 		uart_puts("\n\r");
 		halt();
 	}
 
-    // Actualizamos al siguiente proceso en ejecucion
-    active_process_index = next_process;
+    // Actualizamos la cola
+    ready_queue = ready_queue->nextProc;
 
     // Incremetamos estadisticas y cambiamos status a RUNNING
-    process_list[active_process_index].times_loaded++;
-    process_list[active_process_index].status = PROCESS_STATUS_RUNNING;
+    active_process->times_loaded++;
+    active_process->status = PROCESS_STATUS_RUNNING;
 
     uart_puts("Restoring stack 0x");
-    uart_puts(uintToString(process_list[active_process_index].stack_pointer,HEXADECIMAL));
+    uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     uart_puts("Restoring pc 0x");
-    uart_puts(uintToString(process_list[active_process_index].pc,HEXADECIMAL));
+    uart_puts(uintToString(active_process->pc,HEXADECIMAL));
 	uart_puts("\n\r");
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(process_list[active_process_index].stack_pointer)) );
+	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
 
 	// Si no es la primera vez que se ejecuta el proceso
-	if (process_list[active_process_index].times_loaded > 1) {
+	if (active_process->times_loaded > 1) {
 
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = process_list[active_process_index].tablePageDir;
+		unsigned int pagetable = active_process->tablePageDir;
 		/* Use translation table 0 up to 64MB */
 		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
 		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
@@ -327,12 +328,12 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	} else {
 
 		// Se salva el contador de programa en la pila
-		unsigned int addr = (unsigned int )(process_list[active_process_index].pc);
+		unsigned int addr = (unsigned int )(active_process->pc);
 		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
 		asm volatile("push {R0}");
 
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = process_list[active_process_index].tablePageDir;
+		unsigned int pagetable = active_process->tablePageDir;
 		/* Use translation table 0 up to 64MB */
 		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
 		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
@@ -357,5 +358,12 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 
 	}
 
+}
+
+void sleepCurrentProc(unsigned int tics) {
+	active_process->status = PROCESS_STATUS_BLOCKED;
+	active_process->waiting_for = 0x0FFFFFFF & tics;
+
+	//TODO
 }
 
