@@ -42,7 +42,7 @@ void main() {
     }
 
     unsigned int sleep = 5;
-	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
 	asm volatile("PUSH {r0-r12}");
     asm volatile("SWI #2");
 	asm volatile("pop {r0-r12}");

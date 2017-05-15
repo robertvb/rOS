@@ -60,6 +60,10 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
 */
 void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
+	register unsigned int addr;
+	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+
+
 	uart_puts("                               ________________\n\r");
 	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
 	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
@@ -87,7 +91,10 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
 	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
 
-	uart_puts("[ERROR] UNDEF INTERRUPT");
+	uart_puts("[ERROR] UNDEFINED INSTRUCCION AT ");
+    uart_puts(uintToString(addr,HEXADECIMAL));
+	uart_puts("\n\r");
+
     while( 1 )
     {
         /* Do Nothing! */
@@ -104,8 +111,9 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 // Software interrupt
 __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 {
-	unsigned int addr;
 	unsigned int swi;
+	unsigned int lr_addr;
+	unsigned int sp_addr;
 	unsigned int arg0;
 	unsigned int arg1;
 	unsigned int arg2;
@@ -115,16 +123,25 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	//asm volatile("push {r0-r12}");
 
 	// Read link register into addr - contains the address of the instruction after the SWI
-	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+	asm volatile("mov %[lr_addr], lr" : [lr_addr] "=r" (lr_addr) );
+
+	// Changing system mode to handle the syscall & read SP
+	asm volatile("cps #0x1f");
+
+	// Read stack pointer into sp_addr
+    asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
 
 	/* cargamos los parametros */
 	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
 	asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
-	asm volatile("mov %[arg2], r0" : [arg2] "=r" (arg2) );
-	asm volatile("mov %[arg3], r0" : [arg3] "=r" (arg3) );
+	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
+	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
 
+	uart_puts("Valor de sp en poseidon: 0x");
+    uart_puts(uintToString(sp_addr,HEXADECIMAL));
+	uart_puts("\n\r");
 	uart_puts("Valor de lr en poseidon: 0x");
-    uart_puts(uintToString(addr,HEXADECIMAL));
+    uart_puts(uintToString(lr_addr,HEXADECIMAL));
 	uart_puts("\n\r");
 
 	uart_puts("Valor de arg0 en poseidon: 0x");
@@ -144,13 +161,10 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	uart_puts("\n\r");
 */
 	// Bottom 24 bits of the SWI instruction are the SWI number
-	swi = *((unsigned int *)(addr - 4)) & 0x00ffffff;
-
-	// Changing processor mode to handle the syscall
-	asm volatile("cps #0x1f");
+	swi = *((unsigned int *)(lr_addr - 4)) & 0x00ffffff;
 
 	// Handle syscall
-	syscall_handler(swi,addr,arg0,arg1,arg2,arg3);
+	syscall_handler(swi,lr_addr,sp_addr,arg0,arg1,arg2,arg3);
 
 	uart_puts("Turning interrupt on again");
 	uart_puts("\n\r");
@@ -161,7 +175,7 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Se rehabilitan las interrupciones
 	asm volatile("cpsie i");
 
-	asm volatile("MOV PC, %[Addr]" : : [Addr] "r" (addr) );
+	asm volatile("MOV PC, %[lr_addr]" : : [lr_addr] "r" (lr_addr) );
 }
 
 
@@ -268,8 +282,7 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
     immediately put us back into the start of the handler again.
 */
 // IRQ
-__attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void)
-{
+__attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void) {
 	// Esta rutina empieza en modo IRQ
 
 	// Se guardan todos los registros en la IRQ STACK (R13)

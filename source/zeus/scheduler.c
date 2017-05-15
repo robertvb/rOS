@@ -126,14 +126,15 @@ void create_main_process() {
 
     process_count = 0;
     process_list[process_count].pid = process_count;
+    process_list[process_count].ppid = process_count;
     process_list[process_count].name = "Main";
     // El proceso simplemente ejecuta un while true
     process_list[process_count].pc = (unsigned int) &halt;
     process_list[process_count].times_loaded = 1;
-    process_list[process_count].status = PROCESS_STATUS_ZOMBIE;
+    process_list[process_count].status = PROCESS_STATUS_READY;
     process_list[process_count].tablePageDir = NULL; 	// El proceso main no tiene tabla de paginas.
     process_list[process_count].nextProc = NULL;		// En este punto no hay otros procesos en la cola
-    ready_queue = bloqued_queue = NULL;					// El proceso main es el primero en ejecutarse
+    bloqued_queue = NULL;					// El proceso main es el primero en ejecutarse
 
     // Se obtiene la dirección actual de la pila
     unsigned int stack_pointer;
@@ -148,6 +149,7 @@ void create_main_process() {
 	uart_puts("\n\r");
 
     // Se establece como proceso activo en este momento
+    ready_queue = last_executed = NULL;
     active_process = &process_list[process_count];
 
     // Se incrementa el contador de procesos
@@ -165,8 +167,6 @@ void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 		return;
 	}
 
-    process_count++;
-
 	// DEBUG
 	uart_puts("Forked stack is 0x");
     uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
@@ -178,11 +178,13 @@ void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 	process_list[process_count].ppid = active_process->ppid;
 	process_list[process_count].times_loaded = 0;
 	process_list[process_count].stack_pointer = (unsigned int) forked_stack_pointer;
-	process_list[process_count].status = PROCESS_STATUS_READY;
+	process_list[process_count].status = PROCESS_STATUS_ZOMBIE;
 	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
 
-	process_list[process_count].nextProc = active_process;
-    ready_queue = &process_list[process_count];
+	process_list[process_count].nextProc = ready_queue;
+	ready_queue = &process_list[process_count];
+
+    process_count++;
 }
 
 /*
@@ -199,30 +201,43 @@ void halt() {
  */
 void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 
+	static unsigned int count = 0;
+    uart_puts("ejecutando time_out. Count = ");
+    uart_puts(uintToString(count++,DECIMAL));
+    uart_puts("\n\r");
 	// Se salva PC y STACK del proceso en ejecucion
 	active_process->stack_pointer = stack_pointer;
     active_process->pc = pc;
 
     // Se actualiza su status a READY y se pone al final de la cola
-    if (active_process->status == PROCESS_STATUS_RUNNING) {
-		active_process->status = PROCESS_STATUS_READY;
+	active_process->status = PROCESS_STATUS_READY;
 
-		// Colocamos el proceso actual al final de la cola de preparados
-		last_executed->nextProc = active_process;
-		last_executed = active_process;
-		active_process-> nextProc = NULL;
+    Process_t * proc;
+    uart_puts("estado de la readyQ: \n\r");
+	for(proc = ready_queue; proc != NULL; proc = proc->nextProc) {
+        uart_puts("encontrado un proc en readyQ. Pid: ");
+        uart_puts(uintToString(proc->pid,DECIMAL));
+        if(last_executed == proc) {
+            uart_puts(" y es last executed");
+        }
+        uart_puts("\n\r");
 	}
 
     // Actuamos la cola de bloqueados
-    Process_t * proc;
+    //Process_t * proc;
     Process_t * procAnt;
     uart_puts("Actuando sobre la cola de bloqueados: \n\r");
     for(procAnt = proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
-        uart_puts("encontrado un proc en bloqueados! \n\r");
+        uart_puts("encontrado un proc en bloqueados. Pid: ");
+        uart_puts(uintToString(proc->pid,DECIMAL));
+        uart_puts("\n\r");
         unsigned int reason = GET_BLKD_REASON(proc->waiting_for);
     	if(BLKD_PASIVE_WAITING == GET_BLKD_REASON(proc->waiting_for)) {
     		unsigned int newValue = GET_BLKD_ARGS(proc->waiting_for);
     		newValue--;
+            uart_puts("NewValue = ");
+            uart_puts(uintToString(newValue,DECIMAL));
+            uart_puts("\n\r");
     		if(newValue == 0) {
     			if(bloqued_queue == procAnt) {
     				bloqued_queue = procAnt = proc->nextProc;
@@ -230,15 +245,14 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
     				procAnt->nextProc = proc->nextProc;
     			}
     			// lo metemos en la cola de preparados
-    			last_executed->nextProc = proc;
-    			proc->nextProc = NULL;
+    			proc->nextProc = ready_queue;
+    			ready_queue = proc;
     		} else {
-    			proc->waiting_for = (reason << 29) & newValue;
+    			proc->waiting_for = newValue;
     	    	procAnt = proc;
     		}
     	}
     }
-
     uart_puts("Done! \n\r");
 
     // DEBUG CODE
@@ -258,18 +272,15 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
     uart_puts(uintToString(pc,HEXADECIMAL));
 	uart_puts("\n\r");
 
-    // Obtenemos el siguiente proceso
-	active_process = ready_queue;
-
-    // If -1, halt
-    if (active_process == NULL) {
-		uart_puts("No more waiting processes, halting.");
-		uart_puts("\n\r");
-		halt();
-	}
-
     // Actualizamos la cola
-    ready_queue = ready_queue->nextProc;
+	last_executed = active_process;
+	active_process = ready_queue;
+	if(active_process == NULL) {
+	    active_process = &process_list[0];
+	} else {
+		active_process = ready_queue;
+		ready_queue = ready_queue-> nextProc;
+	}
 
     // Incremetamos estadisticas y cambiamos status a RUNNING
     active_process->times_loaded++;
@@ -360,20 +371,51 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 
 }
 
-void sleepCurrentProc(unsigned int addr, unsigned int tics) {
+void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
+
+
+	uart_puts("metiendo proceso en la cola de bloqueados. Pid is ");
+    uart_puts(uintToString(active_process->pid,DECIMAL));
+    uart_puts("con sp =  ");
+    uart_puts(uintToString(sp,HEXADECIMAL));
+    uart_puts("con addrlr = ");
+    uart_puts(uintToString(addr,HEXADECIMAL));
+    uart_puts("con los siguientes tics: ");
+    uart_puts(uintToString(tics,DECIMAL));
+    uart_puts("\r\n");
 
 	active_process->status = PROCESS_STATUS_BLOCKED;
 	active_process->waiting_for = 0x0FFFFFFF & tics;
-	active_process->pc = addr;
+	// Se salva PC y STACK del proceso en ejecucion
+	active_process->stack_pointer = sp;
+    active_process->pc = addr;
+
+	uart_puts("Valor waiting_for: ");
+    uart_puts(uintToString(active_process->waiting_for,DECIMAL));
+    uart_puts("\r\n");
+
 	if(bloqued_queue == NULL) {
+		uart_puts("la cola estaba vacia!\n\r");
 		bloqued_queue = active_process;
+		active_process->nextProc = NULL;
 	} else {
+		uart_puts("la cola NO estaba vacia!\n\r");
 		Process_t * aux;
 		aux = bloqued_queue->nextProc;
 		bloqued_queue = active_process;
 		active_process->nextProc = aux;
 	}
-	active_process = ready_queue;
+
+	if(ready_queue == NULL) {
+		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: ");
+		active_process = &process_list[0];
+	} else {
+		uart_puts("Proc que vamos a poner a ejecutar: ");
+		active_process = ready_queue;
+		ready_queue = ready_queue->nextProc;
+	}
+    uart_puts(uintToString(active_process->pid,DECIMAL));
+    uart_puts("\r\n");
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
 	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
