@@ -289,7 +289,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
 			}
 
-			prgm2proc(bd, 0x1da, 617, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x237, 609, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 			uart_puts("\r\n\r\n\r\n\r\n");

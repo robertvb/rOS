@@ -62,6 +62,8 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
 	register unsigned int addr;
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
+	register unsigned int pc_addr;
+	asm volatile("mov %[pc_addr], pc" : [pc_addr] "=r" (pc_addr) );
 
 
 	uart_puts("                               ________________\n\r");
@@ -109,8 +111,9 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
     solution.
 */
 // Software interrupt
-__attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
-{
+__attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void) {
+	// En esta funcion se entra en modo supervidor (SVR)
+
 	unsigned int swi;
 	unsigned int lr_addr;
 	unsigned int sp_addr;
@@ -119,8 +122,12 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	unsigned int arg2;
 	unsigned int arg3;
 
-	// save registers
-	//asm volatile("push {r0-r12}");
+	/* cargamos los parametros */
+	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
+	asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
+	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
+	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
+
 
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[lr_addr], lr" : [lr_addr] "=r" (lr_addr) );
@@ -131,11 +138,8 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void)
 	// Read stack pointer into sp_addr
     asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
 
-	/* cargamos los parametros */
-	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
-	asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
-	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
-	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
+	// Vuelvo a system mode
+	asm volatile("cps #0x1f");
 
 	uart_puts("Valor de sp en poseidon: 0x");
     uart_puts(uintToString(sp_addr,HEXADECIMAL));
@@ -290,7 +294,6 @@ __attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void) {
 
 	// Put LR del IRQ mode (Que es el PC del proceso interrumpido) en R0
 	asm volatile("MOV R0, LR");
-
 
 	// Cambio de modo a System mode
 	asm volatile("cps #0x1f");

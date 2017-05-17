@@ -324,7 +324,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		   as well as being able to examine the CPSR in general.
 		   MSR = MOVE SYSTEM REGYSTER
 		 */
-		asm volatile("MSR   SPSR_cxsf, R0");
+		asm volatile("MSR SPSR_cxsf, R0");
 		asm volatile("pop {LR}");
 		asm volatile("pop {R0 - R12}");
 
