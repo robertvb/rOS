@@ -128,18 +128,36 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void) {
 	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
 	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
 
+	// Pillo el PC para la reunaudacion
+	asm volatile("MOV R0, LR");
+
+	// Cambio de modo a System mode
+	asm volatile("cps #0x1f");
+
+	// Push R0 (PC del proceso interrumpido) a la pila del system mode
+	asm volatile("push {R0}");
+
+	// Push todos los registeos pero esta vez dentro de la system mode stack
+	asm volatile("push {R0-R12}");
+
+	// Push de LR del proceso interrumpido a la system mode stack
+	asm volatile("push {LR}");
+
+	// Copy the Saved Program Status Register to R0
+	// http://lioncash.github.io/ARMBook/the_apsr,_cpsr,_and_the_difference_between_them.html
+    asm volatile("MRS R0, SPSR");
+
+    // Se guarda el SPSR en la system mode stack
+    asm volatile("push {R0}");
+
+	// Read SP
+	asm volatile("mov %[sp_addr], sp" : [sp_addr] "=r" (sp_addr) );
+
+    // Return to SVR mode
+    asm volatile("cps #0x13");
 
 	// Read link register into addr - contains the address of the instruction after the SWI
 	asm volatile("mov %[lr_addr], lr" : [lr_addr] "=r" (lr_addr) );
-
-	// Changing system mode to handle the syscall & read SP
-	asm volatile("cps #0x1f");
-
-	// Read stack pointer into sp_addr
-    asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
-
-	// Vuelvo a system mode
-	asm volatile("cps #0x1f");
 
 	uart_puts("Valor de sp en poseidon: 0x");
     uart_puts(uintToString(sp_addr,HEXADECIMAL));
@@ -152,18 +170,6 @@ __attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void) {
     uart_puts(uintToString(arg0,HEXADECIMAL));
 	uart_puts("\n\r");
 
-	/*
-	uart_puts("String de arg0: \"");
-	uint8_t i;
-	for(i = 0; ((uint8_t *) arg0)[i] != 0; i++ ) {
-		printByte(((uint8_t *) arg0)[i]);
-	}
-	uart_puts("\"\n\r");
-
-	uart_puts("String de 0x101084");
-    uart_puts((unsigned char*) 0x101084);
-	uart_puts("\n\r");
-*/
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(lr_addr - 4)) & 0x00ffffff;
 
