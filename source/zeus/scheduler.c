@@ -334,6 +334,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		asm volatile("cpsie i");
 
 		// Rescatamos el contador de programa y renaudamos la ejecucion
+		/* Es seguro que se va a ejecutar por el pipeline (SUPOSICION). */
 		asm volatile("pop {PC}");
 
 	} else {
@@ -365,6 +366,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		asm volatile("cpsie i");
 
 		/* rescatamos PC y comienza la ejecucion del proceso */
+		/* Es seguro que se va a ejecutar por el pipeline (SUPOSICION). */
 		asm volatile("pop {PC}");
 
 	}

@@ -43,7 +43,7 @@ typedef int system_call_t(uint32_t pc, uint32_t sp, uint32_t param0, uint32_t pa
 typedef struct system_call_entry {
 	uint32_t swi;
     char* name;
-    void* function;
+    void * function;
     uint32_t flags;
     uint32_t params;
 } system_call_entry_t;

@@ -62,6 +62,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 void uart_init(void);
 void uart_putc(unsigned char byte);
+void uart_puts(const unsigned char* str);
 unsigned char uart_getc(void); //ESPERA ACTIVA!!!
 
 
