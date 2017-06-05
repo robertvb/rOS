@@ -42,5 +42,6 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc);
 void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics);
 void terminate_process(void);
 void halt(void);
+void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc);
 
 #endif

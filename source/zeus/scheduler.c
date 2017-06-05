@@ -36,7 +36,9 @@ static unsigned int process_count;
 extern void timer_reset();
 
 static void mainProcLoop() {
-	uart_puts("Bucle del proceso main!\r\n");
+	while(1) {
+		uart_puts("Bucle del proceso main!\r\n");
+	}
 }
 
 Pid_t getNextPid(void) {
@@ -129,7 +131,7 @@ void create_main_process() {
     process_list[process_count].ppid = process_count;
     process_list[process_count].name = "Main";
     // El proceso simplemente ejecuta un while true
-    process_list[process_count].pc = (unsigned int) &halt;
+    process_list[process_count].pc = (unsigned int) &mainProcLoop;
     process_list[process_count].times_loaded = 1;
     process_list[process_count].status = PROCESS_STATUS_READY;
     process_list[process_count].tablePageDir = NULL; 	// El proceso main no tiene tabla de paginas.
@@ -300,6 +302,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 	// Si no es la primera vez que se ejecuta el proceso
 	if (active_process->times_loaded > 1) {
 
+#if(0)
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
 		unsigned int pagetable = active_process->tablePageDir;
 		/* Use translation table 0 up to 64MB */
@@ -310,8 +313,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		 * ARM1176JZF-S manual, p. 3-86
 		 */
 		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-		/* end*/
-
+#endif
 		timer_reset();
 
 		// Rescatamos registros y flags de la pila
@@ -344,6 +346,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
 		asm volatile("push {R0}");
 
+#if(0)
 		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
 		unsigned int pagetable = active_process->tablePageDir;
 		/* Use translation table 0 up to 64MB */
@@ -354,7 +357,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		 * ARM1176JZF-S manual, p. 3-86
 		 */
 		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-
+#endif
 		/* end*/
 
 		timer_reset();
@@ -493,5 +496,40 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 		asm volatile("pop {PC}");
 
 	}
+}
+
+void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
+
+		uart_puts("Handling uart int! ");
+		uart_puts("\n\r");
+		RPI_esperarMicroSeconds(400000);
+
+		// Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
+		asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(stack_pointer)) );
+
+			*((unsigned int *) UART0_ICR) = 0x7FF;
+
+			// Rescatamos registros y flags de la pila
+			asm volatile("pop {R0}");
+				/* Saved Program Status Register
+				 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
+				 * mode the exception is taken to.
+				   This is useful because the exception handler is able to restore the CPSR
+				   to the value prior to taking the exception,
+				   as well as being able to examine the CPSR in general.
+				   MSR = MOVE SYSTEM REGYSTER
+				 */
+			asm volatile("MSR   SPSR_cxsf, R0");
+			asm volatile("pop {LR}");
+			asm volatile("pop {R0 - R12}");
+
+				/* Rehabilitacion de interrupciones
+				 * CPS change procesor state IE interrupt and i ENABLE
+				 */
+			asm volatile("cpsie i");
+
+				// Rescatamos el contador de programa y renaudamos la ejecucion
+			asm volatile("pop {PC}");
+
 }
 

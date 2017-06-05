@@ -63,11 +63,11 @@ void uart_init() {
 	mmio_write(UART0_FBRD, 40);
 
 	// Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
-	mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
+	mmio_write(UART0_LCRH, (3 << 5) | (1 << 6));
 
-	// Mask all interrupts.
-	mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
-	                       (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
+	// enable uart interrupts.
+	//mmio_write(UART0_IMSC, 0x0010);
+	mmio_write(UART0_IMSC, 0x0010);
 
 	// Enable UART0, receive & transfer part of UART.
 	mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));

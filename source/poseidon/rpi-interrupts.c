@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 #include "../includes/poseidon/rpi-armtimer.h"
+#include "../includes/hades/rpi-uart.h"
 #include "../includes/zeus/scheduler.h"
 
 extern void _main_endloop();
@@ -60,6 +61,7 @@ void __attribute__((interrupt("ABORT"))) reset_vector(void)
 */
 void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 {
+	asm volatile("cpsid i");
 	register unsigned int addr;
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
 	register unsigned int pc_addr;
@@ -292,7 +294,28 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
     immediately put us back into the start of the handler again.
 */
 // IRQ
-__attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void) {
+void __attribute__((interrupt("IRQ"))) interrupt_vector(void) {
+
+	/*
+	asm volatile("push {R0-R12}");
+	asm volatile("MRS R0, SPSR");
+	asm volatile("push {R0}");
+
+    RPI_GetArmTimer()->IRQClear = 0;
+    *armTimerIRQClear = 0;
+
+
+	asm volatile("pop {R0}");
+	asm volatile("MSR CPSR,R0");
+	asm volatile("pop {R0-R12}");
+	asm volatile("pop {r3,lr}");
+
+	//asm volatile("subs pc, lr, #0");
+
+	asm volatile("mov pc, lr");
+*/
+
+#if(1)
 	// Esta rutina empieza en modo IRQ
 
 	// Se guardan todos los registros en la IRQ STACK (R13)
@@ -349,8 +372,33 @@ __attribute__ ((interrupt ("IRQ"))) void interrupt_vector(void) {
 	asm volatile ("MOV %0, R0\n\t" : "=r" (pc) );
     asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
 
+	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
+	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("RPI_GetIrqController()->IRQ_pending_2: 0x");
+	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_2,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
+	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("UART0_ICR 0x");
+	uart_puts(uintToString(UART0_ICR,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("tecla: '");
+	uart_putc(*((unsigned int *) UART0_DR));
+	uart_puts("'\n\r");
+
+    *((unsigned int *) UART0_ICR) = 0x7FF;
+    rpiIRQController->IRQ_pending_1 = rpiIRQController->IRQ_pending_2 = 0;
+
 	// Se invoca al dispatcher para el cambio de contexto
 	schedule_timeout(stack_pointer, pc);
+
+#endif
 }
 
 
