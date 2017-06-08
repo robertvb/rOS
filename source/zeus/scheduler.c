@@ -391,6 +391,7 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 
 	active_process->status = PROCESS_STATUS_BLOCKED;
 	active_process->waiting_for = 0x0FFFFFFF & tics;
+
 	// Se salva PC y STACK del proceso en ejecucion
 	active_process->stack_pointer = sp;
     active_process->pc = addr;
@@ -502,12 +503,38 @@ void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
 
 		uart_puts("Handling uart int! ");
 		uart_puts("\n\r");
-		RPI_esperarMicroSeconds(400000);
+
+    	uart_puts("tecla: '");
+    	unsigned int caracter = (*((unsigned int *) UART0_DR));
+    	uart_putc(caracter);
+    	uart_puts("'\n\r");
+
+        Process_t * proc;
+        Process_t * procAnt;
+        uart_puts("Actuando sobre la cola de bloqueados: \n\r");
+        for(procAnt = proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
+            uart_puts("encontrado un proc en bloqueados. Pid: ");
+            uart_puts(uintToString(proc->pid,DECIMAL));
+            uart_puts("\n\r");
+            unsigned int reason = GET_BLKD_REASON(proc->waiting_for);
+        	if(BLKD_USER_IO == GET_BLKD_REASON(proc->waiting_for)) {
+        		if(bloqued_queue == procAnt) {
+        			bloqued_queue = procAnt = proc->nextProc;
+        		} else {
+        			procAnt->nextProc = proc->nextProc;
+        		}
+        		// lo metemos en la cola de preparados
+        		proc->nextProc = ready_queue;
+        		ready_queue = proc;
+        		} else {
+        	    	procAnt = proc;
+        		}
+        	}
+
+
 
 		// Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
 		asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(stack_pointer)) );
-
-			*((unsigned int *) UART0_ICR) = 0x7FF;
 
 			// Rescatamos registros y flags de la pila
 			asm volatile("pop {R0}");
@@ -530,6 +557,14 @@ void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
 
 				// Rescatamos el contador de programa y renaudamos la ejecucion
 			asm volatile("pop {PC}");
+}
 
+void getCharacterHandler(unsigned int pc, unsigned int sp) {
+
+	active_process->status = PROCESS_STATUS_BLOCKED;
+	active_process->waiting_for = (BLKD_USER_IO << 30);
+	// Se salva PC y STACK del proceso en ejecucion
+	active_process->stack_pointer = sp;
+    active_process->pc = pc;
 }
 

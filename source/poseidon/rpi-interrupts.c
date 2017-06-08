@@ -372,31 +372,20 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void) {
 	asm volatile ("MOV %0, R0\n\t" : "=r" (pc) );
     asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
 
-	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
-	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
-	uart_puts("\n\r");
+    // Comprobar si la IRQ ha sido producida por la UART0
+    if(rpiIRQController->IRQ_pending_2 != 0) {
+    	// La IRQ ha sido producida por la UART0.
 
-	uart_puts("RPI_GetIrqController()->IRQ_pending_2: 0x");
-	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_2,HEXADECIMAL));
-	uart_puts("\n\r");
+        *((unsigned int *) UART0_ICR) = 0x7FF;
+        rpiIRQController->IRQ_pending_1 = rpiIRQController->IRQ_pending_2 = 0;
 
-	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
-	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
-	uart_puts("\n\r");
+    	uart_interrupt_handler(stack_pointer,pc);
 
-	uart_puts("UART0_ICR 0x");
-	uart_puts(uintToString(UART0_ICR,HEXADECIMAL));
-	uart_puts("\n\r");
-
-	uart_puts("tecla: '");
-	uart_putc(*((unsigned int *) UART0_DR));
-	uart_puts("'\n\r");
-
-    *((unsigned int *) UART0_ICR) = 0x7FF;
-    rpiIRQController->IRQ_pending_1 = rpiIRQController->IRQ_pending_2 = 0;
-
-	// Se invoca al dispatcher para el cambio de contexto
-	schedule_timeout(stack_pointer, pc);
+    } else {
+    	// La IRQ Ha sido producida por el timer.
+    	// Se invoca al dispatcher para el cambio de contexto
+    	schedule_timeout(stack_pointer, pc);
+    }
 
 #endif
 }

@@ -37,6 +37,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SC_SLEEP					2
 #define SC_GET_PID					3
 #define SC_GET_PPID					4
+#define SC_GET_CHAR					5
 
 typedef int system_call_t(uint32_t pc, uint32_t sp, uint32_t param0, uint32_t param1, uint32_t param2, uint32_t param3);
 

@@ -43,12 +43,12 @@ OTHER DEALINGS IN THE SOFTWARE.
  * Motivos de bloqueo:
  * Los dos bits más significativos indican el motivo de bloqueo.
  * El resto se utilizan para calculos, flags, contadores, ej:
- * waiting_for = 0x00001000 -> el proceso esta en esperando pasivamente 4K microsegundos
+ * waiting_for = 0x00001000 -> el proceso esta en esperando pasivamente 4K tics de reloj
  */
-#define BLKD_PASIVE_WAITING			0
-#define BLKD_DISK_IO				1
-#define BLKD_USER_IO				2
-#define BLKD_WAIT_PID				3
+#define BLKD_PASIVE_WAITING			0x00
+#define BLKD_DISK_IO				0x01
+#define BLKD_USER_IO				0x10
+#define BLKD_WAIT_PID				0x11
 
 #define GET_BLKD_REASON(WAITING_FOR) WAITING_FOR >> 29
 #define GET_BLKD_ARGS(WAITING_FOR) WAITING_FOR & 0x3FFFFFFF

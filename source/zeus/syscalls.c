@@ -36,8 +36,9 @@ static system_call_entry_t system_call_table[] = {
 	    {SC_EXIT,"exit",terminate_process,0,0},
 	    {SC_UART_WRITE,"write",uart_puts,0,0},					// TODO
 	    {SC_SLEEP,"sleep",sleepCurrentProc,0,0},				// TODO
-	    {SC_GET_PID,"getpid", getCurrentProcessPid, 0,0},
-	    {SC_GET_PPID,"getppid", getCurrentProcessPpid, 0,0}
+	    {SC_GET_PID,"getpid", getCurrentProcessPid,0,0},
+	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
+		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,1}
 };
 
 static uint32_t MAX_SYSCALLS = 0;
