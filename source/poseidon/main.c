@@ -158,7 +158,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	}
 #endif
 
-#if(0)
+#if(1)
 
 	uart_puts("Inicializando driver emmc......\r\n");
 
@@ -289,7 +289,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
 			}
 
-			prgm2proc(bd, 0x237, 609, fat, primerSectorDirRaiz);
+			prgm2proc(bd, 0x358, 633, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 			uart_puts("\r\n\r\n\r\n\r\n");
@@ -309,6 +309,11 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 
+	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
+	RPI_GetIrqController()->Disable_IRQs_2 = 0xFFFFFFFF;
+
+	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
+
 	/* Setup the system timer interrupt */
 	/* Timer frequency = Clk/256 * 0x400 */
 	RPI_GetArmTimer()->Load = 0x400;
@@ -316,6 +321,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	/* Setup the ARM Timer */
 	RPI_GetArmTimer()->Control =
 	RPI_ARMTIMER_CTRL_23BIT |
+
 	RPI_ARMTIMER_CTRL_ENABLE |
 	RPI_ARMTIMER_CTRL_INT_ENABLE |
 	RPI_ARMTIMER_CTRL_PRESCALE_256;
@@ -329,7 +335,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	}
 #endif
 
-#if(1)
+#if(0)
 
 	create_main_process();
 

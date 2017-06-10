@@ -23,35 +23,34 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SYSCALLS_H
-#define SYSCALLS_H
+void main() {
 
+    char caracter = 0;
+    int to = 5;
 
-#include "../atenea/pmem.h"
-#include "scheduler.h"
-#include "../hades/rpi-uart.h"
+    volatile char * string = "Mi PID es: \0";
+    unsigned int addr = (unsigned int) string;
 
+	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
 
-#define SC_EXIT						0
-#define SC_UART_WRITE				1
-#define SC_SLEEP					2
-#define SC_GET_PID					3
-#define SC_GET_PPID					4
-#define SC_GET_CHAR					5
+    asm volatile("SWI #1");
+    
+    string = "Dame un caracter: \0";
+    addr = (unsigned int) string;
+    do {
+    	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
 
-typedef int system_call_t(uint32_t pc, uint32_t sp, ...);
+    	asm volatile("SWI #5");
+    
+    	asm volatile ("MOV %0, R0 \n\t" : "=r" (caracter) );
+    } while(caracter != 'r');
 
-typedef struct system_call_entry {
-	uint32_t swi;
-    char* name;
-    void * function;
-    uint32_t flags;
-    uint32_t params;
-} system_call_entry_t;
+    unsigned int sleep = 5;
+	asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
+    asm volatile("SWI #2");
 
+    // llamada al sistema para terminar ejecucion
+    asm volatile("SWI #0");
 
-void init_syscalls(void);
-
-int syscall_handler(unsigned int swi,unsigned int pc, unsigned int sp, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3);
-
-#endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */
+    // Call software interrupt #0 (terminate)
+}
