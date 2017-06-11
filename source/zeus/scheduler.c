@@ -89,7 +89,7 @@ void terminate_process() {
 		   as well as being able to examine the CPSR in general.
 		   MSR = MOVE SYSTEM REGYSTER
 		 */
-		asm volatile("MSR   SPSR_cxsf, R0");
+		asm volatile("MSR   SPSR, R0");
 		asm volatile("pop {LR}");
 		asm volatile("pop {R0 - R12}");
 
@@ -132,15 +132,14 @@ void create_main_process() {
     process_list[process_count].name = "Main";
     // El proceso simplemente ejecuta un while true
     process_list[process_count].pc = (unsigned int) &mainProcLoop;
-    process_list[process_count].times_loaded = 1;
+    process_list[process_count].times_loaded = 0;
     process_list[process_count].status = PROCESS_STATUS_READY;
     process_list[process_count].tablePageDir = NULL; 	// El proceso main no tiene tabla de paginas.
     process_list[process_count].nextProc = NULL;		// En este punto no hay otros procesos en la cola
     bloqued_queue = NULL;					// El proceso main es el primero en ejecutarse
 
     // Se obtiene la dirección actual de la pila
-    unsigned int stack_pointer;
-	asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
+    unsigned int stack_pointer = 0x401f3c;
 
 	// Se utiliza como dirección base del puntero de pila del proceso
 	stack_base = stack_pointer;
@@ -326,7 +325,7 @@ void schedule_timeout(unsigned int stack_pointer, unsigned int pc) {
 		   as well as being able to examine the CPSR in general.
 		   MSR = MOVE SYSTEM REGYSTER
 		 */
-		asm volatile("MSR SPSR_cxsf, R0");
+		asm volatile("MSR SPSR, R0");
 		asm volatile("pop {LR}");
 		asm volatile("pop {R0 - R12}");
 
@@ -416,10 +415,10 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: ");
 		active_process = &process_list[0];
 	} else {
-		uart_puts("Proc que vamos a poner a ejecutar: ");
 		active_process = ready_queue;
 		ready_queue = ready_queue->nextProc;
 	}
+	uart_puts("Proc que vamos a poner a ejecutar: ");
     uart_puts(uintToString(active_process->pid,DECIMAL));
     uart_puts("\r\n");
 
@@ -453,7 +452,7 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 		   as well as being able to examine the CPSR in general.
 		   MSR = MOVE SYSTEM REGYSTER
 		 */
-		asm volatile("MSR   SPSR_cxsf, R0");
+		asm volatile("MSR   SPSR, R0");
 		asm volatile("pop {LR}");
 		asm volatile("pop {R0 - R12}");
 
@@ -501,6 +500,10 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 
 void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
 
+		// Se salva PC y STACK del proceso en ejecucion
+		active_process->stack_pointer = stack_pointer;
+		active_process->pc = pc;
+
 		uart_puts("Handling uart int! ");
 		uart_puts("\n\r");
 
@@ -509,57 +512,111 @@ void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
     	uart_putc(caracter);
     	uart_puts("'\n\r");
 
-        Process_t * proc;
-        Process_t * procAnt;
-        uart_puts("Actuando sobre la cola de bloqueados: \n\r");
-        for(procAnt = proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
-            uart_puts("encontrado un proc en bloqueados. Pid: ");
-            uart_puts(uintToString(proc->pid,DECIMAL));
-            uart_puts("\n\r");
-            unsigned int reason = GET_BLKD_REASON(proc->waiting_for);
-        	if(BLKD_USER_IO == GET_BLKD_REASON(proc->waiting_for)) {
-        		uart_puts("<<<<<<<<<<<<<<<ENCONTRADO PROC BLOQUEADO POR IO >>>>>>>>\r\n");
-        		if(bloqued_queue == procAnt) {
-        			bloqued_queue = procAnt = proc->nextProc;
-        		} else {
-        			procAnt->nextProc = proc->nextProc;
-        		}
-        		// lo metemos en la cola de preparados
-        		proc->nextProc = ready_queue;
-        		ready_queue = proc;
-        	} else {
-        	    procAnt = proc;
-        	}
-        }
+		Process_t * proc;
+		Process_t * lastProc;
+		uart_puts("Actuando sobre la cola de bloqueados: \n\r");
+		for (lastProc = proc = bloqued_queue;
+				proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO;
+				proc = lastProc = proc, proc->nextProc);
 
+		if(proc == NULL) {
+			uart_puts("No hay proceso esperando por uart input \n\r");
+		} else {
+			uart_puts("Encontrado proceso bloqueado esperando uart. Pid = ");
+	        uart_puts(uintToString(proc->pid,DECIMAL));
+	    	uart_puts("\n\r");
 
+	    	if(lastProc == proc) {
+	    		bloqued_queue = proc->nextProc;
+	    	} else {
+	    		lastProc->nextProc = proc->nextProc;
+	    	}
 
-		// Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-		asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(stack_pointer)) );
+		    proc->nextProc = NULL;
+		    last_executed = active_process;
+		    ready_queue = proc;
+		}
 
-			// Rescatamos registros y flags de la pila
-			asm volatile("pop {R0}");
-				/* Saved Program Status Register
-				 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
-				 * mode the exception is taken to.
-				   This is useful because the exception handler is able to restore the CPSR
-				   to the value prior to taking the exception,
-				   as well as being able to examine the CPSR in general.
-				   MSR = MOVE SYSTEM REGYSTER
-				 */
-			asm volatile("MSR   SPSR_cxsf, R0");
-			asm volatile("pop {LR}");
-			asm volatile("pop {R0 - R12}");
+		// TODO PRINTF DE DEBUG
+		if(ready_queue == NULL){
+			uart_puts("REady Q = NULL");
+		} else {
+			uart_puts("REady Q = ");
+			uart_puts(uintToString(ready_queue->pid,DECIMAL));
+			uart_puts("\n\r");
+		}
 
-			/* meto el caracter */
-			asm volatile ("MOV R0, %0\n\t" : "=r" (caracter) );
-				/* Rehabilitacion de interrupciones
-				 * CPS change procesor state IE interrupt and i ENABLE
-				 */
-			asm volatile("cpsie i");
+	uart_puts("Done! \n\r");
 
-				// Rescatamos el contador de programa y renaudamos la ejecucion
-			asm volatile("pop {PC}");
+        // A PARTIR DE AQUI COPIADO DEL DISPATCHER
+
+    // Incremetamos estadisticas y cambiamos status a RUNNING
+    active_process->times_loaded++;
+    active_process->status = PROCESS_STATUS_RUNNING;
+
+    uart_puts("stack saved, was 0x");
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+	uart_puts("\n\r");
+
+	uart_puts("Saving pc...");
+    uart_puts(uintToString(pc,HEXADECIMAL));
+	uart_puts("\n\r");
+
+    // Actualizamos la cola
+	last_executed = active_process;
+	active_process = ready_queue;
+	if(active_process == NULL) {
+	    active_process = &process_list[0];
+	} else {
+		active_process = ready_queue;
+		ready_queue = ready_queue-> nextProc;
+	}
+
+         // Incremetamos estadisticas y cambiamos status a RUNNING
+         active_process->times_loaded++;
+         active_process->status = PROCESS_STATUS_RUNNING;
+
+         uart_puts("Restoring stack 0x");
+         uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
+     	uart_puts("\n\r");
+
+         uart_puts("Restoring pc 0x");
+         uart_puts(uintToString(active_process->pc,HEXADECIMAL));
+     	uart_puts("\n\r");
+
+         // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
+     	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
+
+     		// Se salva el contador de programa en la pila
+     		unsigned int addr = (unsigned int )(active_process->pc);
+     		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
+     		asm volatile("push {R0}");
+
+     #if(1)
+     		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
+     		unsigned int pagetable = active_process->tablePageDir;
+     		/* Use translation table 0 up to 64MB */
+     		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
+     		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
+     		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
+     		/* Invalidate the translation lookaside buffer (TLB)
+     		 * ARM1176JZF-S manual, p. 3-86
+     		 */
+     		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
+     #endif
+     		/* end*/
+
+     		timer_reset();
+
+     		/* Rehabilitacion de interrupciones
+     		 * CPS change procesor state IE interrupt and i ENABLE
+     		 */
+
+     		asm volatile("cpsie i");
+
+     		/* rescatamos PC y comienza la ejecucion del proceso */
+     		/* Es seguro que se va a ejecutar por el pipeline (SUPOSICION). */
+     		asm volatile("pop {PC}");
 }
 
 void getCharacterHandler(unsigned int pc, unsigned int sp) {
@@ -574,19 +631,19 @@ void getCharacterHandler(unsigned int pc, unsigned int sp) {
     active_process->nextProc = bloqued_queue;
     bloqued_queue = active_process;
 
-	uart_puts("<<<<<<<<<<<<<<<<<<ESPERAND CARACTER>>>>>>>>>>>>>>>>>>>\r\n");
+	uart_puts("<<<<<<<<<<<<<<<<<<ESPERANDO CARACTER>>>>>>>>>>>>>>>>>>>\r\n");
 
     // Ejecutar siguiente proceso. COPIADO DE SLEEPCURRENTPROC
 	if(ready_queue == NULL) {
-		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: ");
+		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: PID = ");
 		active_process = &process_list[0];
-	} else {
-		uart_puts("Proc que vamos a poner a ejecutar: ");
-		active_process = ready_queue;
-		ready_queue = ready_queue->nextProc;
+	    uart_puts(uintToString(active_process->pid,DECIMAL));
+	    uart_puts(" pc = 0x");
+	    uart_puts(uintToString(active_process->pc,HEXADECIMAL));
+	    uart_puts(" sp = 0x");
+	    uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
+	    uart_puts("\n\r");
 	}
-    uart_puts(uintToString(active_process->pid,DECIMAL));
-    uart_puts("\r\n");
 
     // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
 	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
@@ -618,7 +675,7 @@ void getCharacterHandler(unsigned int pc, unsigned int sp) {
 		   as well as being able to examine the CPSR in general.
 		   MSR = MOVE SYSTEM REGYSTER
 		 */
-		asm volatile("MSR   SPSR_cxsf, R0");
+		asm volatile("MSR   SPSR, R0");
 		asm volatile("pop {LR}");
 		asm volatile("pop {R0 - R12}");
 

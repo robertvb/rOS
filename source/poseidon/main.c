@@ -289,7 +289,10 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
 			}
 
-			prgm2proc(bd, 0x358, 633, fat, primerSectorDirRaiz);
+			/* up5 */
+			//prgm2proc(bd, 0x358, 633, fat, primerSectorDirRaiz);
+			/* up5b */
+			prgm2proc(bd, 0x39C, 822, fat, primerSectorDirRaiz);
 
 			uart_puts("PROCESO CARGADO!\r\n");
 			uart_puts("\r\n\r\n\r\n\r\n");
@@ -329,6 +332,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts("Comienza roundrobin!\r\n");
 	/* Enable interrupts! */
 	_enable_interrupts();
+	asm volatile("cps #0x10");
 
 	while (1) {
 		//uart_puts("Main while!\r\n");
