@@ -32,7 +32,7 @@ rebuild: all
 # Rules
 
 build/%.o: source/%.c
-	$(ARMGNU)-gcc-4.7.4 -c -O2 -DRPIBPLUS -fno-builtin -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -nostartfiles -o $@ $<
+	$(ARMGNU)-gcc-4.7.4 -c -O0 -DRPIBPLUS -fno-builtin -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -nostartfiles -o $@ $<
 
 
 # Rule to make the listing file.

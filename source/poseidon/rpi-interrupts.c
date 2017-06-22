@@ -23,6 +23,47 @@ rpi_irq_controller_t* RPI_GetIrqController( void )
     return rpiIRQController;
 }
 
+void timer_reset(void)
+{
+    RPI_GetArmTimer()->IRQClear = 0;
+    *armTimerIRQClear = 0;
+}
+
+static void __attribute__ ((naked)) _force_to_save_new_stack(unsigned int new_stack) {
+	asm volatile("mov pc, lr");
+}
+
+static void print_kernel_panic(void) {
+
+	uart_puts("                               ________________\n\r");
+	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
+	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
+	uart_puts("                       ((     (   )(    )  )   (   )  )\n\r");
+	uart_puts("                     ((/  ( _(   )   (   _) ) (  () )  )\n\r");
+	uart_puts("                    ( (  ( (_)   ((    (   )  .((_ ) .  )_\n\r");
+	uart_puts("                   ( (  )    (      (  )    )   ) . ) (   )\n\r");
+	uart_puts("                  (  (   (  (   ) (  _  ( _) ).  ) . ) ) ( )\n\r");
+	uart_puts("                  ( (  (   ) (  )   (  ))     ) _)(   )  )  )\n\r");
+	uart_puts("                 ( (  ( \\ ) (    (_  ( ) ( )  )   ) )  )) ( )\n\r");
+	uart_puts("                 (  (   (  (   (_ ( ) ( _    )  ) (  )  )   )\n\r");
+	uart_puts("                 ( (  ( (  (  )     (_  )  ) )  _)   ) _( ( )\n\r");
+	uart_puts("                  ((  (   )(    (     _    )   _) _(_ (  (_ )\n\r");
+	uart_puts("                   (_((__(_(__(( ( ( |  ) ) ) )_))__))_)___)\n\r");
+	uart_puts("                  ((__)        \\\\||lll|l||///          \\_))\n\r");
+	uart_puts("                            (   /(/ (  )  ) )\\   )\n\r");
+	uart_puts("                         (    ( ( ( | | ) ) )\\   )\n\r");
+	uart_puts("                            (   /(| / ( )) ) ) )) )\n\r");
+	uart_puts("                         (     ( ((((_(|)_)))))     )\n\r");
+	uart_puts("                          (      ||\\(|(|)|/||     )\n\r");
+	uart_puts("                        (        |(||(||)||||        )\n\r");
+	uart_puts("                          (     //|/l|||)|\\\\ \\     )\n\r");
+	uart_puts("                        (/ / //  /|//||||\\\\  \\ \\  \\ _)\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
+	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+
+	return;
+}
 
 /**
     @brief The Reset vector interrupt handler
@@ -64,36 +105,8 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 	asm volatile("cpsid i");
 	register unsigned int addr;
 	asm volatile("mov %[addr], lr" : [addr] "=r" (addr) );
-	register unsigned int pc_addr;
-	asm volatile("mov %[pc_addr], pc" : [pc_addr] "=r" (pc_addr) );
 
-
-	uart_puts("                               ________________\n\r");
-	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
-	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
-	uart_puts("                       ((     (   )(    )  )   (   )  )\n\r");
-	uart_puts("                     ((/  ( _(   )   (   _) ) (  () )  )\n\r");
-	uart_puts("                    ( (  ( (_)   ((    (   )  .((_ ) .  )_\n\r");
-	uart_puts("                   ( (  )    (      (  )    )   ) . ) (   )\n\r");
-	uart_puts("                  (  (   (  (   ) (  _  ( _) ).  ) . ) ) ( )\n\r");
-	uart_puts("                  ( (  (   ) (  )   (  ))     ) _)(   )  )  )\n\r");
-	uart_puts("                 ( (  ( \\ ) (    (_  ( ) ( )  )   ) )  )) ( )\n\r");
-	uart_puts("                 (  (   (  (   (_ ( ) ( _    )  ) (  )  )   )\n\r");
-	uart_puts("                 ( (  ( (  (  )     (_  )  ) )  _)   ) _( ( )\n\r");
-	uart_puts("                  ((  (   )(    (     _    )   _) _(_ (  (_ )\n\r");
-	uart_puts("                   (_((__(_(__(( ( ( |  ) ) ) )_))__))_)___)\n\r");
-	uart_puts("                  ((__)        \\\\||lll|l||///          \\_))\n\r");
-	uart_puts("                            (   /(/ (  )  ) )\\   )\n\r");
-	uart_puts("                         (    ( ( ( | | ) ) )\\   )\n\r");
-	uart_puts("                            (   /(| / ( )) ) ) )) )\n\r");
-	uart_puts("                         (     ( ((((_(|)_)))))     )\n\r");
-	uart_puts("                          (      ||\\(|(|)|/||     )\n\r");
-	uart_puts("                        (        |(||(||)||||        )\n\r");
-	uart_puts("                          (     //|/l|||)|\\\\ \\     )\n\r");
-	uart_puts("                        (/ / //  /|//||||\\\\  \\ \\  \\ _)\n\r");
-	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
-	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
-	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+	print_kernel_panic();
 
 	uart_puts("[ERROR] UNDEFINED INSTRUCCION AT ");
     uart_puts(uintToString(addr,HEXADECIMAL));
@@ -113,7 +126,7 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
     solution.
 */
 // Software interrupt
-__attribute__ ((interrupt ("SWI"))) void software_interrupt_vector(void) {
+__attribute__ ((interrupt ("NAKED"))) void software_interrupt_vector(void) {
 	// En esta funcion se entra en modo supervidor (SVR)
 
 	unsigned int swi;
@@ -211,32 +224,8 @@ void __attribute__((interrupt("ABORT"))) prefetch_abort_vector(void)
     uart_puts(uintToString(addr,HEXADECIMAL));
 	uart_puts("\n\r");
 
-	uart_puts("                               ________________\n\r");
-	uart_puts("                          ____/ (  (    )   )  \\___\n\r");
-	uart_puts("                         /( (  (  )   _    ))  )   )\\\n\r");
-	uart_puts("                       ((     (   )(    )  )   (   )  )\n\r");
-	uart_puts("                     ((/  ( _(   )   (   _) ) (  () )  )\n\r");
-	uart_puts("                    ( (  ( (_)   ((    (   )  .((_ ) .  )_\n\r");
-	uart_puts("                   ( (  )    (      (  )    )   ) . ) (   )\n\r");
-	uart_puts("                  (  (   (  (   ) (  _  ( _) ).  ) . ) ) ( )\n\r");
-	uart_puts("                  ( (  (   ) (  )   (  ))     ) _)(   )  )  )\n\r");
-	uart_puts("                 ( (  ( \\ ) (    (_  ( ) ( )  )   ) )  )) ( )\n\r");
-	uart_puts("                 (  (   (  (   (_ ( ) ( _    )  ) (  )  )   )\n\r");
-	uart_puts("                 ( (  ( (  (  )     (_  )  ) )  _)   ) _( ( )\n\r");
-	uart_puts("                  ((  (   )(    (     _    )   _) _(_ (  (_ )\n\r");
-	uart_puts("                   (_((__(_(__(( ( ( |  ) ) ) )_))__))_)___)\n\r");
-	uart_puts("                  ((__)        \\\\||lll|l||///          \\_))\n\r");
-	uart_puts("                            (   /(/ (  )  ) )\\   )\n\r");
-	uart_puts("                         (    ( ( ( | | ) ) )\\   )\n\r");
-	uart_puts("                            (   /(| / ( )) ) ) )) )\n\r");
-	uart_puts("                         (     ( ((((_(|)_)))))     )\n\r");
-	uart_puts("                          (      ||\\(|(|)|/||     )\n\r");
-	uart_puts("                        (        |(||(||)||||        )\n\r");
-	uart_puts("                          (     //|/l|||)|\\\\ \\     )\n\r");
-	uart_puts("                        (/ / //  /|//||||\\\\  \\ \\  \\ _)\n\r");
-	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
-	uart_puts("---------------------- >>>>>>> rOS-KERNEL PANIC <<<<<<<<< -------------------\n\r");
-	uart_puts("--------------------- >>>>>>>>>>>>>>>>> <<<<<<<<<<<<<<<<<< ------------------\n\r");
+	print_kernel_panic();
+
 	/* Set the return address to be the function main_endloop(), by
 	 * putting its address into the program counter
 	 *
@@ -294,102 +283,94 @@ void __attribute__((interrupt("ABORT"))) data_abort_vector(void)
     immediately put us back into the start of the handler again.
 */
 // IRQ
-void __attribute__((interrupt("IRQ"))) interrupt_vector(void) {
-
-	/*
-	asm volatile("push {R0-R12}");
-	asm volatile("MRS R0, SPSR");
-	asm volatile("push {R0}");
-
-    RPI_GetArmTimer()->IRQClear = 0;
-    *armTimerIRQClear = 0;
-
-
-	asm volatile("pop {R0}");
-	asm volatile("MSR CPSR,R0");
-	asm volatile("pop {R0-R12}");
-	asm volatile("pop {r3,lr}");
-
-	//asm volatile("subs pc, lr, #0");
-
-	asm volatile("mov pc, lr");
-*/
-
-#if(1)
-	// Esta rutina empieza en modo IRQ
-
-	// Se guardan todos los registros en la IRQ STACK (R13)
-	asm volatile("push {R0-R12}");
-
-	// Put LR del IRQ mode (Que es el PC del proceso interrumpido) en R0
-	asm volatile("MOV R0, LR");
-
-	// Cambio de modo a System mode
-	asm volatile("cps #0x1f");
-
-	// Push R0 (PC del proceso interrumpido) a la pila del system mode
-	asm volatile("push {R0}");
-
-
-	// Return to IRQ mode
-	asm volatile("cps #0x12");
-
-	// Pop all registers again
-	asm volatile("pop {R0-R12}");
-
-
-	// Return to system mode
-	asm volatile("cps #0x1f");
-
-	// Push todos los registeos pero esta vez dentro de la system mode stack
-	asm volatile("push {R0-R12}");
-
-	// Push de LR del proceso interrumpido a la system mode stack
-	asm volatile("push {LR}");
-
-	// Copy the Saved Program Status Register to R0
-	// http://lioncash.github.io/ARMBook/the_apsr,_cpsr,_and_the_difference_between_them.html
-    asm volatile("MRS R0, SPSR");
-
-    // Se guarda el SPSR en la system mode stack
-    asm volatile("push {R0}");
-
-
-    // Return to IRQ mode
-    asm volatile("cps #0x12");
-
-	// Copy LR to R0
-	asm volatile("MOV R0, LR");
-
-	// Back to system mode
-	asm volatile("cps #0x1f");
+void __attribute__((naked)) interrupt_vector(void) {
 
 	unsigned int pc;
+	unsigned int stack_pointer;
+	unsigned int spsr;
+	unsigned int new_stack;
 
-    unsigned int stack_pointer;
+	// COMIENZO DEL PROLOGO DE LA RTI.
 
-	// PC y SP
-	asm volatile ("MOV %0, R0\n\t" : "=r" (pc) );
+	/*// debug
+	asm volatile("cps #0x1f");
     asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
+	asm volatile("cps #0x12");
+
+    uart_puts("SP ANTES DE SRSDB #16!: 0x");
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+    uart_puts("\n\r");
+	// debug*/
+
+	asm volatile("sub lr,lr,#4");
+	// PUSH PC y SPSR en la pila del proceso interrumpido.
+	asm volatile("SRSDB #16!");
+/*
+	// debug
+	asm volatile("cps #0x1f");
+    asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
+	asm volatile("cps #0x12");
+
+    uart_puts("SP DESPUES DE SRSDB #16!: 0x");
+    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+    uart_puts("\n\r");
+	// debug
+*/
+	// Cambio a modo SYSTEM para acceder a la pila del proceso interrumpido.
+	asm volatile("cps #0x1f");
+
+	// push de todos los registros a la pila del proceso detenido.
+	// r15 = PC.
+	// r14 = LR.
+	// r13 = SP. No queremos hacer push del stack pointer -> ARM doesn't guarantee what value it will have.
+	asm volatile("push	{r0-r12,r14}");
+
+	// Obtencion de la pila
+    asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
+
+    // Vuelta al modo IRQ para el manejo de la interrupción.
+	asm volatile("cps #0x12");
+
+	// Obtencion del PC del proceso interrumpido. LR del modo IRQ = PC del proceso interrumpido
+	asm volatile ("MOV %0, LR\n\t" : "=r" (pc) );
+
+	// Obtencion del PSR del proceso interrumpido (SPSR).
+	asm volatile("MRS %0, SPSR\n\t" : "=r" (spsr) );
+
+	// FIN DEL PROLOGO.
 
     // Comprobar si la IRQ ha sido producida por la UART0
     if(rpiIRQController->IRQ_pending_2 != 0) {
     	// La IRQ ha sido producida por la UART0.
-
         *((unsigned int *) UART0_ICR) = 0x7FF;
         rpiIRQController->IRQ_pending_1 = rpiIRQController->IRQ_pending_2 = 0;
 
-    	uart_interrupt_handler(stack_pointer,pc);
+        uart_interrupt_handler(stack_pointer,pc);
 
     } else {
     	// La IRQ Ha sido producida por el timer.
     	// Se invoca al dispatcher para el cambio de contexto
-    	schedule_timeout(stack_pointer, pc);
+
+		timer_reset();
+
+		new_stack = schedule_timeout(stack_pointer,pc,spsr);
+		_force_to_save_new_stack(new_stack);
     }
+/*
+    uart_puts("NEW stack = 0x");
+    uart_puts(uintToString(new_stack,HEXADECIMAL));
+	uart_puts("\n\r");
+*/
+	// Cambio a modo SYSTEM para acceder a los registros del nuevo proceso
+	// Asignación de la nueva pila
+	asm volatile("cps #0x1f");
+	asm volatile ("MOV SP, %0\n\t" : "=r" (new_stack) );
+	asm volatile("pop	{r0-r12,r14}");
+	asm volatile("RFEIA	sp!");
 
-#endif
+	return;
+
 }
-
 
 /**
     @brief The FIQ Interrupt Handler
@@ -419,10 +400,8 @@ void __attribute__((interrupt("IRQ"))) interrupt_vector(void) {
 void __attribute__((interrupt("FIQ"))) fast_interrupt_vector(void)
 {
 	uart_puts("[ERROR] FIQ INTERRUPT");
-}
 
-void timer_reset(void)
-{
-    RPI_GetArmTimer()->IRQClear = 0;
-    *armTimerIRQClear = 0;
+	print_kernel_panic();
+
+	while(1);
 }

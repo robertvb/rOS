@@ -65,6 +65,7 @@ struct Process_t {
     unsigned int	tablePageDir;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;
+	unsigned int	spsr;
     unsigned int 	times_loaded;
     unsigned int 	status;
     unsigned int	waiting_for;	// Recurso por el que se está esperando cuando el proceso esta bloqueado

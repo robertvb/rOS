@@ -158,7 +158,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	}
 #endif
 
-#if(1)
+#if(0)
 
 	uart_puts("Inicializando driver emmc......\r\n");
 
@@ -339,14 +339,14 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	}
 #endif
 
-#if(0)
+#if(1)
 
 	create_main_process();
 
 	/* Enable the timer interrupt IRQ */
-	RPI_GetIrqController()->Enable_Basic_IRQs = 0x0;
+	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 
-	/* Setup the system timer interrupt */
+	/* Setup the system time r interrupt */
 	/* Timer frequency = Clk/256 * 0x400 */
 	RPI_GetArmTimer()->Load = 0x800;
 
@@ -358,12 +358,13 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	RPI_ARMTIMER_CTRL_PRESCALE_256;
 
 	//Enable uart interrupts:
-
+/*
 	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
 	RPI_GetIrqController()->Disable_IRQs_2 = 0xFFFFFFFF;
 
 	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
 
+	/*
 	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
 	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
 	uart_puts("\n\r");
@@ -376,9 +377,9 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts(uintToString(UART0_ICR,HEXADECIMAL));
 	uart_puts("\n\r");
 	/* Enable interrupts! */
-	_enable_interrupts();
-	asm volatile("cps #0x10");
+	//_enable_interrupts();
 
+	asm volatile("cpsie i,#0x10");
 	while(1){
 		uart_puts("while...\n\r");
 		RPI_esperarMicroSeconds(1000000);
