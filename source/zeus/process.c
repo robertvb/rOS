@@ -30,14 +30,12 @@ void sample_process_1() {
 
     uart_puts("Starting process 1 ");
 
-    int to = 300;
-
-    int i, j;
+    int to = 10;
+    int i;
     for (i=0; i<to; i++) {
-        for (j=0; j<to*to; j++) {
-			asm volatile("NOP");
-		}
+        uart_puts("PROCESO1........");
     }
+
 
     // Call software interrupt #0 (terminate)
     asm volatile("SWI #0");
@@ -46,16 +44,16 @@ void sample_process_1() {
 // Just some counting for easy debug on the screen. Simulate user process.
 void sample_process_2() {
 
-	uart_puts("Starting process 2 ");
+	uart_puts("Starting process 2!\n\r");
 
-    int to = 300;
-
-    int i, j;
+    int to = 200;
+    int i;
     for (i=0; i<to; i++) {
-        for (j=0; j<to*to; j++) {
-			asm volatile("NOP");
-		}
+        uart_puts("PROCESO2. VALOR DE I = \n\r");
+        uart_puts(uintToString((unsigned int) i,HEXADECIMAL));
+        uart_puts("\n\r");
     }
+
 
     // Call software interrupt #0 (terminate)
     asm volatile("SWI #0");

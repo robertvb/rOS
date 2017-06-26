@@ -159,7 +159,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 #endif
 
 #if(0)
-
 	uart_puts("Inicializando driver emmc......\r\n");
 
 	struct block_device *bd = NULL;
@@ -220,7 +219,17 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 			uint32_t fat[242432];
 
+			if (emmc_card_init(&bd) == 0) {
+				uart_puts("emmc_sd_card_driver re-inicializado!!!!!!\r\n");
+				uart_puts("block Size = ");
+				uart_puts(uintToString(bd->block_size, DECIMAL));
+				uart_puts("\r\n");
+			} else {
+				uart_puts("[ERROR] emmc_sd_card_driver NO inicializado!!!!!!\r\n");
+			}
+
 			for (i = 0; i < 242432 / (512 / 4); i++) {
+				uart_puts("Sigo en el for tio... \r\n");
 				emmc_read(bd, (uint8_t *)&fat[i * (512 / 4)], 512, primerSectorFAT + i);
 			}
 
@@ -309,6 +318,8 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 		}
 	}
 
+
+
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
 
@@ -341,6 +352,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 #if(1)
 
+	bgInit(atagsAddr);
 	create_main_process();
 
 	/* Enable the timer interrupt IRQ */
@@ -358,26 +370,21 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	RPI_ARMTIMER_CTRL_PRESCALE_256;
 
 	//Enable uart interrupts:
-/*
+
 	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
 	RPI_GetIrqController()->Disable_IRQs_2 = 0xFFFFFFFF;
 
 	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
 
-	/*
-	uart_puts("RPI_GetIrqController()->IRQ_pending_1: 0x");
-	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_1,HEXADECIMAL));
-	uart_puts("\n\r");
-
-	uart_puts("RPI_GetIrqController()->IRQ_pending_2: 0x");
-	uart_puts(uintToString(RPI_GetIrqController()->IRQ_pending_2,HEXADECIMAL));
-	uart_puts("\n\r");
-
-	uart_puts("UART0_ICR 0x");
-	uart_puts(uintToString(UART0_ICR,HEXADECIMAL));
-	uart_puts("\n\r");
-	/* Enable interrupts! */
-	//_enable_interrupts();
+	uart_puts("creando procs de ejemplo!\r\n");
+/*
+	kfork("Sample process 1", (Dir_t) &sample_process_1, (Dir_t) 0x1f000000);
+	uart_puts("KFORK 1 HECHO, resultado de la pila:\r\n");
+	printMemDump(0x1f000000 - 16*4,16);
+*/
+	kfork("Sample process 2", (Dir_t) &sample_process_2, (Dir_t) 0x1e000000);
+	uart_puts("KFORK 2 HECHO, resultado de la pila:\r\n");
+	printMemDump(0x1e000000 - 16*4,16);
 
 	asm volatile("cpsie i,#0x10");
 	while(1){

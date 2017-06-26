@@ -39,7 +39,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SC_GET_PPID					4
 #define SC_GET_CHAR					5
 
-typedef int system_call_t(uint32_t pc, uint32_t sp, ...);
+typedef int system_call_t(uint32_t pc, uint32_t sp, uint32_t spsr, ...);
 
 typedef struct system_call_entry {
 	uint32_t swi;
@@ -52,6 +52,6 @@ typedef struct system_call_entry {
 
 void init_syscalls(void);
 
-int syscall_handler(unsigned int swi,unsigned int pc, unsigned int sp, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3);
+unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr,unsigned int swi,unsigned int arg0,unsigned int arg1,unsigned int arg2,unsigned int arg3);
 
 #endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */

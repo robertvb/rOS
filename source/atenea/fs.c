@@ -31,6 +31,24 @@ void printByte(uint8_t value) {
 	uart_putc(buffer[value & 0x0F]);
 }
 
+void printMemDump(unsigned int * offset, unsigned int len) {
+	unsigned int i;
+	uint8_t * byte;
+	uart_putc('[');
+	for(i = 0, byte = (uint8_t *) offset; i < len; i++) {
+		printByte(* byte);
+		byte++;
+		printByte(* byte);
+		byte++;
+		printByte(* byte);
+		byte++;
+		printByte(* byte);
+		byte++;
+		uart_putc(',');
+	}
+	uart_putc(']');
+}
+
 void prgm2proc(struct block_device * bd, unsigned int cluster,
 		unsigned int fichTam, uint32_t * fat, unsigned int primerSectorDirRaiz) {
 

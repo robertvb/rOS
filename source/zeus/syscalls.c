@@ -29,8 +29,9 @@ static void SC_DO_NOTHING(void) {
 	return;
 }
 
-static wrapper_uart_puts(unsigned int pc,unsigned int sp,unsigned int param0) {
+static unsigned int wrapper_uart_puts(unsigned int pc,unsigned int sp, unsigned int spsr, unsigned int param0) {
 	uart_puts((unsigned char *)param0);
+	return sp;
 }
 
 /*
@@ -38,8 +39,8 @@ static wrapper_uart_puts(unsigned int pc,unsigned int sp,unsigned int param0) {
  */
 static system_call_entry_t system_call_table[] = {
 	    {SC_EXIT,"exit",terminate_process,0,0},
-	    {SC_UART_WRITE,"write",wrapper_uart_puts,0,1},			// TODO
-	    {SC_SLEEP,"sleep",sleepCurrentProc,0,1},				// TODO
+	    {SC_UART_WRITE,"write",wrapper_uart_puts,0,1},
+	    {SC_SLEEP,"sleep",sleepCurrentProc,0,1},
 	    {SC_GET_PID,"getpid", getCurrentProcessPid,0,0},
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
 		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,0}
@@ -54,10 +55,11 @@ void init_syscalls(void) {
 /*
  * Rutina de manejo de interrupciones software
  */
-int syscall_handler(unsigned int swi, unsigned int pc, unsigned int sp, unsigned int param0, unsigned int param1, unsigned int param2, unsigned int param3) {
+unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr,unsigned int swi,unsigned int param0,unsigned int param1,unsigned int param2,unsigned int param3) {
 
     system_call_t* syscall;
     system_call_entry_t* syscall_entry;
+    unsigned int new_stack = 0;
 
 	uart_puts("Handling syscall: ");
 	uart_puts(system_call_table[swi].name);
@@ -75,19 +77,20 @@ int syscall_handler(unsigned int swi, unsigned int pc, unsigned int sp, unsigned
     // Llamamos a la rutina del kernel encargada de dicha llamada al sistema con el número de parámetros especificado.
     switch(syscall_entry->params) {
     	case 0:
-    	    return syscall(pc,sp);
+    		new_stack = syscall(lr_addr,sp_addr,spsr);
     	break;
     	case 1:
-    	    return syscall(pc,sp,param0);
+    		new_stack = syscall(lr_addr,sp_addr,spsr,param0);
     	break;
     	case 2:
-        	return syscall(pc,sp,param0,param1);
+    		new_stack = syscall(lr_addr,sp_addr,spsr,param0,param1);
     	break;
     	case 3:
-        	return syscall(pc,sp,param0,param1,param2);
+    		new_stack = syscall(lr_addr,sp_addr,spsr,param0,param1,param2);
     	break;
     	case 4:
-        	return syscall(pc,sp,param0,param1,param2,param3);
+    		new_stack = syscall(lr_addr,sp_addr,spsr,param0,param1,param2,param3);
     }
 
+    return new_stack;
 }

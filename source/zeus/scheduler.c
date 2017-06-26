@@ -32,6 +32,8 @@ static Process_t * bloqued_queue;
 static Process_t * active_process;
 static unsigned int stack_base;
 static unsigned int process_count;
+// TODO DEBUG
+static unsigned int count;
 
 static void mainProcLoop() {
 	while(1) {
@@ -154,13 +156,16 @@ void create_main_process() {
 
     // Se incrementa el contador de procesos
     process_count++;
+    // TODO DEBUG
+    count = 0;
 }
 
 /*
  * Procedure to fork this process, creating a new one, pointing the pc
  * to the memory address of the desired procedure
  */
-void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
+
+void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
 
 	if(process_count >= MAX_PROCS) {
 		uart_puts("ERROR! ALCANZADO MAX_PROCS");
@@ -169,22 +174,49 @@ void kfork(char * name, Dir_t pc, Dir_t forked_stack_pointer) {
 
 	// DEBUG
 	uart_puts("Forked stack is 0x");
-    uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
+    uart_puts(uintToString((unsigned int) forked_stack_pointer, HEXADECIMAL));
 	uart_puts("\n\r");
 
 	process_list[process_count].pid = process_count;
-	process_list[process_count].name = name;
+	process_list[process_count].name = (char *) name;
 	process_list[process_count].pc = (unsigned int) pc;
 	process_list[process_count].ppid = active_process->ppid;
 	process_list[process_count].times_loaded = 0;
-	process_list[process_count].stack_pointer = (unsigned int) forked_stack_pointer;
-	process_list[process_count].status = PROCESS_STATUS_ZOMBIE;
+	process_list[process_count].status = PROCESS_STATUS_READY;
 	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
+	process_list[process_count].spsr = 0x00000150;				  //Modo usuario
+
 
 	process_list[process_count].nextProc = ready_queue;
 	ready_queue = &process_list[process_count];
 
+
+    forked_stack_pointer--;
+    *forked_stack_pointer = 0x00000150;
+    uart_puts("Poniendo a cero word = ");
+    uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
+    uart_puts("\n\r");
+
+    forked_stack_pointer--;
+    *forked_stack_pointer = pc;
+    uart_puts("Poniendo a cero word = ");
+    uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
+    uart_puts("\n\r");
+
+
+    unsigned int i = 14;
+    while( i-- > 0) {
+        forked_stack_pointer--;
+    	*forked_stack_pointer = 0;
+        uart_puts("Poniendo a cero word = ");
+        uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
+        uart_puts("\n\r");
+    }
+
+	process_list[process_count].stack_pointer = (unsigned int) (forked_stack_pointer);
+
     process_count++;
+
 }
 
 /*
@@ -201,8 +233,10 @@ void halt() {
  */
 unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr) {
 
+	// Refrescamos BG
+	bgRefresh();
+
 	unsigned int new_stack;
-	static unsigned int count = 0;
     uart_puts("ejecutando time_out. Count = ");
     uart_puts(uintToString(count++,DECIMAL));
     uart_puts("\n\r");
@@ -304,7 +338,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
 
 }
 
-void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
+unsigned int sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int spsr, unsigned int tics) {
 
 
 	uart_puts("metiendo proceso en la cola de bloqueados. Pid is ");
@@ -323,6 +357,7 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
 	// Se salva PC y STACK del proceso en ejecucion
 	active_process->stack_pointer = sp;
     active_process->pc = addr;
+    active_process->spsr = spsr;
 
 	uart_puts("Valor waiting_for: ");
     uart_puts(uintToString(active_process->waiting_for,DECIMAL));
@@ -351,83 +386,10 @@ void sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int tics) {
     uart_puts(uintToString(active_process->pid,DECIMAL));
     uart_puts("\r\n");
 
-    // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
-
-	// Si no es la primera vez que se ejecuta el proceso
-	if (active_process->times_loaded > 1) {
-
-		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = active_process->tablePageDir;
-		/* Use translation table 0 up to 64MB */
-		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
-		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
-		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
-		/* Invalidate the translation lookaside buffer (TLB)
-		 * ARM1176JZF-S manual, p. 3-86
-		 */
-		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-		/* end*/
-
-		timer_reset();
-
-		// Rescatamos registros y flags de la pila
-		asm volatile("pop {R0}");
-		/* Saved Program Status Register
-		 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
-		 * mode the exception is taken to.
-		   This is useful because the exception handler is able to restore the CPSR
-		   to the value prior to taking the exception,
-		   as well as being able to examine the CPSR in general.
-		   MSR = MOVE SYSTEM REGYSTER
-		 */
-		asm volatile("MSR   SPSR, R0");
-		asm volatile("pop {LR}");
-		asm volatile("pop {R0 - R12}");
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-		asm volatile("cpsie i");
-
-		// Rescatamos el contador de programa y renaudamos la ejecucion
-		asm volatile("pop {PC}");
-
-	} else {
-
-		// Se salva el contador de programa en la pila
-		unsigned int addr = (unsigned int )(active_process->pc);
-		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
-		asm volatile("push {R0}");
-
-		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = active_process->tablePageDir;
-		/* Use translation table 0 up to 64MB */
-		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
-		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
-		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
-		/* Invalidate the translation lookaside buffer (TLB)
-		 * ARM1176JZF-S manual, p. 3-86
-		 */
-		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-
-		/* end*/
-
-		timer_reset();
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-
-		asm volatile("cpsie i");
-
-		/* rescatamos PC y comienza la ejecucion del proceso */
-		asm volatile("pop {PC}");
-
-	}
+	return active_process->stack_pointer;
 }
 
-void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
+unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
 
 		// Se salva PC y STACK del proceso en ejecucion
 		active_process->stack_pointer = stack_pointer;
@@ -513,48 +475,18 @@ void uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
          uart_puts(uintToString(active_process->pc,HEXADECIMAL));
      	uart_puts("\n\r");
 
-         // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-     	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
+        return active_process->stack_pointer;
 
-     		// Se salva el contador de programa en la pila
-     		unsigned int addr = (unsigned int )(active_process->pc);
-     		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
-     		asm volatile("push {R0}");
-
-     #if(1)
-     		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-     		unsigned int pagetable = active_process->tablePageDir;
-     		/* Use translation table 0 up to 64MB */
-     		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
-     		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
-     		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
-     		/* Invalidate the translation lookaside buffer (TLB)
-     		 * ARM1176JZF-S manual, p. 3-86
-     		 */
-     		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-     #endif
-     		/* end*/
-
-     		timer_reset();
-
-     		/* Rehabilitacion de interrupciones
-     		 * CPS change procesor state IE interrupt and i ENABLE
-     		 */
-
-     		asm volatile("cpsie i");
-
-     		/* rescatamos PC y comienza la ejecucion del proceso */
-     		/* Es seguro que se va a ejecutar por el pipeline (SUPOSICION). */
-     		asm volatile("pop {PC}");
 }
 
-void getCharacterHandler(unsigned int pc, unsigned int sp) {
+unsigned int getCharacterHandler(unsigned int pc, unsigned int sp, unsigned int spsr) {
 
 	active_process->status = PROCESS_STATUS_BLOCKED;
 	active_process->waiting_for = (BLKD_USER_IO << 30);
 	// Se salva PC y STACK del proceso en ejecucion
 	active_process->stack_pointer = sp;
     active_process->pc = pc;
+    active_process->spsr = spsr;
 
     // Se bloquea al proceso solicitante hasta que este disponible el recurso
     active_process->nextProc = bloqued_queue;
@@ -574,80 +506,7 @@ void getCharacterHandler(unsigned int pc, unsigned int sp) {
 	    uart_puts("\n\r");
 	}
 
-    // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
-
-	// Si no es la primera vez que se ejecuta el proceso
-	if (active_process->times_loaded > 1) {
-
-		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = active_process->tablePageDir;
-		/* Use translation table 0 up to 64MB */
-		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
-		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
-		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
-		/* Invalidate the translation lookaside buffer (TLB)
-		 * ARM1176JZF-S manual, p. 3-86
-		 */
-		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-		/* end*/
-
-		timer_reset();
-
-		// Rescatamos registros y flags de la pila
-		asm volatile("pop {R0}");
-		/* Saved Program Status Register
-		 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
-		 * mode the exception is taken to.
-		   This is useful because the exception handler is able to restore the CPSR
-		   to the value prior to taking the exception,
-		   as well as being able to examine the CPSR in general.
-		   MSR = MOVE SYSTEM REGYSTER
-		 */
-		asm volatile("MSR   SPSR, R0");
-		asm volatile("pop {LR}");
-		asm volatile("pop {R0 - R12}");
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-		asm volatile("cpsie i");
-
-		// Rescatamos el contador de programa y renaudamos la ejecucion
-		asm volatile("pop {PC}");
-
-	} else {
-
-		// Se salva el contador de programa en la pila
-		unsigned int addr = (unsigned int )(active_process->pc);
-		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
-		asm volatile("push {R0}");
-
-		/* refresco del cacheo de la TLB y reasignacion de la tabla de paginas */
-		unsigned int pagetable = active_process->tablePageDir;
-		/* Use translation table 0 up to 64MB */
-		asm volatile("mcr p15, 0, %[n], c2, c0, 2" : : [n] "r" (6));
-		/* Translation table 0 - ARM1176JZF-S manual, 3-57 */
-		asm volatile("mcr p15, 0, %[addr], c2, c0, 0" : : [addr] "r" (pagetable));
-		/* Invalidate the translation lookaside buffer (TLB)
-		 * ARM1176JZF-S manual, p. 3-86
-		 */
-		asm volatile("mcr p15, 0, %[data], c8, c7, 0" : : [data] "r" (0));
-
-		/* end*/
-
-		timer_reset();
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-
-		asm volatile("cpsie i");
-
-		/* rescatamos PC y comienza la ejecucion del proceso */
-		asm volatile("pop {PC}");
-
-	}
+	return active_process->stack_pointer;
 
 
 }

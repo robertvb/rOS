@@ -72,6 +72,8 @@ static void print_kernel_panic(void) {
     GPU and therefore cause the GPU to start running code again until
     the ARM is handed control at the end of boot loading
 */
+
+
 void __attribute__((interrupt("ABORT"))) reset_vector(void)
 {
 	register unsigned int addr, far;
@@ -126,16 +128,33 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
     solution.
 */
 // Software interrupt
-__attribute__ ((interrupt ("NAKED"))) void software_interrupt_vector(void) {
+__attribute__ ((naked)) void software_interrupt_vector(void) {
 	// En esta funcion se entra en modo supervidor (SVR)
 
 	unsigned int swi;
 	unsigned int lr_addr;
 	unsigned int sp_addr;
+	unsigned int spsr;
 	unsigned int arg0;
 	unsigned int arg1;
 	unsigned int arg2;
 	unsigned int arg3;
+	unsigned int new_stack;
+
+	// PUSH PC y SPSR en la pila del proceso interrumpido.
+	asm volatile("SRSDB #16!");
+
+	// Cambio a modo SYSTEM para acceder a la pila del proceso interrumpido.
+	asm volatile("cps #0x1f");
+
+	// push de todos los registros a la pila del proceso detenido.
+	// r15 = PC.
+	// r14 = LR.
+	// r13 = SP. No queremos hacer push del stack pointer -> ARM doesn't guarantee what value it will have.
+	asm volatile("push	{r0-r12,r14}");
+
+	// Obtencion de la pila
+    asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
 
 	/* cargamos los parametros */
 	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
@@ -143,36 +162,16 @@ __attribute__ ((interrupt ("NAKED"))) void software_interrupt_vector(void) {
 	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
 	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
 
-	// Pillo el PC para la reunaudacion
-	asm volatile("MOV R0, LR");
-
-	// Cambio de modo a System mode
-	asm volatile("cps #0x1f");
-
-	// Push R0 (PC del proceso interrumpido) a la pila del system mode
-	asm volatile("push {R0}");
-
-	// Push todos los registeos pero esta vez dentro de la system mode stack
-	asm volatile("push {R0-R12}");
-
-	// Push de LR del proceso interrumpido a la system mode stack
-	asm volatile("push {LR}");
-
-	// Copy the Saved Program Status Register to R0
-	// http://lioncash.github.io/ARMBook/the_apsr,_cpsr,_and_the_difference_between_them.html
-    asm volatile("MRS R0, SPSR");
-
-    // Se guarda el SPSR en la system mode stack
-    asm volatile("push {R0}");
-
-	// Read SP
-	asm volatile("mov %[sp_addr], sp" : [sp_addr] "=r" (sp_addr) );
-
     // Return to SVR mode
     asm volatile("cps #0x13");
 
-	// Read link register into addr - contains the address of the instruction after the SWI
-	asm volatile("mov %[lr_addr], lr" : [lr_addr] "=r" (lr_addr) );
+	// Obtencion del PC del proceso interrumpido. LR del modo IRQ = PC del proceso interrumpido
+	asm volatile ("MOV %0, LR\n\t" : "=r" (lr_addr) );
+
+	// Obtencion del PSR del proceso interrumpido (SPSR).
+	asm volatile("MRS %0, SPSR\n\t" : "=r" (spsr) );
+
+	// FIN DEL PROLOGO.
 
 	uart_puts("Valor de sp en poseidon: 0x");
     uart_puts(uintToString(sp_addr,HEXADECIMAL));
@@ -189,18 +188,18 @@ __attribute__ ((interrupt ("NAKED"))) void software_interrupt_vector(void) {
 	swi = *((unsigned int *)(lr_addr - 4)) & 0x00ffffff;
 
 	// Handle syscall
-	syscall_handler(swi,lr_addr,sp_addr,arg0,arg1,arg2,arg3);
+	new_stack = syscall_handler(sp_addr,lr_addr,spsr,swi,arg0,arg1,arg2,arg3);
+	_force_to_save_new_stack(new_stack);
 
-	uart_puts("Turning interrupt on again");
-	uart_puts("\n\r");
-
+	// Cambio a modo SYSTEM para acceder a los registros del nuevo proceso
+	asm volatile("cps #0x1f");
+	// Asignación de la nueva pila
+	asm volatile ("MOV SP, %0\n\t" : "=r" (new_stack) );
 	// pop de los registros del proceso
-	//asm volatile("pop {r0-r12}");
+	asm volatile("pop	{r0-r12,r14}");
+	// RETORNO DE LA RUTINA DE INTERRUPCION. hace un restore del pc y el SPSR slvado por SRSDB
+	asm volatile("RFEIA	sp!");
 
-	// Se rehabilitan las interrupciones
-	asm volatile("cpsie i");
-
-	asm volatile("MOV PC, %[lr_addr]" : : [lr_addr] "r" (lr_addr) );
 }
 
 
@@ -292,30 +291,11 @@ void __attribute__((naked)) interrupt_vector(void) {
 
 	// COMIENZO DEL PROLOGO DE LA RTI.
 
-	/*// debug
-	asm volatile("cps #0x1f");
-    asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
-	asm volatile("cps #0x12");
-
-    uart_puts("SP ANTES DE SRSDB #16!: 0x");
-    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
-    uart_puts("\n\r");
-	// debug*/
-
 	asm volatile("sub lr,lr,#4");
+
 	// PUSH PC y SPSR en la pila del proceso interrumpido.
 	asm volatile("SRSDB #16!");
-/*
-	// debug
-	asm volatile("cps #0x1f");
-    asm volatile ("MOV %0, SP\n\t" : "=r" (stack_pointer) );
-	asm volatile("cps #0x12");
 
-    uart_puts("SP DESPUES DE SRSDB #16!: 0x");
-    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
-    uart_puts("\n\r");
-	// debug
-*/
 	// Cambio a modo SYSTEM para acceder a la pila del proceso interrumpido.
 	asm volatile("cps #0x1f");
 
@@ -345,7 +325,7 @@ void __attribute__((naked)) interrupt_vector(void) {
         *((unsigned int *) UART0_ICR) = 0x7FF;
         rpiIRQController->IRQ_pending_1 = rpiIRQController->IRQ_pending_2 = 0;
 
-        uart_interrupt_handler(stack_pointer,pc);
+        new_stack = uart_interrupt_handler(stack_pointer,pc);
 
     } else {
     	// La IRQ Ha sido producida por el timer.
@@ -354,21 +334,22 @@ void __attribute__((naked)) interrupt_vector(void) {
 		timer_reset();
 
 		new_stack = schedule_timeout(stack_pointer,pc,spsr);
-		_force_to_save_new_stack(new_stack);
     }
-/*
-    uart_puts("NEW stack = 0x");
-    uart_puts(uintToString(new_stack,HEXADECIMAL));
-	uart_puts("\n\r");
-*/
+
+	_force_to_save_new_stack(new_stack);
+
+    // COMIENZO DEL EPILOGO DE LA RTI.
+
 	// Cambio a modo SYSTEM para acceder a los registros del nuevo proceso
-	// Asignación de la nueva pila
 	asm volatile("cps #0x1f");
+	// Asignación de la nueva pila
 	asm volatile ("MOV SP, %0\n\t" : "=r" (new_stack) );
+	// pop de los registros del proceso
 	asm volatile("pop	{r0-r12,r14}");
+	// RETORNO DE LA RUTINA DE INTERRUPCION. hace un restore del pc y el SPSR slvado por SRSDB
 	asm volatile("RFEIA	sp!");
 
-	return;
+    // FIN DEL EPILOGO DE LA RTI.
 
 }
 
