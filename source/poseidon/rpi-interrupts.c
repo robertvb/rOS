@@ -128,7 +128,7 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
     solution.
 */
 // Software interrupt
-__attribute__ ((naked)) void software_interrupt_vector(void) {
+void __attribute__ ((naked)) software_interrupt_vector(void) {
 	// En esta funcion se entra en modo supervidor (SVR)
 
 	unsigned int swi;
@@ -190,6 +190,10 @@ __attribute__ ((naked)) void software_interrupt_vector(void) {
 	// Handle syscall
 	new_stack = syscall_handler(sp_addr,lr_addr,spsr,swi,arg0,arg1,arg2,arg3);
 	_force_to_save_new_stack(new_stack);
+
+	if(new_stack == 0) {
+		new_stack = sp_addr;
+	}
 
 	// Cambio a modo SYSTEM para acceder a los registros del nuevo proceso
 	asm volatile("cps #0x1f");
@@ -290,7 +294,6 @@ void __attribute__((naked)) interrupt_vector(void) {
 	unsigned int new_stack;
 
 	// COMIENZO DEL PROLOGO DE LA RTI.
-
 	asm volatile("sub lr,lr,#4");
 
 	// PUSH PC y SPSR en la pila del proceso interrumpido.

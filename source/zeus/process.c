@@ -50,7 +50,7 @@ void sample_process_2() {
     int i;
     for (i=0; i<to; i++) {
         uart_puts("PROCESO2. VALOR DE I = \n\r");
-        uart_puts(uintToString((unsigned int) i,HEXADECIMAL));
+        uart_puts(uintToString((unsigned int) i,DECIMAL));
         uart_puts("\n\r");
     }
 

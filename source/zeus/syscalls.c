@@ -56,7 +56,6 @@ void init_syscalls(void) {
  * Rutina de manejo de interrupciones software
  */
 unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr,unsigned int swi,unsigned int param0,unsigned int param1,unsigned int param2,unsigned int param3) {
-
     system_call_t* syscall;
     system_call_entry_t* syscall_entry;
     unsigned int new_stack = 0;
@@ -67,8 +66,10 @@ unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned 
 
 	if(swi >= MAX_SYSCALLS) {
 		// SYSCALL no recenocida.
-		uart_puts("[ERROR] SYSCALL NO RECONOCIDA!\n\r");
-		return -1;
+		uart_puts("[ERROR] SYSCALL NO RECONOCIDA: ");
+	    uart_puts(uintToString(swi,DECIMAL));
+		uart_puts("\n\r");
+		return 0;
 	}
 
     syscall_entry = &system_call_table[swi];

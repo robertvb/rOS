@@ -40,7 +40,7 @@ void create_main_process(void);
 void kfork(char * name,  Dir_t addr, Dir_t sp);
 unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr);
 unsigned int sleepCurrentProc(unsigned int addr,unsigned int sp, unsigned int spsr, unsigned int tics);
-void terminate_process(void);
+unsigned int terminate_process(void);
 void halt(void);
 unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc); // TODO
 unsigned int getCharacterHandler(unsigned int pc, unsigned int sp, unsigned int spsr); // TODO

@@ -27,7 +27,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 static Process_t process_list[MAX_PROCS];
 static Process_t * ready_queue;
-static Process_t * last_executed;
+static Process_t * ready_queue_tail;
 static Process_t * bloqued_queue;
 static Process_t * active_process;
 static unsigned int stack_base;
@@ -53,77 +53,25 @@ Pid_t getCurrentProcessPpid(void) {
 	return active_process->ppid;
 }
 
-void terminate_process() {
+unsigned int terminate_process(void) {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	active_process->status = PROCESS_STATUS_TERMINATED;
 
     // Obtenemos el siguiente proceso
 	active_process = ready_queue;
 
-    // If -1, halt
+    // If -1, halt TODO DEBUG
     if (active_process == NULL) {
 		uart_puts("No more waiting processes, halting.");
 		uart_puts("\n\r");
 		halt();
 	}
 
-    // Incremetamos estadisticas y cambiamos status a RUNNING
-    active_process->times_loaded++;
-    active_process->status = PROCESS_STATUS_RUNNING;
-
-    // Actualizacion del puntero de pila en el procesador al nuevo proceso a ejecutar
-	asm volatile("MOV SP, %[addr]" : : [addr] "r" ((unsigned int )(active_process->stack_pointer)) );
-
-	// Si no es la primera vez que se ejecuta el proceso
-	if (active_process->times_loaded > 1) {
-
-		timer_reset();
-
-		// Rescatamos registros y flags de la pila
-		asm volatile("pop {R0}");
-		/* Saved Program Status Register
-		 * Upon taking an exception, the CPSR is copied to the SPSR of the processor
-		 * mode the exception is taken to.
-		   This is useful because the exception handler is able to restore the CPSR
-		   to the value prior to taking the exception,
-		   as well as being able to examine the CPSR in general.
-		   MSR = MOVE SYSTEM REGYSTER
-		 */
-		asm volatile("MSR   SPSR, R0");
-		asm volatile("pop {LR}");
-		asm volatile("pop {R0 - R12}");
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-		asm volatile("cpsie i");
-
-		// Rescatamos el contador de programa y renaudamos la ejecucion
-		asm volatile("pop {PC}");
-
-	} else {
-
-		// Se salva el contador de programa en la pila
-		unsigned int addr = (unsigned int )(active_process->pc);
-		asm volatile("MOV R0, %[addr]" : : [addr] "r" (addr) );
-		asm volatile("push {R0}");
-
-		timer_reset();
-
-		/* Rehabilitacion de interrupciones
-		 * CPS change procesor state IE interrupt and i ENABLE
-		 */
-		asm volatile("cpsie i");
-
-		/* rescatamos PC y comienza la ejecucion del proceso */
-		asm volatile("pop {PC}");
-
-	}
+    return active_process->stack_pointer;
 
 }
 
 // Funcion para crear el proceso base.
-// El equivalente en UNIX sería el proceso INIT
 void create_main_process() {
 
     process_count = 0;
@@ -151,10 +99,12 @@ void create_main_process() {
 	uart_puts("\n\r");
 
     // Se establece como proceso activo en este momento
-    ready_queue = last_executed = NULL;
+    ready_queue = ready_queue_tail = NULL;
+    process_list[process_count].nextProc = NULL;
     active_process = &process_list[process_count];
 
     // Se incrementa el contador de procesos
+
     process_count++;
     // TODO DEBUG
     count = 0;
@@ -184,11 +134,7 @@ void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
 	process_list[process_count].times_loaded = 0;
 	process_list[process_count].status = PROCESS_STATUS_READY;
 	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
-	process_list[process_count].spsr = 0x00000150;				  //Modo usuario
-
-
-	process_list[process_count].nextProc = ready_queue;
-	ready_queue = &process_list[process_count];
+	process_list[process_count].spsr = 0x00000150;			  //Modo usuario
 
 
     forked_stack_pointer--;
@@ -214,6 +160,15 @@ void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
     }
 
 	process_list[process_count].stack_pointer = (unsigned int) (forked_stack_pointer);
+
+	if(ready_queue == NULL) {
+		ready_queue_tail = &process_list[process_count];
+		process_list[process_count].nextProc = NULL;
+	} else {
+		process_list[process_count].nextProc = ready_queue;
+	}
+
+	ready_queue = &process_list[process_count];
 
     process_count++;
 
@@ -253,7 +208,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
 	for(proc = ready_queue; proc != NULL; proc = proc->nextProc) {
         uart_puts("encontrado un proc en readyQ. Pid: ");
         uart_puts(uintToString(proc->pid,DECIMAL));
-        if(last_executed == proc) {
+        if(ready_queue_tail == proc) {
             uart_puts(" y es last executed");
         }
         uart_puts("\n\r");
@@ -312,15 +267,31 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     uart_puts(uintToString(spsr,HEXADECIMAL));
 	uart_puts("\n\r");
 
-    // Actualizamos la cola
-	last_executed = active_process;
-	active_process = ready_queue;
-	if(active_process == NULL) {
-	    active_process = &process_list[0];
-	} else {
-		active_process = ready_queue;
-		ready_queue = ready_queue-> nextProc;
+	// Obtenemos siguiente proceso y encolamos el actual.
+
+	// Caso en el que no hay procesos en la cola (se está ejecutando el ocioso únicamente).
+	if(ready_queue != NULL ) {
+		if(ready_queue->pid == 0) {
+			if(ready_queue == ready_queue_tail) {
+				// Caso en el que el procesos ocioso es el único en la lista. Continuamos ejecutando el actual
+				uart_puts("SOLO PROC OCIOSO EN COLA, SE IGNORA.\n\r");
+			} else {
+				// Caso en el que nos encontramos al proceso ocioso y hay mas procesos: nos lo saltamos
+				ready_queue_tail->nextProc = active_process;
+				active_process->nextProc = ready_queue;
+				ready_queue_tail = ready_queue;
+				active_process = ready_queue->nextProc;
+				ready_queue = ready_queue->nextProc->nextProc;
+			}
+		} else {
+			ready_queue_tail->nextProc = active_process;
+			ready_queue_tail = active_process;
+			active_process = ready_queue;
+			ready_queue = ready_queue->nextProc;
+		}
 	}
+
+	active_process->nextProc = NULL;
 
     // Incremetamos estadisticas y cambiamos status a RUNNING
     active_process->times_loaded++;
@@ -424,7 +395,7 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 	    	}
 
 		    proc->nextProc = NULL;
-		    last_executed = active_process;
+		    ready_queue_tail = active_process;
 		    ready_queue = proc;
 		}
 
@@ -454,7 +425,7 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 	uart_puts("\n\r");
 
     // Actualizamos la cola
-	last_executed = active_process;
+	ready_queue_tail = active_process;
 	active_process = ready_queue;
 	if(active_process == NULL) {
 	    active_process = &process_list[0];

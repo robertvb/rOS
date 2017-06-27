@@ -353,6 +353,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 #if(1)
 
 	bgInit(atagsAddr);
+	init_syscalls();
 	create_main_process();
 
 	/* Enable the timer interrupt IRQ */
