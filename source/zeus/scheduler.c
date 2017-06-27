@@ -22,7 +22,6 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
-
 #include "../includes/zeus/scheduler.h"
 
 static Process_t process_list[MAX_PROCS];
@@ -362,91 +361,87 @@ unsigned int sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int s
 
 unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc) {
 
-		// Se salva PC y STACK del proceso en ejecucion
-		active_process->stack_pointer = stack_pointer;
-		active_process->pc = pc;
+	// Se salva PC y STACK del proceso en ejecucion
+	active_process->stack_pointer = stack_pointer;
+	active_process->pc = pc;
 
-		uart_puts("Handling uart int! ");
+	uart_puts("Handling uart int! ");
+	uart_puts("\n\r");
+
+	uart_puts("tecla: '");
+	unsigned int caracter = (*((unsigned int *) UART0_DR));
+	uart_putc(caracter);
+	uart_puts("'\n\r");
+
+	Process_t * proc;
+	Process_t * lastProc;
+	uart_puts("Actuando sobre la cola de bloqueados: \n\r");
+	for (lastProc = proc = bloqued_queue;
+			proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO;
+			proc = lastProc = proc, proc->nextProc)
+		;
+
+	if (proc == NULL) {
+		uart_puts("No hay proceso esperando por uart input \n\r");
+	} else {
+		uart_puts("Encontrado proceso bloqueado esperando uart. Pid = ");
+		uart_puts(uintToString(proc->pid, DECIMAL));
 		uart_puts("\n\r");
 
-    	uart_puts("tecla: '");
-    	unsigned int caracter = (*((unsigned int *) UART0_DR));
-    	uart_putc(caracter);
-    	uart_puts("'\n\r");
-
-		Process_t * proc;
-		Process_t * lastProc;
-		uart_puts("Actuando sobre la cola de bloqueados: \n\r");
-		for (lastProc = proc = bloqued_queue;
-				proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO;
-				proc = lastProc = proc, proc->nextProc);
-
-		if(proc == NULL) {
-			uart_puts("No hay proceso esperando por uart input \n\r");
+		if (lastProc == proc) {
+			bloqued_queue = proc->nextProc;
 		} else {
-			uart_puts("Encontrado proceso bloqueado esperando uart. Pid = ");
-	        uart_puts(uintToString(proc->pid,DECIMAL));
-	    	uart_puts("\n\r");
-
-	    	if(lastProc == proc) {
-	    		bloqued_queue = proc->nextProc;
-	    	} else {
-	    		lastProc->nextProc = proc->nextProc;
-	    	}
-
-		    proc->nextProc = NULL;
-		    ready_queue_tail = active_process;
-		    ready_queue = proc;
+			lastProc->nextProc = proc->nextProc;
 		}
 
-		// TODO PRINTF DE DEBUG
-		if(ready_queue == NULL){
-			uart_puts("REady Q = NULL");
-		} else {
-			uart_puts("REady Q = ");
-			uart_puts(uintToString(ready_queue->pid,DECIMAL));
-			uart_puts("\n\r");
-		}
+	}
+
+	// TODO PRINTF DE DEBUG
+	if (ready_queue == NULL) {
+		uart_puts("REady Q = NULL");
+	} else {
+		uart_puts("REady Q = ");
+		uart_puts(uintToString(ready_queue->pid, DECIMAL));
+		uart_puts("\n\r");
+	}
 
 	uart_puts("Done! \n\r");
 
-        // A PARTIR DE AQUI COPIADO DEL DISPATCHER
+	// A PARTIR DE AQUI COPIADO DEL DISPATCHER
 
-    // Incremetamos estadisticas y cambiamos status a RUNNING
-    active_process->times_loaded++;
-    active_process->status = PROCESS_STATUS_RUNNING;
+	// Incremetamos estadisticas y cambiamos status a RUNNING
+	active_process->times_loaded++;
+	active_process->status = PROCESS_STATUS_RUNNING;
 
-    uart_puts("stack saved, was 0x");
-    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+	uart_puts("stack saved, was 0x");
+	uart_puts(uintToString(stack_pointer, HEXADECIMAL));
 	uart_puts("\n\r");
 
 	uart_puts("Saving pc...");
-    uart_puts(uintToString(pc,HEXADECIMAL));
+	uart_puts(uintToString(pc, HEXADECIMAL));
 	uart_puts("\n\r");
 
-    // Actualizamos la cola
-	ready_queue_tail = active_process;
-	active_process = ready_queue;
-	if(active_process == NULL) {
-	    active_process = &process_list[0];
-	} else {
-		active_process = ready_queue;
-		ready_queue = ready_queue-> nextProc;
+	// Actualizamos la cola
+	if(proc != NULL) {
+		active_process->status = PROCESS_STATUS_READY;
+		ready_queue_tail->nextProc = active_process;
+		ready_queue_tail = active_process;
+		active_process = proc;
 	}
 
-         // Incremetamos estadisticas y cambiamos status a RUNNING
-         active_process->times_loaded++;
-         active_process->status = PROCESS_STATUS_RUNNING;
+	// Incremetamos estadisticas y cambiamos status a RUNNING
+	active_process->times_loaded++;
+	active_process->status = PROCESS_STATUS_RUNNING;
 
-         uart_puts("Restoring stack 0x");
-         uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
-     	uart_puts("\n\r");
+	uart_puts("Restoring stack 0x");
+	uart_puts(uintToString(active_process->stack_pointer, HEXADECIMAL));
+	uart_puts("\n\r");
 
-         uart_puts("Restoring pc 0x");
-         uart_puts(uintToString(active_process->pc,HEXADECIMAL));
-     	uart_puts("\n\r");
+	uart_puts("Restoring pc 0x");
+	uart_puts(uintToString(active_process->pc, HEXADECIMAL));
+	uart_puts("\n\r");
 
-        return active_process->stack_pointer;
+	return active_process->stack_pointer;
 
 }
 
@@ -479,6 +474,4 @@ unsigned int getCharacterHandler(unsigned int pc, unsigned int sp, unsigned int 
 
 	return active_process->stack_pointer;
 
-
 }
-

@@ -23,40 +23,19 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../includes/zeus/process.h"
+#ifndef SOURCE_APOLO_DEBUGTRACER_H_
+#define SOURCE_APOLO_DEBUGTRACER_H_
 
-// Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_1() {
+#include "../hades/rpi-uart.h"
 
-    uart_puts("Starting process 1 ");
-
-    int to = 10;
-    int i;
-    for (i=0; i<to; i++) {
-        uart_puts("PROCESO1........");
-    }
-
-
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();
-}
-
-// Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_2() {
-
-	uart_puts("Starting process 2!\n\r");
-
-    int to = 200;
-    int i;
-    for (i=0; i<to; i++) {
-        uart_puts("PROCESO2. VALOR DE I = \n\r");
-        uart_puts(uintToString((unsigned int) i,DECIMAL));
-        uart_puts("\n\r");
-    }
+void init_debugTracer(void);
+void setDebugDisplayLevel(unsigned int level);
+void debugPrintStrV1(char * str);
+void debugPrintStrV2(char * str);
+void debugPrintStrV3(char * str);
+void debugPrintValueV1(unsigned int value, char base);
+void debugPrintValueV2(unsigned int value, char base);
+void debugPrintValueV3(unsigned int value, char base);
 
 
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();
-}
+#endif /* SOURCE_APOLO_DEBUGTRACER_H_ */

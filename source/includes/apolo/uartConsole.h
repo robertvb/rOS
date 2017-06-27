@@ -40,5 +40,6 @@ typedef struct {
 
 void init_uartConsole(void);
 void readCommand(void);
+void activateUartConsole(void);
 
 #endif /* SOURCE_INCLUDES_APOLO_UARTCONSOLE_H_ */

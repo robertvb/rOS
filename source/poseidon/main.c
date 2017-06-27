@@ -355,6 +355,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	bgInit(atagsAddr);
 	init_syscalls();
 	create_main_process();
+	init_uartConsole();
 
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
@@ -383,7 +384,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts("KFORK 1 HECHO, resultado de la pila:\r\n");
 	printMemDump(0x1f000000 - 16*4,16);
 */
-	kfork("Sample process 2", (Dir_t) &sample_process_2, (Dir_t) 0x1e000000);
+	kfork("Uart_Console", (Dir_t) &activateUartConsole, (Dir_t) 0x1e000000);
 	uart_puts("KFORK 2 HECHO, resultado de la pila:\r\n");
 	printMemDump(0x1e000000 - 16*4,16);
 

@@ -23,40 +23,52 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../includes/zeus/process.h"
+#include "../includes/apolo/debugTracer.h"
 
-// Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_1() {
+static unsigned int level;
+static char * promptL1 = "[DEBUG:1]> ";
+static char * promptL2 = "[DEBUG:2]> ";
+static char * promptL3 = "[DEBUG:3]> ";
 
-    uart_puts("Starting process 1 ");
-
-    int to = 10;
-    int i;
-    for (i=0; i<to; i++) {
-        uart_puts("PROCESO1........");
-    }
-
-
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();
+void init_debugTracer(void) {
+	level = 1;
 }
 
-// Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_2() {
+void debugPrintStrV1(char * str) {
+	if(level == 1) {
+		uart_puts(promptL1);
+		uart_puts(str);
+	}
+}
 
-	uart_puts("Starting process 2!\n\r");
+void debugPrintStrV2(char * str) {
+	if(level <= 2) {
+		uart_puts(promptL2);
+		uart_puts(str);
+	}
+}
 
-    int to = 200;
-    int i;
-    for (i=0; i<to; i++) {
-        uart_puts("PROCESO2. VALOR DE I = \n\r");
-        uart_puts(uintToString((unsigned int) i,DECIMAL));
-        uart_puts("\n\r");
-    }
+void debugPrintStrV3(char * str) {
+	if(level <= 3) {
+		uart_puts(promptL3);
+		uart_puts(str);
+	}
+}
 
+void debugPrintValueV1(unsigned int value, char base) {
+	if(level == 1) {
+		uart_puts(uintToString(value,base));
+	}
+}
 
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();
+void debugPrintValueV2(unsigned int value, char base) {
+	if(level <= 2) {
+		uart_puts(uintToString(value,base));
+	}
+}
+
+void debugPrintValueV3(unsigned int value, char base) {
+	if(level <=3) {
+		uart_puts(uintToString(value,base));
+	}
 }

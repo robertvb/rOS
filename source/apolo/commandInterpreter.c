@@ -108,6 +108,12 @@ static void reg(unsigned char * r) {
 
 
 }
+
+void printPid(void) {
+	uart_puts("Pid de la consola = ");
+    uart_puts(uintToString(getCurrentProcessPid(),DECIMAL));
+	uart_puts("\n\r");
+}
 /*
 static char *  mdump(void * addr, uint32_t size) {
 
@@ -153,7 +159,14 @@ void init_commandInterpreter(commandInterpreter_t * commandInter, char * lastCom
 	strcpy(commandInterpreter->commands[1].usage,"regs");
 	commandInterpreter->commands[1].function = (void *) &reg;
 
-	commandInter->nCommands = 2;
+	// Add Print PID
+	strcpy(commandInterpreter->commands[1].name,"cpid");
+	strcpy(commandInterpreter->commands[1].descrp,"muestra el pid de la consola");
+	strcpy(commandInterpreter->commands[1].usage,"cpid");
+	commandInterpreter->commands[1].function = (void *) &printPid;
+
+
+	commandInter->nCommands = 3;
 }
 
 /*

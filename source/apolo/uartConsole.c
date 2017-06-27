@@ -50,3 +50,8 @@ void readCommand(void) {
 	uart_puts(uartConsole.outBuffer);
 	uart_puts("\r\n");
 }
+
+void activateUartConsole(void) {
+	while(1)
+		readCommand();
+}
