@@ -91,8 +91,11 @@ rpi_gpu_mailbox_t * RPI_GetGpuMailbox(void);
 rpi_gpu_framebuffer_descriptor_t * RPI_GetFrameBufferDescrp(void);
 void paintEntireScreen(uint16_t Colour16b);
 void line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t Colour16b);
+void setPixelFB(unsigned int * fb, int32_t posX, int32_t posY, uint16_t Colour16b);
 void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b);
+int8_t drawCharacterFB(unsigned int * fb, uint8_t Char, uint32_t x, uint32_t y);
 int8_t drawCharacter(uint8_t Char, uint32_t posX, uint32_t posY);
+int8_t drawStringFB( unsigned int * fb, uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
 int8_t drawString(uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
 void eraseString(uint16_t baseColour16b, uint32_t x, uint32_t y, uint32_t len);
 

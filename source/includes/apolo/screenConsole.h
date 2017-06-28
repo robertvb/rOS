@@ -23,23 +23,30 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef UARTCONSOLE_H
-#define UARTCONSOLE_H
+#ifndef SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_
+#define SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_
 
 #include "commandInterpreter.h"
-#include "../hades/rpi-uart.h"
+#include "screenbackground.h"
 
-#define MAX_UCONSOLE_INBUFFER 50
-static const char prompt[] = "rOS232> ";
+#define MAX_SCONSOLE_INBUFFER 50
+#define MAX_SCONSOLES 		  5
+static char * prompt = "rOS> ";
 
 typedef struct {
-	commandInterpreter_t commandInter;
-	char inBuffer[MAX_UCONSOLE_INBUFFER];
-	char outBuffer[MAX_COMMAND_OUTPUT];
-}uartConsole_t;
+	commandInterpreter_t * commandInter;
+	uint16_t backGroundColour;
+	uint16_t fontColour;
+	unsigned int currentX;
+	unsigned int currentY;
+	unsigned char inBuffer[MAX_SCONSOLE_INBUFFER];
+	unsigned char outBuffer[MAX_COMMAND_OUTPUT];
+	unsigned int frameBuffer[0x180000];
+}screenConsole_t;
 
-void init_uartConsole(void);
-void readCommand(void);
-void activateUartConsole(void);
+void init_screen_consoles(void);
+void clearSConsole(unsigned char consoleNum);
+void focusSConsole(unsigned char consoleNum);
+void sConsoleWrite(unsigned char consoleNum, char * str);
 
-#endif /* SOURCE_INCLUDES_APOLO_UARTCONSOLE_H_ */
+#endif /* SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_ */

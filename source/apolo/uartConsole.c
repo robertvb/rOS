@@ -30,7 +30,7 @@ static uartConsole_t uartConsole;
 void init_uartConsole(void) {
 	/* inicializamos buffer */
 	int i = 0;
-	while(i < MAX_INBUFFER) {
+	while(i < MAX_UCONSOLE_INBUFFER) {
 		uartConsole.inBuffer[i] = '\0';
 		i++;
 	}

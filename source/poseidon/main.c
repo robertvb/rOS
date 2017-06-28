@@ -36,6 +36,7 @@
 #include "../includes/atenea/fat32.h"
 #include "../includes/atenea/fs.h"
 #include "../includes/atenea/mem-utils.h"
+#include "../includes/hades/gpuFrameBuffer.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -350,7 +351,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	}
 #endif
 
-#if(1)
+#if(0)
 
 	bgInit(atagsAddr);
 	init_syscalls();
@@ -393,6 +394,32 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 		uart_puts("while...\n\r");
 		RPI_esperarMicroSeconds(1000000);
 	}
+
+#endif
+
+#if(1)
+	bgInit(atagsAddr);
+	init_syscalls();
+	create_main_process();
+	init_screen_consoles();
+	rpi_gpu_framebuffer_descriptor_t* a;
+	a = RPI_GetFrameBufferDescpr();
+	uart_puts("SIZE! = ");
+	uart_puts(uintToString(a->size,DECIMAL));
+	uart_puts("\r\n");
+	uart_puts("vH = ");
+	uart_puts(uintToString(a->vHeight,DECIMAL));
+	uart_puts("\r\n");
+	uart_puts("vW = ");
+	uart_puts(uintToString(a->vWidth,DECIMAL));
+	uart_puts("\r\n");
+
+	focusSConsole(0);
+
+	//sConsoleWrite(0,"HOLA MUNDO!!!!!!!!");
+
+	//focusSConsole(0);
+
 
 #endif
 

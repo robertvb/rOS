@@ -29,7 +29,6 @@ extern FrameBufferInfo;
 extern SystemDefaultFontInfo;
 
 static rpi_gpu_framebuffer_descriptor_t * FrameBufferDescrp = (rpi_gpu_framebuffer_descriptor_t *) &FrameBufferInfo;
-static rpi_gpu_mailbox_t * rpiGpuMailbox = (rpi_gpu_mailbox_t *) RPI_GPU_MAILBOX_BASE; 					//mailbox
 static uint8_t * fontInfoAddress = (uint8_t *) &SystemDefaultFontInfo;
 
 //FRAMEBUFFER METHODS
@@ -84,6 +83,20 @@ void line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t Colour16b) {
 						
 }
 
+void setPixelFB(unsigned int * fb, int32_t posX, int32_t posY, uint16_t Colour16b) {
+
+
+	uint16_t *ptr;
+	uint32_t  offset;
+	if(posX < FrameBufferDescrp->vWidth && posY < FrameBufferDescrp->vWidth) {
+
+		offset = (posY * FrameBufferDescrp->pitch) + (posX << 1);
+		ptr = (uint16_t *) (fb + offset);
+		*ptr = Colour16b;
+
+	}
+}
+
 void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b) {
 
 		
@@ -96,6 +109,35 @@ void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b) {
 		*ptr = Colour16b;
 	
 	}
+}
+
+/* Devuelve el caracer que ha pintado*/
+int8_t drawCharacterFB(unsigned int * fb, uint8_t Char, uint32_t x, uint32_t y) {
+
+	uint8_t bit;
+	uint8_t readedBits;
+	uint8_t row;
+	uint8_t * currentCharAddress;
+
+	if(Char > 127)	//vemos si el caracter esta dentro de los 128 que podemos representar
+		return -1;
+
+	currentCharAddress=(fontInfoAddress + Char * 16);
+
+	for(row = 0; row < CHAR_HEIGHT; row++) {
+
+		readedBits = *(currentCharAddress + row);
+
+		for(bit = 0; bit < CHAR_WIDTH; bit ++) {
+
+			if(((readedBits >> bit) & 0x1) != 0)
+				setPixelFB(fb,x + bit, y + row,GreenYellow);
+
+		}
+
+	}
+	return Char;
+
 }
 
 /* Devuelve el caracer que ha pintado*/
@@ -125,6 +167,36 @@ int8_t drawCharacter(uint8_t Char, uint32_t x, uint32_t y) {
 	}
 	return Char;
 
+}
+
+int8_t drawStringFB( unsigned int * fb, uint8_t * string, uint32_t length, uint32_t x, uint32_t y) {
+
+	uint32_t x0 = x;
+	uint32_t x1;
+	uint8_t nextChar;
+	if(length == 0)
+		return 0;
+
+	for(nextChar = 0; nextChar < length -1 && string[nextChar]; nextChar++) {
+
+		switch(string[nextChar]) {
+
+			case '\n':
+				x = x0;
+				y += CHAR_HEIGHT;
+				break;
+
+			case '\t':
+				break;
+
+			default:
+				drawCharacterFB(fb,string[nextChar],x,y);
+				x += CHAR_WIDTH;
+
+		}
+	}
+
+	return nextChar + 1;
 }
 
 int8_t drawString(uint8_t * string, uint32_t length, uint32_t x, uint32_t y) {

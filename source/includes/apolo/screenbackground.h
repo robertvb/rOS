@@ -31,7 +31,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../hefesto/string.h"
 #include "../hades/gpuFrameBuffer.h"
 
-#define MAX_CONSOLE		4
 #define MAX_SIZE_BOARD		40
 #define VERTICAL_EDGES		CHAR_WIDTH		
 #define HORIZONTAL_EDGES	CHAR_WIDTH
