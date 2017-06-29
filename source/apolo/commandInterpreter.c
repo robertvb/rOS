@@ -29,8 +29,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 static commandInterpreter_t * commandInterpreter;
 
+commandInterpreter_t * getCommandInterpreter(void) {
+	return commandInterpreter;
+}
+
 static void hello(void) {
-	strncpy(commandInterpreter->lastCommandOutPutBuffer,"Hola amigo, que tal?\0",30);
+	sConsoleWrite(getCurrentSConsole(),"Hola amigo, que tal?");
 	return;
 }
 /*
@@ -104,8 +108,7 @@ static void reg(unsigned char * r) {
 
 	strcpy(commandInterpreter->lastCommandOutPutBuffer+3,"= 0x");
 
-	 uintToStringStr(value,HEXADECIMAL,commandInterpreter->lastCommandOutPutBuffer+7);
-
+	uintToStringStr(value,HEXADECIMAL,commandInterpreter->lastCommandOutPutBuffer+7);
 
 }
 
@@ -123,30 +126,13 @@ static char *  run(void * addr) {
 
 }
 */
-static command_t * searchCommand(const char * name) {
-	char i;
-	int debug = 0;
-	for(i = 0; i < commandInterpreter->nCommands
-	&& !strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
-	uart_puts("Se ha buscado el comando, valor de i: ");
-	uart_puts(uintToString(i,DECIMAL));
-
-	return (i >= commandInterpreter->nCommands ? NULL : &(commandInterpreter->commands[i]));
-
-}
-
-commandInterpreter_t * getCommandInterpreter(void) {
-	return commandInterpreter;
-}
 
 /*
  * Se inicializan los comandos del sistema:
  * boot, regs, mdump y run
  */
-void init_commandInterpreter(commandInterpreter_t * commandInter, char * lastCommandOutPutBuffer) {
+void init_commandInterpreter(void) {
 
-	commandInterpreter = commandInter;
-	commandInter->lastCommandOutPutBuffer = lastCommandOutPutBuffer;
 	// add hello
 	strcpy(commandInterpreter->commands[0].name,"hello");
 	strcpy(commandInterpreter->commands[0].descrp,"hello");
@@ -166,18 +152,31 @@ void init_commandInterpreter(commandInterpreter_t * commandInter, char * lastCom
 	commandInterpreter->commands[1].function = (void *) &printPid;
 
 
-	commandInter->nCommands = 3;
+	commandInterpreter->nCommands = 3;
+}
+
+
+static command_t * searchCommand(const char * name) {
+	char i;
+	int debug = 0;
+	for(i = 0; i < commandInterpreter->nCommands
+	&& !strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
+	uart_puts("Se ha buscado el comando, valor de i: ");
+	uart_puts(uintToString(i,DECIMAL));
+
+	return (i >= commandInterpreter->nCommands ? NULL : &(commandInterpreter->commands[i]));
+
 }
 
 /*
- * Devuelve la salida del comando
+ * ejecuta el comando
  */
-char * executeCommand(char * name, ...) {
+void executeCommand(char * name, ...) {
 
 	command_t * command = searchCommand(name);
 
 	if(!command) {
-		strncpy(commandInterpreter->lastCommandOutPutBuffer,"command not found\0",20);
+		sConsoleWrite(getCurrentSConsole(),"No existe el comando!");
 	}
 	else {
 		/* limpiamos buffer de salida */
@@ -189,5 +188,5 @@ char * executeCommand(char * name, ...) {
 		command->function(0,NULL);
 	}
 
-	return commandInterpreter->lastCommandOutPutBuffer;
+	return;
 }

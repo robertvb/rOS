@@ -35,7 +35,7 @@ void init_uartConsole(void) {
 		i++;
 	}
 	/* inicializamos el interprete de comandos */
-	init_commandInterpreter(&uartConsole.commandInter,uartConsole.outBuffer);
+	//init_commandInterpreter(&uartConsole.commandInter,uartConsole.outBuffer);
 }
 void readCommand(void) {
 	uart_puts(prompt);

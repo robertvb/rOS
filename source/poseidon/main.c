@@ -36,7 +36,7 @@
 #include "../includes/atenea/fat32.h"
 #include "../includes/atenea/fs.h"
 #include "../includes/atenea/mem-utils.h"
-#include "../includes/hades/gpuFrameBuffer.h"
+#include "../includes/apolo/screenConsole.h"
 
 int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
@@ -414,11 +414,32 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts(uintToString(a->vWidth,DECIMAL));
 	uart_puts("\r\n");
 
+	init_uartConsole();
+
+	/* Enable the timer interrupt IRQ */
+	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
+
+	/* Setup the system time r interrupt */
+	/* Timer frequency = Clk/256 * 0x400 */
+	RPI_GetArmTimer()->Load = 0x800;
+
+	/* Setup the ARM Timer */
+	RPI_GetArmTimer()->Control =
+	RPI_ARMTIMER_CTRL_23BIT |
+	RPI_ARMTIMER_CTRL_ENABLE |
+	RPI_ARMTIMER_CTRL_INT_ENABLE |
+	RPI_ARMTIMER_CTRL_PRESCALE_256;
+
+	//Enable uart interrupts:
+
+	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
+	RPI_GetIrqController()->Disable_IRQs_2 = 0xFFFFFFFF;
+
+	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
+
 	focusSConsole(0);
-
-	//sConsoleWrite(0,"HOLA MUNDO!!!!!!!!");
-
-	//focusSConsole(0);
+	asm volatile("cpsie i,#0x10");
+	while(1);
 
 
 #endif

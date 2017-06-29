@@ -29,11 +29,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include <stdint.h>
 #include <stddef.h>
 
-#define MAX_PWIDTH 			4096
-#define MAX_PHEIGHT			4096
-#define RPI_GPU_MAILBOX_BASE      0x2000B880
-#define CHAR_WIDTH	  	           8
-#define CHAR_HEIGHT 			  16
+#define MAX_PWIDTH 				4096
+#define MAX_PHEIGHT				4096
+#define RPI_GPU_MAILBOX_BASE    0x2000B880
+#define CHAR_WIDTH	  	        8
+#define CHAR_HEIGHT 			16
+#define MAX_VERTICAL_PIXELS		768
+#define MAX_HORIZONTAL_PIXELS 	1024
 //  ALGUNOS RGB HIGH-COLOR 16BIT COLORES                            
 #define Black           0x0000      /*   0,   0,   0 */
 #define Navy            0x000F      /*   0,   0, 128 */
@@ -93,9 +95,10 @@ void paintEntireScreen(uint16_t Colour16b);
 void line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t Colour16b);
 void setPixelFB(unsigned int * fb, int32_t posX, int32_t posY, uint16_t Colour16b);
 void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b);
-int8_t drawCharacterFB(unsigned int * fb, uint8_t Char, uint32_t x, uint32_t y);
+int8_t drawCharacterCL(uint16_t colour, uint8_t Char, uint32_t x, uint32_t y);
 int8_t drawCharacter(uint8_t Char, uint32_t posX, uint32_t posY);
-int8_t drawStringFB( unsigned int * fb, uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
+void eraseCharacterCL(uint16_t colour, uint32_t x, uint32_t y);
+int8_t drawStringCL(uint16_t colour, uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
 int8_t drawString(uint8_t * string, uint32_t length, uint32_t x, uint32_t y);
 void eraseString(uint16_t baseColour16b, uint32_t x, uint32_t y, uint32_t len);
 

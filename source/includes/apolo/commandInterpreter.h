@@ -56,8 +56,8 @@ typedef struct {
 
 } commandInterpreter_t;
 
-void init_commandInterpreter(commandInterpreter_t * commandInter, char * outBuffer);
-char * executeCommand(char * name, ... ); // nombre de comando y argumentos
+void init_commandInterpreter(void);
+void executeCommand(char * name, ... ); // nombre de comando y argumentos
 
 
 #endif /* SOURCE_INCLUDES_APOLO_COMANDS_H_ */

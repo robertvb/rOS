@@ -187,8 +187,9 @@ void halt() {
  */
 unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr) {
 
-	// Refrescamos BG
-	bgRefresh();
+	static unsigned int timeoutCount = 0;
+
+	timeoutCount++;
 
 	unsigned int new_stack;
    //uart_puts("ejecutando time_out. Count = ");
@@ -367,9 +368,11 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 	uart_puts("\n\r");
 
 	uart_puts("tecla: '");
-	unsigned int caracter = (*((unsigned int *) UART0_DR));
-	uart_putc(caracter);
+	unsigned int uCharacter = (*((unsigned int *) UART0_DR));
+	uart_putc(uCharacter);
 	uart_puts("'\n\r");
+
+	sConsoleManageChar((unsigned char) uCharacter);
 
 	Process_t * proc;
 	Process_t * lastProc;

@@ -29,9 +29,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "commandInterpreter.h"
 #include "screenbackground.h"
 
-#define MAX_SCONSOLE_INBUFFER 50
-#define MAX_SCONSOLES 		  5
-static char * prompt = "rOS> ";
+#define MAX_SCONSOLE_INBUFFER 	50
+#define MAX_SCONSOLES 		  	5
+static char * sprompt = " rOS- ";
+#define SPROMPT_LEN 			6
+#define LINE_SPACING			0
+#define MAX_SCONSOLE_LINES		MAX_VERTICAL_PIXELS / CHAR_HEIGHT - 6  /* 768 / 16 - 6 = 42 CARACTERES */
+#define MAX_SCONSOLE_LINE_LEN	MAX_HORIZONTAL_PIXELS / CHAR_WIDTH - SPROMPT_LEN - 6 /* 1024 / 8 - 6 = 117 CARACTERES */
 
 typedef struct {
 	commandInterpreter_t * commandInter;
@@ -39,14 +43,17 @@ typedef struct {
 	uint16_t fontColour;
 	unsigned int currentX;
 	unsigned int currentY;
-	unsigned char inBuffer[MAX_SCONSOLE_INBUFFER];
-	unsigned char outBuffer[MAX_COMMAND_OUTPUT];
-	unsigned int frameBuffer[0x180000];
+	unsigned char matrixMessages[MAX_SCONSOLE_LINES][MAX_SCONSOLE_LINE_LEN];
+	unsigned int messageCount;
 }screenConsole_t;
 
 void init_screen_consoles(void);
+unsigned char getCurrentSConsole(void);
+unsigned char nextSConsole(void);
 void clearSConsole(unsigned char consoleNum);
 void focusSConsole(unsigned char consoleNum);
 void sConsoleWrite(unsigned char consoleNum, char * str);
+void sConsoleManageChar(char c);
+void sConsoleManageBlinkPrompt(void);
 
 #endif /* SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_ */

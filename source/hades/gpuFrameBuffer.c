@@ -97,7 +97,7 @@ void setPixelFB(unsigned int * fb, int32_t posX, int32_t posY, uint16_t Colour16
 	}
 }
 
-void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b) {
+void setPixel(int32_t posX, int32_t posY, uint16_t colour16b) {
 
 		
 	uint16_t *ptr;     
@@ -106,13 +106,13 @@ void setPixel(int32_t posX, int32_t posY, uint16_t Colour16b) {
 		
 		offset = (posY * FrameBufferDescrp->pitch) + (posX << 1);
 		ptr = (uint16_t *) (FrameBufferDescrp->pointer + offset);
-		*ptr = Colour16b;
+		*ptr = colour16b;
 	
 	}
 }
 
 /* Devuelve el caracer que ha pintado*/
-int8_t drawCharacterFB(unsigned int * fb, uint8_t Char, uint32_t x, uint32_t y) {
+int8_t drawCharacterCL(uint16_t colour, uint8_t Char, uint32_t x, uint32_t y) {
 
 	uint8_t bit;
 	uint8_t readedBits;
@@ -131,7 +131,7 @@ int8_t drawCharacterFB(unsigned int * fb, uint8_t Char, uint32_t x, uint32_t y) 
 		for(bit = 0; bit < CHAR_WIDTH; bit ++) {
 
 			if(((readedBits >> bit) & 0x1) != 0)
-				setPixelFB(fb,x + bit, y + row,GreenYellow);
+				setPixel(x + bit, y + row,colour);
 
 		}
 
@@ -169,7 +169,27 @@ int8_t drawCharacter(uint8_t Char, uint32_t x, uint32_t y) {
 
 }
 
-int8_t drawStringFB( unsigned int * fb, uint8_t * string, uint32_t length, uint32_t x, uint32_t y) {
+/* Devuelve el caracer que ha pintado*/
+void eraseCharacterCL(uint16_t colour, uint32_t x, uint32_t y) {
+
+	uint8_t bit;
+	uint8_t readedBits;
+	uint8_t row;
+	uint8_t * currentCharAddress;
+
+	for(row = 0; row < CHAR_HEIGHT; row++) {
+		for(bit = 0; bit < CHAR_WIDTH; bit ++) {
+			setPixel(x + bit, y + row,colour);
+		}
+	}
+
+	return;
+
+}
+
+
+
+int8_t drawStringCL(uint16_t colour, uint8_t * string, uint32_t length, uint32_t x, uint32_t y) {
 
 	uint32_t x0 = x;
 	uint32_t x1;
@@ -190,7 +210,7 @@ int8_t drawStringFB( unsigned int * fb, uint8_t * string, uint32_t length, uint3
 				break;
 
 			default:
-				drawCharacterFB(fb,string[nextChar],x,y);
+				drawCharacterCL(colour,string[nextChar],x,y);
 				x += CHAR_WIDTH;
 
 		}

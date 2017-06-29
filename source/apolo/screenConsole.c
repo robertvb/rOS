@@ -32,18 +32,23 @@ void init_screen_consoles(void) {
 
 	char i;
 	for(i = 0; i < MAX_SCONSOLES; i++) {
-		sConsoleList[i].backGroundColour = Green;
+		sConsoleList[i].backGroundColour = Black;
 		sConsoleList[i].fontColour = White;
-		sConsoleList[i].currentX = 3*CHAR_WIDTH;
-		sConsoleList[i].currentX = 2*CHAR_HEIGHT;
+		sConsoleList[i].currentX = 0;
+		sConsoleList[i].currentY = 3*CHAR_HEIGHT;
+		sConsoleList[i].messageCount = 0;
 		clearSConsole(i);
 	}
 
 	currentSConsole = 0;
 }
 
-unsigned char getNextSConsole(void) {
-	return currentSConsole = (currentSConsole) + 1 % MAX_SCONSOLES;
+unsigned char getCurrentSConsole(void) {
+	return currentSConsole;
+}
+
+unsigned char nextSConsole(void) {
+	return currentSConsole = (currentSConsole + 1) % MAX_SCONSOLES;
 }
 
 void clearSConsole(unsigned char consoleNum) {
@@ -52,37 +57,142 @@ void clearSConsole(unsigned char consoleNum) {
 		return;
 	}
 
-	rpi_gpu_framebuffer_descriptor_t* FrameBufferDescrp  = (rpi_gpu_framebuffer_descriptor_t *) RPI_GetFrameBufferDescpr();
-	uint16_t * pixel = (uint16_t *) sConsoleList[consoleNum].frameBuffer;
+	uint32_t message;
+	for(message = 0; message < MAX_SCONSOLE_LINE_LEN; message++) {
+		sConsoleList[consoleNum].matrixMessages[message][0] = '\0';
+	}
 
-	uint32_t x,y;
-	for(y = 0; y < FrameBufferDescrp->vHeight; y++) {
-		for(x = 0; x < FrameBufferDescrp->vWidth; x++) {
-			// ponemos a backGroundColour todos menos los bordes TODO
-			*(pixel++) = sConsoleList[consoleNum].backGroundColour;
-		}
+	if(consoleNum == currentSConsole) {
+
+		rpi_gpu_framebuffer_descriptor_t * frameBufferDscr  = (rpi_gpu_framebuffer_descriptor_t*) RPI_GetFrameBufferDescpr();
+		uint16_t * pixel = (uint16_t *) frameBufferDscr->pointer;
+		uint32_t x,y;
+		for(y = 0; y < frameBufferDscr->vHeight; y++)
+			for(x = 0; x < frameBufferDscr->vWidth; x++) {
+				if(y <= CHAR_HEIGHT) {
+					*(pixel++) = LightGrey;
+				} else {
+					*(pixel++) = sConsoleList[consoleNum].backGroundColour;
+				}
+			}
+
+		drawStringCL(Black,"rOS v0.9 Terminal",18,0,0);
 	}
 
 }
 
 void focusSConsole(unsigned char consoleNum) {
 
+	if(consoleNum >= MAX_SCONSOLES) {
+		return;
+	}
+
 	rpi_gpu_framebuffer_descriptor_t * frameBufferDscr  = (rpi_gpu_framebuffer_descriptor_t*) RPI_GetFrameBufferDescpr();
 	uint16_t * pixel = (uint16_t *) frameBufferDscr->pointer;
-	uint16_t * cPixel = (uint16_t *) sConsoleList[consoleNum].frameBuffer;
 	uint32_t x,y;
 	for(y = 0; y < frameBufferDscr->vHeight; y++)
-		for(x = 0; x < frameBufferDscr->vWidth; x++)
-			*(pixel++) = *(cPixel++);
+		for(x = 0; x < frameBufferDscr->vWidth; x++) {
+			if(y <= CHAR_HEIGHT) {
+				*(pixel++) = LightGrey;
+			} else {
+				*(pixel++) = sConsoleList[consoleNum].backGroundColour;
+			}
+		}
+
+	drawStringCL(Black,"rOS v0.9 Terminal",18,0,0);
+
+	for(x = 0; x < sConsoleList[consoleNum].messageCount; x++) {
+		unsigned char* str = sConsoleList[consoleNum].matrixMessages[x];
+		unsigned int len = stringLength(str);
+		drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+		sConsoleList[consoleNum].currentX += SPROMPT_LEN*CHAR_WIDTH;
+
+		drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+		sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
+
+		sConsoleList[consoleNum].currentX = 0;
+	}
+
+	drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+	sConsoleList[consoleNum].currentX += SPROMPT_LEN*CHAR_WIDTH;
+
 }
 
 void sConsoleWrite(unsigned char consoleNum, char * str) {
 
+	if(consoleNum >= MAX_SCONSOLES) {
+		return;
+	}
+
 	const unsigned int len = stringLength(str);
 
-	drawStringFB(sConsoleList[consoleNum].frameBuffer,prompt,5,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
-	sConsoleList[consoleNum].currentX+=5*CHAR_WIDTH;
-	drawStringFB(sConsoleList[consoleNum].frameBuffer,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
-	sConsoleList[consoleNum].currentY+=2*CHAR_HEIGHT;
+	if(len > MAX_SCONSOLE_LINE_LEN) {
+		return;
+	}
 
+	strncpy(sConsoleList[consoleNum].matrixMessages[sConsoleList[consoleNum].messageCount],(uint8_t *)str,len);
+
+	sConsoleList[consoleNum].messageCount++;
+
+	if(currentSConsole == consoleNum) {
+		drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+		sConsoleList[consoleNum].currentX = 0;
+		sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
+	}
+
+}
+
+void sConsoleManageChar(char c) {
+
+	static unsigned int currentCharPos = 0;
+
+	switch(c) {
+		case '\t':
+			focusSConsole(nextSConsole());
+			break;
+		case '-':
+			currentCharPos--;
+			sConsoleList[currentSConsole].currentX -= CHAR_WIDTH;
+			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
+			eraseCharacterCL(sConsoleList[currentSConsole].fontColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			break;
+		case '+':
+			if(sConsoleList[currentSConsole].messageCount == MAX_SCONSOLE_LINES) {
+				sConsoleList[currentSConsole].messageCount = 0;
+				currentCharPos = 0;
+				clearSConsole(currentSConsole);
+				sConsoleList[currentSConsole].currentX = 0;
+				sConsoleList[currentSConsole].currentY = 3*CHAR_HEIGHT;
+			}
+			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
+			sConsoleList[currentSConsole].messageCount++;
+			sConsoleList[currentSConsole].currentX = 0;
+			sConsoleList[currentSConsole].currentY += CHAR_HEIGHT;
+			drawStringCL(sConsoleList[currentSConsole].fontColour,sprompt,SPROMPT_LEN,sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			sConsoleList[currentSConsole].currentX += SPROMPT_LEN*CHAR_WIDTH;
+			currentCharPos = 0;
+			executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount]);
+			break;
+		default:
+			eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			drawCharacterCL(sConsoleList[currentSConsole].fontColour, (uint8_t) c, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			sConsoleList[currentSConsole].currentX += CHAR_WIDTH;
+			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = c;
+			drawCharacterCL(sConsoleList[currentSConsole].fontColour, '_', sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			currentCharPos++;
+	}
+
+}
+
+void sConsoleManageBlinkPrompt(void) {
+
+	static unsigned char blink = 0;
+
+	if(blink) {
+		eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+		blink = 0;
+	} else {
+		drawCharacterCL(sConsoleList[currentSConsole].fontColour, (uint8_t) '_', sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+		blink = 1;
+	}
 }
