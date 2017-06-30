@@ -146,10 +146,10 @@ void init_commandInterpreter(void) {
 	commandInterpreter->commands[1].function = (void *) &reg;
 
 	// Add Print PID
-	strcpy(commandInterpreter->commands[1].name,"cpid");
-	strcpy(commandInterpreter->commands[1].descrp,"muestra el pid de la consola");
-	strcpy(commandInterpreter->commands[1].usage,"cpid");
-	commandInterpreter->commands[1].function = (void *) &printPid;
+	strcpy(commandInterpreter->commands[2].name,"cpid");
+	strcpy(commandInterpreter->commands[2].descrp,"muestra el pid de la consola");
+	strcpy(commandInterpreter->commands[2].usage,"cpid");
+	commandInterpreter->commands[2].function = (void *) &printPid;
 
 
 	commandInterpreter->nCommands = 3;
@@ -160,11 +160,9 @@ static command_t * searchCommand(const char * name) {
 	char i;
 	int debug = 0;
 	for(i = 0; i < commandInterpreter->nCommands
-	&& !strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
-	uart_puts("Se ha buscado el comando, valor de i: ");
-	uart_puts(uintToString(i,DECIMAL));
+	&& strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
 
-	return (i >= commandInterpreter->nCommands ? NULL : &(commandInterpreter->commands[i]));
+	return (i >= commandInterpreter->nCommands ? NULL : &commandInterpreter->commands[i]);
 
 }
 
@@ -173,10 +171,11 @@ static command_t * searchCommand(const char * name) {
  */
 void executeCommand(char * name, ...) {
 
+	uart_puts(name);
 	command_t * command = searchCommand(name);
 
-	if(!command) {
-		sConsoleWrite(getCurrentSConsole(),"No existe el comando!");
+	if(command == NULL) {
+		sConsoleWrite(getCurrentSConsole(),"No existe el comando!!!!");
 	}
 	else {
 		/* limpiamos buffer de salida */
@@ -185,7 +184,7 @@ void executeCommand(char * name, ...) {
 			commandInterpreter->lastCommandOutPutBuffer[i] = '\0';
 		}
 		/* ejecución del comando */
-		command->function(0,NULL);
+		sConsoleWrite(getCurrentSConsole(),"Hola amigo, que tal?");
 	}
 
 	return;

@@ -187,9 +187,17 @@ void halt() {
  */
 unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr) {
 
-	static unsigned int timeoutCount = 0;
+	unsigned int consolaAct = getCurrentSConsole();
+    uart_puts("CONSOLA ACT:  ");
+    uart_puts(uintToString(consolaAct,DECIMAL));
+    uart_puts("\n\r");
 
-	timeoutCount++;
+	if(consolaAct == 5) {
+		uart_puts("actualizando BG\n\r");
+		bgRefresh();
+	} else {
+		uart_puts("hay una consola en este timeout\n\r");
+	}
 
 	unsigned int new_stack;
    //uart_puts("ejecutando time_out. Count = ");

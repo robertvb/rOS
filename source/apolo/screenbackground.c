@@ -41,7 +41,6 @@ void bgInit(uint32_t atagsAddr) {
 	bgInfo->workingChar = '|';
 	bgInfo->bwk = 0;
 	bgInfo->onTime = 0;
-	RPI_GetSystemTimer()->counter_lo = 0;
 
 	/************* Empezamos a pintar el BackGround con la info obtenida ************/
 
@@ -53,7 +52,23 @@ void bgInit(uint32_t atagsAddr) {
 
 	parseAtags(atagsAddr);
 
-	RPI_GetSystemTimer()->counter_lo = 0;
+	displayBgInfo();
+
+	bgInfo->currentY=240;
+
+}
+
+void drawBg(void) {
+
+
+	/************* Empezamos a pintar el BackGround con la info obtenida ************/
+
+	paintEntireScreen(bgInfo->bgColor);
+
+	bgDrawEdges(LightGrey);
+
+	bgDrawLogo(GreenYellow);
+
 	displayBgInfo();
 
 	bgInfo->currentY=240;

@@ -401,6 +401,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	bgInit(atagsAddr);
 	init_syscalls();
 	create_main_process();
+	init_commandInterpreter();
 	init_screen_consoles();
 	rpi_gpu_framebuffer_descriptor_t* a;
 	a = RPI_GetFrameBufferDescpr();
@@ -437,7 +438,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
 
-	focusSConsole(0);
 	asm volatile("cpsie i,#0x10");
 	while(1);
 

@@ -30,7 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "screenbackground.h"
 
 #define MAX_SCONSOLE_INBUFFER 	50
-#define MAX_SCONSOLES 		  	5
+#define MAX_SCONSOLES 		  	5 /* +1 BackGround */
 static char * sprompt = " rOS- ";
 #define SPROMPT_LEN 			6
 #define LINE_SPACING			0
@@ -49,7 +49,6 @@ typedef struct {
 
 void init_screen_consoles(void);
 unsigned char getCurrentSConsole(void);
-unsigned char nextSConsole(void);
 void clearSConsole(unsigned char consoleNum);
 void focusSConsole(unsigned char consoleNum);
 void sConsoleWrite(unsigned char consoleNum, char * str);

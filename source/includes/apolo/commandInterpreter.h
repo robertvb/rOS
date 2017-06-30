@@ -53,10 +53,10 @@ typedef struct {
 	char * lastCommandOutPutBuffer;
 	unsigned int lastCommandLen;
 
-
 } commandInterpreter_t;
 
 void init_commandInterpreter(void);
+commandInterpreter_t * getCommandInterpreter(void);
 void executeCommand(char * name, ... ); // nombre de comando y argumentos
 
 

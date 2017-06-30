@@ -30,6 +30,8 @@ static unsigned char currentSConsole;
 
 void init_screen_consoles(void) {
 
+	currentSConsole = MAX_SCONSOLES; 	/* bgInfo */
+
 	char i;
 	for(i = 0; i < MAX_SCONSOLES; i++) {
 		sConsoleList[i].backGroundColour = Black;
@@ -37,18 +39,18 @@ void init_screen_consoles(void) {
 		sConsoleList[i].currentX = 0;
 		sConsoleList[i].currentY = 3*CHAR_HEIGHT;
 		sConsoleList[i].messageCount = 0;
+		sConsoleList[i].commandInter = getCommandInterpreter();
 		clearSConsole(i);
 	}
 
-	currentSConsole = 0;
 }
 
 unsigned char getCurrentSConsole(void) {
 	return currentSConsole;
 }
 
-unsigned char nextSConsole(void) {
-	return currentSConsole = (currentSConsole + 1) % MAX_SCONSOLES;
+static unsigned char nextSConsole(void) {
+	return currentSConsole = ((currentSConsole + 1) % (MAX_SCONSOLES + 1));
 }
 
 void clearSConsole(unsigned char consoleNum) {
@@ -76,7 +78,8 @@ void clearSConsole(unsigned char consoleNum) {
 				}
 			}
 
-		drawStringCL(Black,"rOS v0.9 Terminal",18,0,0);
+		sConsoleList[consoleNum].currentX += drawStringCL(Black,"rOS v0.8 | Terminal ",20,0,0);
+		drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,20*CHAR_WIDTH,0);
 	}
 
 }
@@ -99,18 +102,24 @@ void focusSConsole(unsigned char consoleNum) {
 			}
 		}
 
-	drawStringCL(Black,"rOS v0.9 Terminal",18,0,0);
+	sConsoleList[consoleNum].currentX += drawStringCL(Black,"rOS v0.8 | Terminal ",20,0,0);
+	drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,20*CHAR_WIDTH,0);
+
+	sConsoleList[consoleNum].currentX = 0;
+	sConsoleList[consoleNum].currentY = 3*CHAR_HEIGHT;
 
 	for(x = 0; x < sConsoleList[consoleNum].messageCount; x++) {
 		unsigned char* str = sConsoleList[consoleNum].matrixMessages[x];
 		unsigned int len = stringLength(str);
-		drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
-		sConsoleList[consoleNum].currentX += SPROMPT_LEN*CHAR_WIDTH;
+		if(len > 0) {
+			drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+			sConsoleList[consoleNum].currentX += SPROMPT_LEN*CHAR_WIDTH;
 
-		drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
-		sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
+			drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+			sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
 
-		sConsoleList[consoleNum].currentX = 0;
+			sConsoleList[consoleNum].currentX = 0;
+		}
 	}
 
 	drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
@@ -135,6 +144,7 @@ void sConsoleWrite(unsigned char consoleNum, char * str) {
 	sConsoleList[consoleNum].messageCount++;
 
 	if(currentSConsole == consoleNum) {
+		sConsoleList[consoleNum].currentX+= SPROMPT_LEN * CHAR_WIDTH;
 		drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
 		sConsoleList[consoleNum].currentX = 0;
 		sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
@@ -145,33 +155,54 @@ void sConsoleWrite(unsigned char consoleNum, char * str) {
 void sConsoleManageChar(char c) {
 
 	static unsigned int currentCharPos = 0;
+	unsigned char nSC;
 
 	switch(c) {
 		case '\t':
-			focusSConsole(nextSConsole());
+			nSC = nextSConsole();
+		    uart_puts("NSC =  ");
+		    uart_puts(uintToString(nSC,DECIMAL));
+		    uart_puts("\n\r");
+
+		    uart_puts("currentSConsole ");
+		    uart_puts(uintToString(currentSConsole,DECIMAL));
+		    uart_puts("\n\r");
+			if(nSC == MAX_SCONSOLES) {
+				drawBg();
+			} else {
+				focusSConsole(nSC);
+			}
 			break;
 		case '-':
-			currentCharPos--;
-			sConsoleList[currentSConsole].currentX -= CHAR_WIDTH;
-			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
-			eraseCharacterCL(sConsoleList[currentSConsole].fontColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			if(currentSConsole < MAX_SCONSOLES) {
+				currentCharPos--;
+				eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				sConsoleList[currentSConsole].currentX -= CHAR_WIDTH;
+				sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
+				eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				drawCharacterCL(sConsoleList[currentSConsole].fontColour, '_', sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+			}
 			break;
 		case '+':
-			if(sConsoleList[currentSConsole].messageCount == MAX_SCONSOLE_LINES) {
-				sConsoleList[currentSConsole].messageCount = 0;
-				currentCharPos = 0;
-				clearSConsole(currentSConsole);
+			if(currentSConsole < MAX_SCONSOLES) {
+				if(sConsoleList[currentSConsole].messageCount == MAX_SCONSOLE_LINES) {
+					sConsoleList[currentSConsole].messageCount = 0;
+					currentCharPos = 0;
+					clearSConsole(currentSConsole);
+					sConsoleList[currentSConsole].currentX = 0;
+					sConsoleList[currentSConsole].currentY = 3*CHAR_HEIGHT;
+				}
+				sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
+				sConsoleList[currentSConsole].messageCount++;
+				eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
 				sConsoleList[currentSConsole].currentX = 0;
-				sConsoleList[currentSConsole].currentY = 3*CHAR_HEIGHT;
+				sConsoleList[currentSConsole].currentY += CHAR_HEIGHT;
+				currentCharPos = 0;
+				//executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount-1]);
+				sConsoleWrite(currentSConsole, "NO WAITING PROCS EN ESTA CONSOLA!");
+				drawStringCL(sConsoleList[currentSConsole].fontColour,sprompt,SPROMPT_LEN,sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				sConsoleList[currentSConsole].currentX += SPROMPT_LEN*CHAR_WIDTH;
 			}
-			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = '\0';
-			sConsoleList[currentSConsole].messageCount++;
-			sConsoleList[currentSConsole].currentX = 0;
-			sConsoleList[currentSConsole].currentY += CHAR_HEIGHT;
-			drawStringCL(sConsoleList[currentSConsole].fontColour,sprompt,SPROMPT_LEN,sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
-			sConsoleList[currentSConsole].currentX += SPROMPT_LEN*CHAR_WIDTH;
-			currentCharPos = 0;
-			executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount]);
 			break;
 		default:
 			eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);

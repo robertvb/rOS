@@ -55,6 +55,7 @@ typedef struct {
 
 void bgInit(uint32_t atagsAddr);
 void bgRefresh(void);
+void drawBg(void);
 void bgWrite(uint8_t * string);
 void bgDrawEdges(uint16_t color);
 void bgDrawLogo(uint16_t color);
