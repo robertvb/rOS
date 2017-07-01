@@ -27,7 +27,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define STRING_H
 
 #include <stdint.h>
-#include "../atenea/mem-utils.h"
 
 #define BINARY			 	 2
 #define DECIMAL				10

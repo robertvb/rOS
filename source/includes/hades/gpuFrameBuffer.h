@@ -27,7 +27,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define RPI_SCREEN_H
 
 #include <stdint.h>
-#include <stddef.h>
 
 #define MAX_PWIDTH 				4096
 #define MAX_PHEIGHT				4096

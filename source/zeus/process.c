@@ -60,3 +60,14 @@ void sample_process_2() {
     // asm volatile("SWI #0");
     terminate_process();
 }
+
+void sample_process_console() {
+
+	unsigned int getNextComand = 1;
+	unsigned char command[500];
+	command[0] = '\0';
+
+    while (getNextComand) {
+
+    }
+}

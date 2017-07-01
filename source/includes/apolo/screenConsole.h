@@ -26,8 +26,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_
 #define SOURCE_INCLUDES_APOLO_SCREENCONSOLE_H_
 
-#include "commandInterpreter.h"
 #include "screenbackground.h"
+#include "../zeus/procUtils.h"
 
 #define MAX_SCONSOLE_INBUFFER 	50
 #define MAX_SCONSOLES 		  	5 /* +1 BackGround */
@@ -37,21 +37,23 @@ static char * sprompt = " rOS- ";
 #define MAX_SCONSOLE_LINES		MAX_VERTICAL_PIXELS / CHAR_HEIGHT - 6  /* 768 / 16 - 6 = 42 CARACTERES */
 #define MAX_SCONSOLE_LINE_LEN	MAX_HORIZONTAL_PIXELS / CHAR_WIDTH - SPROMPT_LEN - 6 /* 1024 / 8 - 6 = 117 CARACTERES */
 
+typedef unsigned char SCid_t;
+
 typedef struct {
-	commandInterpreter_t * commandInter;
 	uint16_t backGroundColour;
 	uint16_t fontColour;
 	unsigned int currentX;
 	unsigned int currentY;
 	unsigned char matrixMessages[MAX_SCONSOLE_LINES][MAX_SCONSOLE_LINE_LEN];
 	unsigned int messageCount;
-}screenConsole_t;
+	ProcessQueue_t bloquedProcs;
+}ScreenConsole_t;
 
 void init_screen_consoles(void);
-unsigned char getCurrentSConsole(void);
-void clearSConsole(unsigned char consoleNum);
-void focusSConsole(unsigned char consoleNum);
-void sConsoleWrite(unsigned char consoleNum, char * str);
+SCid_t getCurrentSConsole(void);
+void clearSConsole(SCid_t consoleNum);
+void focusSConsole(SCid_t consoleNum);
+void sConsoleWrite(SCid_t consoleNum, char * str);
 void sConsoleManageChar(char c);
 void sConsoleManageBlinkPrompt(void);
 

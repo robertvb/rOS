@@ -23,27 +23,21 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
+#ifndef SOURCE_INCLUDES_ZEUS_PROCUTILS_H_
+#define SOURCE_INCLUDES_ZEUS_PROCUTILS_H_
 
 #include "process.h"
-#include "../atenea/pmem.h"
+#include "../atenea/mem-utils.h"
 
-// todo DEBUG
-#include "../hades/rpi-uart.h"
+typedef struct {
+	Process_t * head;
+	Process_t * tail;
+} ProcessQueue_t;
 
+void init_queue(ProcessQueue_t * queue);
+void addProcToQueue(Process_t * proc, ProcessQueue_t * queue);
+Process_t * getProcFromQueue(ProcessQueue_t * queue);
+void addPidToQueue(Pid_t pid, ProcessQueue_t * queue);
+Pid_t getPidFromQueue(ProcessQueue_t * queue);
 
-Pid_t getCurrentProcessPid(void);
-Pid_t getCurrentProcessPpid(void);
-Pid_t getNextPid(void);
-Process_t * getProcUsingPid(Pid_t);
-void create_main_process(void);
-void kfork(char * name,  Dir_t addr, Dir_t sp);
-unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr);
-unsigned int sleepCurrentProc(unsigned int addr,unsigned int sp, unsigned int spsr, unsigned int tics);
-unsigned int terminate_process(void);
-void halt(void);
-unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc); // TODO
-unsigned int getCharacterHandler(unsigned int pc, unsigned int sp, unsigned int spsr); // TODO
-
-#endif
+#endif /* SOURCE_INCLUDES_ZEUS_PROCUTILS_H_ */

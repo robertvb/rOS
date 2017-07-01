@@ -23,11 +23,10 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../hades/rpi-uart.h"
-#include "../atenea/pmem.h"
-
 #ifndef PROCESS_H
 #define	PROCESS_H
+
+#include "../hades/rpi-uart.h"
 
 /*
  * Estados del proceso
@@ -62,6 +61,7 @@ struct Process_t {
     Pid_t 			ppid;
     char * 			name;
     char * 			fileName;
+    unsigned char	stoutPut;
     unsigned int	tablePageDir;
     unsigned int 	stack_pointer;
 	unsigned int 	pc;
@@ -75,6 +75,8 @@ struct Process_t {
 void sample_process_1();
 
 void sample_process_2();
+
+void sample_process_console();
 
 #endif	/* PROCESS_H */
 

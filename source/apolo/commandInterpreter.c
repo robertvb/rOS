@@ -157,10 +157,18 @@ void init_commandInterpreter(void) {
 
 
 static command_t * searchCommand(const char * name) {
+
 	char i;
-	int debug = 0;
 	for(i = 0; i < commandInterpreter->nCommands
 	&& strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
+
+	uart_puts("<<< VALOR DE i = ");
+	uart_puts(uintToString(i,DECIMAL));
+	uart_puts(">>>>>>\n\r");
+
+	uart_puts("<<< VALOR DE commandInterpreter->commands[i].name = '");
+	uart_puts(commandInterpreter->commands[i].name);
+	uart_puts("'>>>>>>\n\r");
 
 	return (i >= commandInterpreter->nCommands ? NULL : &commandInterpreter->commands[i]);
 
@@ -172,19 +180,16 @@ static command_t * searchCommand(const char * name) {
 void executeCommand(char * name, ...) {
 
 	uart_puts(name);
-	command_t * command = searchCommand(name);
 
-	if(command == NULL) {
+	char i;
+	for(i = 0; i < commandInterpreter->nCommands
+	&& strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
+
+	if(i == commandInterpreter->nCommands) {
 		sConsoleWrite(getCurrentSConsole(),"No existe el comando!!!!");
 	}
 	else {
-		/* limpiamos buffer de salida */
-		unsigned int i = MAX_COMMAND_OUTPUT;
-		while(i--) {
-			commandInterpreter->lastCommandOutPutBuffer[i] = '\0';
-		}
-		/* ejecución del comando */
-		sConsoleWrite(getCurrentSConsole(),"Hola amigo, que tal?");
+		commandInterpreter->commands[i].function(name,0);
 	}
 
 	return;

@@ -25,8 +25,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/apolo/screenConsole.h"
 
-static screenConsole_t sConsoleList[MAX_SCONSOLES];
-static unsigned char currentSConsole;
+static ScreenConsole_t sConsoleList[MAX_SCONSOLES];
+static SCid_t currentSConsole;
 
 void init_screen_consoles(void) {
 
@@ -39,7 +39,8 @@ void init_screen_consoles(void) {
 		sConsoleList[i].currentX = 0;
 		sConsoleList[i].currentY = 3*CHAR_HEIGHT;
 		sConsoleList[i].messageCount = 0;
-		sConsoleList[i].commandInter = getCommandInterpreter();
+		sConsoleList[i].bloquedProcs.head = NULL;
+		sConsoleList[i].bloquedProcs.tail = NULL;
 		clearSConsole(i);
 	}
 
@@ -49,11 +50,11 @@ unsigned char getCurrentSConsole(void) {
 	return currentSConsole;
 }
 
-static unsigned char nextSConsole(void) {
+static SCid_t nextSConsole(void) {
 	return currentSConsole = ((currentSConsole + 1) % (MAX_SCONSOLES + 1));
 }
 
-void clearSConsole(unsigned char consoleNum) {
+void clearSConsole(SCid_t consoleNum) {
 
 	if(consoleNum >= MAX_SCONSOLES) {
 		return;
@@ -69,14 +70,17 @@ void clearSConsole(unsigned char consoleNum) {
 		rpi_gpu_framebuffer_descriptor_t * frameBufferDscr  = (rpi_gpu_framebuffer_descriptor_t*) RPI_GetFrameBufferDescpr();
 		uint16_t * pixel = (uint16_t *) frameBufferDscr->pointer;
 		uint32_t x,y;
-		for(y = 0; y < frameBufferDscr->vHeight; y++)
+		for(y = 0; y < frameBufferDscr->vHeight; y++) {
 			for(x = 0; x < frameBufferDscr->vWidth; x++) {
-				if(y <= CHAR_HEIGHT) {
+				if(y <= CHAR_HEIGHT || y >= frameBufferDscr->vHeight - CHAR_HEIGHT) {
 					*(pixel++) = LightGrey;
 				} else {
 					*(pixel++) = sConsoleList[consoleNum].backGroundColour;
 				}
 			}
+		}
+
+		drawStringCL(Black,"Tab = Next Terminal | '+' = Enter | '-' = Delete | Help para ayuda",68,20*CHAR_WIDTH,frameBufferDscr->vHeight - CHAR_HEIGHT);
 
 		sConsoleList[consoleNum].currentX += drawStringCL(Black,"rOS v0.8 | Terminal ",20,0,0);
 		drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,20*CHAR_WIDTH,0);
@@ -84,30 +88,15 @@ void clearSConsole(unsigned char consoleNum) {
 
 }
 
-void focusSConsole(unsigned char consoleNum) {
+void focusSConsole(SCid_t consoleNum) {
 
 	if(consoleNum >= MAX_SCONSOLES) {
 		return;
 	}
 
-	rpi_gpu_framebuffer_descriptor_t * frameBufferDscr  = (rpi_gpu_framebuffer_descriptor_t*) RPI_GetFrameBufferDescpr();
-	uint16_t * pixel = (uint16_t *) frameBufferDscr->pointer;
+	clearSConsole(currentSConsole);
+
 	uint32_t x,y;
-	for(y = 0; y < frameBufferDscr->vHeight; y++)
-		for(x = 0; x < frameBufferDscr->vWidth; x++) {
-			if(y <= CHAR_HEIGHT) {
-				*(pixel++) = LightGrey;
-			} else {
-				*(pixel++) = sConsoleList[consoleNum].backGroundColour;
-			}
-		}
-
-	sConsoleList[consoleNum].currentX += drawStringCL(Black,"rOS v0.8 | Terminal ",20,0,0);
-	drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,20*CHAR_WIDTH,0);
-
-	sConsoleList[consoleNum].currentX = 0;
-	sConsoleList[consoleNum].currentY = 3*CHAR_HEIGHT;
-
 	for(x = 0; x < sConsoleList[consoleNum].messageCount; x++) {
 		unsigned char* str = sConsoleList[consoleNum].matrixMessages[x];
 		unsigned int len = stringLength(str);
@@ -127,7 +116,7 @@ void focusSConsole(unsigned char consoleNum) {
 
 }
 
-void sConsoleWrite(unsigned char consoleNum, char * str) {
+void sConsoleWrite(SCid_t consoleNum, char * str) {
 
 	if(consoleNum >= MAX_SCONSOLES) {
 		return;
@@ -198,19 +187,23 @@ void sConsoleManageChar(char c) {
 				sConsoleList[currentSConsole].currentX = 0;
 				sConsoleList[currentSConsole].currentY += CHAR_HEIGHT;
 				currentCharPos = 0;
-				//executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount-1]);
-				sConsoleWrite(currentSConsole, "NO WAITING PROCS EN ESTA CONSOLA!");
+				executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount-1]);
 				drawStringCL(sConsoleList[currentSConsole].fontColour,sprompt,SPROMPT_LEN,sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
 				sConsoleList[currentSConsole].currentX += SPROMPT_LEN*CHAR_WIDTH;
 			}
 			break;
 		default:
-			eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
-			drawCharacterCL(sConsoleList[currentSConsole].fontColour, (uint8_t) c, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
-			sConsoleList[currentSConsole].currentX += CHAR_WIDTH;
-			sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = c;
-			drawCharacterCL(sConsoleList[currentSConsole].fontColour, '_', sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
-			currentCharPos++;
+			if(sConsoleList[currentSConsole].bloquedProcs.head == NULL) {
+				/* si no hay procesos bloqueados asociados a este terminal */
+				eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				drawCharacterCL(sConsoleList[currentSConsole].fontColour, (uint8_t) c, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				sConsoleList[currentSConsole].currentX += CHAR_WIDTH;
+				sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount][currentCharPos] = c;
+				drawCharacterCL(sConsoleList[currentSConsole].fontColour, '_', sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				currentCharPos++;
+			} else {
+				/* se envia el caracter a dicho proceso */
+			}
 	}
 
 }

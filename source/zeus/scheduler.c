@@ -52,6 +52,10 @@ Pid_t getCurrentProcessPpid(void) {
 	return active_process->ppid;
 }
 
+Process_t * getProcUsingPid(Pid_t pid) {
+	return (Process_t *) &process_list[pid];
+}
+
 unsigned int terminate_process(void) {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	active_process->status = PROCESS_STATUS_TERMINATED;
@@ -143,7 +147,7 @@ void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
     uart_puts("\n\r");
 
     forked_stack_pointer--;
-    *forked_stack_pointer = pc;
+    *forked_stack_pointer = (unsigned int) pc;
     uart_puts("Poniendo a cero word = ");
     uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
     uart_puts("\n\r");
