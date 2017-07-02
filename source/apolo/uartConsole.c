@@ -47,7 +47,6 @@ void readCommand(void) {
 	/* se llama a executeCommand */
 	executeCommand(uartConsole.inBuffer);
 	/* la salida se encuentra en el buffer del interprete */
-	uart_puts(uartConsole.outBuffer);
 	uart_puts("\r\n");
 }
 

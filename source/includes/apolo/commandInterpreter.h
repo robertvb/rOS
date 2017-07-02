@@ -32,17 +32,20 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../hefesto/string.h"
 
 #define MAX_COMMANDS			10
-#define MAX_SIZE_COMMAND		16
+#define MAX_SIZE_COMMAND		126
+#define MAX_SIZE_ARG			10
 #define MAX_SIZE_COMMAND_DESCRP 61
 #define MAX_SIZE_COMMAND_USAGE	31
-#define MAX_COMMAND_OUTPUT 	   500
+#define MAX_SIZE_ARGV	 	   	 4
 
 typedef struct {
 
 	char name[MAX_SIZE_COMMAND];				// Comando
 	char descrp[MAX_SIZE_COMMAND_DESCRP];		// DEscripción
 	char usage[MAX_SIZE_COMMAND_USAGE];			// Uso
-	void (* function)(int argc, char * argv[]); // funcion que "ejecuta" el comando
+	unsigned char argc;
+	void (* function)(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]); // funcion que "ejecuta" el comando interno
+
 
 } command_t;
 
@@ -50,14 +53,14 @@ typedef struct {
 
 	command_t commands[MAX_COMMANDS];
 	unsigned int nCommands;
-	char * lastCommandOutPutBuffer;
-	unsigned int lastCommandLen;
+	unsigned char (* argv_pointer)[MAX_SIZE_ARG];
+	unsigned char commandBuffer[MAX_SIZE_COMMAND];
 
 } commandInterpreter_t;
 
 void init_commandInterpreter(void);
 commandInterpreter_t * getCommandInterpreter(void);
-void executeCommand(char * name, ... ); // nombre de comando y argumentos
+void executeCommand(unsigned char * command); // nombre de comando y argumentos
 
 
 #endif /* SOURCE_INCLUDES_APOLO_COMANDS_H_ */

@@ -206,6 +206,10 @@ int32_t strncmp(const char *s1, const char *s2, uint32_t n) {
         s2++;
         n--;
     }
+
+	if(n == 0 && (*s1 == '\0' || *s2 == '\0')) {
+		return 0;
+	}
     return *(const unsigned char*)s1-*(const unsigned char*)s2;
 }
 

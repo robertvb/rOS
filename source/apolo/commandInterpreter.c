@@ -28,6 +28,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Comandos del sistema
 
 static commandInterpreter_t * commandInterpreter;
+static unsigned char argv[MAX_SIZE_ARGV][MAX_SIZE_ARG];
 
 commandInterpreter_t * getCommandInterpreter(void) {
 	return commandInterpreter;
@@ -104,18 +105,39 @@ static void reg(unsigned char * r) {
 	else if(strncmp(r,"sp",3))
 		asm volatile ("MOV %0, SP\n\t" : "=r" (value) );
 
-	strcpy(commandInterpreter->lastCommandOutPutBuffer,r);
-
-	strcpy(commandInterpreter->lastCommandOutPutBuffer+3,"= 0x");
-
-	uintToStringStr(value,HEXADECIMAL,commandInterpreter->lastCommandOutPutBuffer+7);
-
 }
 
 void printPid(void) {
 	uart_puts("Pid de la consola = ");
     uart_puts(uintToString(getCurrentProcessPid(),DECIMAL));
 	uart_puts("\n\r");
+}
+
+void echo(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	sConsoleWrite(getCurrentSConsole(),argv_pointer[1]);
+}
+
+void apariencia(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+
+	if(!strncmp("lima",argv_pointer[1],stringLength("lima"))) {
+		setSConsolebackGroundColour(getCurrentSConsole(),0xb691);
+		setSConsoleFontColour(getCurrentSConsole(),0x0000);
+		uart_puts("<<< cambiando a estilo lima>>>>>>>");
+	}else if(!strncmp("ros",argv_pointer[1],stringLength("ros"))) {
+		setSConsolebackGroundColour(getCurrentSConsole(),0x2844);
+		setSConsoleFontColour(getCurrentSConsole(),0xAFE5);
+		uart_puts("<<< cambiando a estilo ros>>>>>>>");
+	}else if(!strncmp("nyb",argv_pointer[1],stringLength("nyb"))) {
+		setSConsolebackGroundColour(getCurrentSConsole(),0x0000);
+		setSConsoleFontColour(getCurrentSConsole(),0xFFFF);
+		uart_puts("<<< cambiando a estilo nyb>>>>>>>");
+	}else if(!strncmp("ayb",argv_pointer[1],stringLength("ayb"))) {
+		setSConsolebackGroundColour(getCurrentSConsole(),0x000F);
+		setSConsoleFontColour(getCurrentSConsole(),0xFFFF);
+		uart_puts("<<< cambiando a estilo ayb>>>>>>>");
+	}
+
+	focusSConsole(getCurrentSConsole());
 }
 /*
 static char *  mdump(void * addr, uint32_t size) {
@@ -133,26 +155,51 @@ static char *  run(void * addr) {
  */
 void init_commandInterpreter(void) {
 
+	unsigned char i = 0;
+	for (i = 0; i < MAX_SIZE_ARGV; ++i) {
+		argv[i][0] = '\0';
+	}
+
+	commandInterpreter->argv_pointer = argv;
+	commandInterpreter->commandBuffer[0] = '\0';
+
 	// add hello
 	strcpy(commandInterpreter->commands[0].name,"hello");
 	strcpy(commandInterpreter->commands[0].descrp,"hello");
 	strcpy(commandInterpreter->commands[0].usage,"hello");
+	commandInterpreter->commands[0].argc = 1;
 	commandInterpreter->commands[0].function = (void *) &hello;
 
 	//add regs
 	strcpy(commandInterpreter->commands[1].name,"regs");
 	strcpy(commandInterpreter->commands[1].descrp,"muestra el valor de todos los registros");
 	strcpy(commandInterpreter->commands[1].usage,"regs");
+	commandInterpreter->commands[1].argc = 1;
 	commandInterpreter->commands[1].function = (void *) &reg;
 
 	// Add Print PID
 	strcpy(commandInterpreter->commands[2].name,"cpid");
 	strcpy(commandInterpreter->commands[2].descrp,"muestra el pid de la consola");
 	strcpy(commandInterpreter->commands[2].usage,"cpid");
+	commandInterpreter->commands[2].argc = 1;
 	commandInterpreter->commands[2].function = (void *) &printPid;
 
+	// Add echo
+	strcpy(commandInterpreter->commands[3].name,"echo");
+	strcpy(commandInterpreter->commands[3].descrp,"repite el mensaje enviado");
+	strcpy(commandInterpreter->commands[3].usage,"echo 'str'");
+	commandInterpreter->commands[3].argc = 2;
+	commandInterpreter->commands[3].function = (void *) &echo;
 
-	commandInterpreter->nCommands = 3;
+	// Add apariencia
+	strcpy(commandInterpreter->commands[4].name,"estilo");
+	strcpy(commandInterpreter->commands[4].descrp,"cambia la apariencia al estilo seleccionado");
+	strcpy(commandInterpreter->commands[4].usage,"estilo 'name' donde 'name' = {navajo, ros, nyb, ayb}");
+	commandInterpreter->commands[4].argc = 2;
+	commandInterpreter->commands[4].function = (void *) &apariencia;
+
+
+	commandInterpreter->nCommands = 5;
 }
 
 
@@ -177,19 +224,48 @@ static command_t * searchCommand(const char * name) {
 /*
  * ejecuta el comando
  */
-void executeCommand(char * name, ...) {
+void executeCommand(unsigned char * command) {
 
-	uart_puts(name);
+	strcpy(commandInterpreter->commandBuffer,command);
+	unsigned char * commandInfo = commandInterpreter->commandBuffer + 6; /* SPROMPT LEN */
 
 	char i;
 	for(i = 0; i < commandInterpreter->nCommands
-	&& strncmp(name,commandInterpreter->commands[i].name,MAX_SIZE_COMMAND); i++);
+	&& strncmp(commandInfo,commandInterpreter->commands[i].name,stringLength(commandInterpreter->commands[i].name)); i++);
+
 
 	if(i == commandInterpreter->nCommands) {
 		sConsoleWrite(getCurrentSConsole(),"No existe el comando!!!!");
+		uart_puts("command: ");
+		uart_puts(command);
+		uart_puts("\n\r");
+
+		uart_puts("commandInfo: ");
+		uart_puts(commandInfo);
+		uart_puts("\n\r");
 	}
 	else {
-		commandInterpreter->commands[i].function(name,0);
+		/* creamos la cadena de argumentos (argv) */
+		char j,v,last;
+		for (j = 0, v = 0, last = 0; commandInfo[j] != '\0' && v < commandInterpreter->commands[i].argc - 1; j++) {
+			if(commandInfo[j] == ' ') {
+				commandInfo[j] = '\0';
+				strcpy(argv[v],&commandInfo[last]);
+				last = j + 1;
+				v++;
+			}
+		}
+
+		strcpy(argv[v],&commandInfo[last]);
+
+		commandInterpreter->commands[i].function(commandInterpreter->commands[i].argc, argv);
+
+		for (i = 0; i < commandInterpreter->commands[i].argc; ++i) {
+			argv[i][0] = '\0';
+		}
+
+		commandInterpreter->commandBuffer[0] = '\0';
+
 	}
 
 	return;

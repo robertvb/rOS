@@ -35,7 +35,7 @@ static char * sprompt = " rOS- ";
 #define SPROMPT_LEN 			6
 #define LINE_SPACING			0
 #define MAX_SCONSOLE_LINES		MAX_VERTICAL_PIXELS / CHAR_HEIGHT - 6  /* 768 / 16 - 6 = 42 CARACTERES */
-#define MAX_SCONSOLE_LINE_LEN	MAX_HORIZONTAL_PIXELS / CHAR_WIDTH - SPROMPT_LEN - 6 /* 1024 / 8 - 6 = 117 CARACTERES */
+#define MAX_SCONSOLE_LINE_LEN	MAX_HORIZONTAL_PIXELS / CHAR_WIDTH - SPROMPT_LEN - 2 /* 1024 / 8 - 2 = 126 CARACTERES */
 
 typedef unsigned char SCid_t;
 
@@ -51,6 +51,8 @@ typedef struct {
 
 void init_screen_consoles(void);
 SCid_t getCurrentSConsole(void);
+void setSConsoleFontColour(SCid_t consoleNum, uint16_t colour);
+void setSConsolebackGroundColour(SCid_t consoleNum, uint16_t colour);
 void clearSConsole(SCid_t consoleNum);
 void focusSConsole(SCid_t consoleNum);
 void sConsoleWrite(SCid_t consoleNum, char * str);

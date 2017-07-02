@@ -54,6 +54,14 @@ static SCid_t nextSConsole(void) {
 	return currentSConsole = ((currentSConsole + 1) % (MAX_SCONSOLES + 1));
 }
 
+void setSConsoleFontColour(SCid_t consoleNum, uint16_t colour) {
+	sConsoleList[consoleNum].fontColour = colour;
+}
+
+void setSConsolebackGroundColour(SCid_t consoleNum, uint16_t colour) {
+	sConsoleList[consoleNum].backGroundColour = colour;
+}
+
 void clearSConsole(SCid_t consoleNum) {
 
 	if(consoleNum >= MAX_SCONSOLES) {
@@ -82,8 +90,10 @@ void clearSConsole(SCid_t consoleNum) {
 
 		drawStringCL(Black,"Tab = Next Terminal | '+' = Enter | '-' = Delete | Help para ayuda",68,20*CHAR_WIDTH,frameBufferDscr->vHeight - CHAR_HEIGHT);
 
-		sConsoleList[consoleNum].currentX += drawStringCL(Black,"rOS v0.8 | Terminal ",20,0,0);
-		drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,20*CHAR_WIDTH,0);
+		sConsoleList[consoleNum].currentX += drawStringCL(Black," rOS v0.8 | Terminal ",20,0,0);
+		drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,21*CHAR_WIDTH,0);
+
+		sConsoleList[consoleNum].currentX = 0;
 	}
 
 }
@@ -94,19 +104,34 @@ void focusSConsole(SCid_t consoleNum) {
 		return;
 	}
 
-	clearSConsole(currentSConsole);
+	sConsoleList[consoleNum].currentY = 3*CHAR_HEIGHT;
 
+	rpi_gpu_framebuffer_descriptor_t * frameBufferDscr  = (rpi_gpu_framebuffer_descriptor_t*) RPI_GetFrameBufferDescpr();
+	uint16_t * pixel = (uint16_t *) frameBufferDscr->pointer;
 	uint32_t x,y;
+	for(y = 0; y < frameBufferDscr->vHeight; y++) {
+		for(x = 0; x < frameBufferDscr->vWidth; x++) {
+			if(y <= CHAR_HEIGHT || y >= frameBufferDscr->vHeight - CHAR_HEIGHT) {
+				*(pixel++) = LightGrey;
+			} else {
+				*(pixel++) = sConsoleList[consoleNum].backGroundColour;
+			}
+		}
+	}
+
+	drawStringCL(Black,"Tab = Next Terminal | '+' = Enter | '-' = Delete | Help para ayuda",68,20*CHAR_WIDTH,frameBufferDscr->vHeight - CHAR_HEIGHT);
+
+	sConsoleList[consoleNum].currentX += drawStringCL(Black," rOS v0.8 | Terminal ",20,0,0);
+	drawStringCL(Black,uintToString(currentSConsole,DECIMAL),2,21*CHAR_WIDTH,0);
+
+	sConsoleList[consoleNum].currentX = 0;
+
 	for(x = 0; x < sConsoleList[consoleNum].messageCount; x++) {
 		unsigned char* str = sConsoleList[consoleNum].matrixMessages[x];
 		unsigned int len = stringLength(str);
 		if(len > 0) {
-			drawStringCL(sConsoleList[consoleNum].fontColour,sprompt,SPROMPT_LEN,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
-			sConsoleList[consoleNum].currentX += SPROMPT_LEN*CHAR_WIDTH;
-
 			drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
 			sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
-
 			sConsoleList[consoleNum].currentX = 0;
 		}
 	}
@@ -128,13 +153,13 @@ void sConsoleWrite(SCid_t consoleNum, char * str) {
 		return;
 	}
 
-	strncpy(sConsoleList[consoleNum].matrixMessages[sConsoleList[consoleNum].messageCount],(uint8_t *)str,len);
+	strncpy(sConsoleList[consoleNum].matrixMessages[sConsoleList[consoleNum].messageCount],(uint8_t *)str,len+1);
 
 	sConsoleList[consoleNum].messageCount++;
 
 	if(currentSConsole == consoleNum) {
 		sConsoleList[consoleNum].currentX+= SPROMPT_LEN * CHAR_WIDTH;
-		drawStringCL(sConsoleList[consoleNum].fontColour,str,len,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
+		drawStringCL(sConsoleList[consoleNum].fontColour,str,len+1,sConsoleList[consoleNum].currentX,sConsoleList[consoleNum].currentY);
 		sConsoleList[consoleNum].currentX = 0;
 		sConsoleList[consoleNum].currentY += CHAR_HEIGHT;
 	}
@@ -149,13 +174,6 @@ void sConsoleManageChar(char c) {
 	switch(c) {
 		case '\t':
 			nSC = nextSConsole();
-		    uart_puts("NSC =  ");
-		    uart_puts(uintToString(nSC,DECIMAL));
-		    uart_puts("\n\r");
-
-		    uart_puts("currentSConsole ");
-		    uart_puts(uintToString(currentSConsole,DECIMAL));
-		    uart_puts("\n\r");
 			if(nSC == MAX_SCONSOLES) {
 				drawBg();
 			} else {
@@ -163,7 +181,7 @@ void sConsoleManageChar(char c) {
 			}
 			break;
 		case '-':
-			if(currentSConsole < MAX_SCONSOLES) {
+			if(currentSConsole < MAX_SCONSOLES && currentCharPos > SPROMPT_LEN) {
 				currentCharPos--;
 				eraseCharacterCL(sConsoleList[currentSConsole].backGroundColour, sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
 				sConsoleList[currentSConsole].currentX -= CHAR_WIDTH;
@@ -189,6 +207,8 @@ void sConsoleManageChar(char c) {
 				currentCharPos = 0;
 				executeCommand(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount-1]);
 				drawStringCL(sConsoleList[currentSConsole].fontColour,sprompt,SPROMPT_LEN,sConsoleList[currentSConsole].currentX,sConsoleList[currentSConsole].currentY);
+				strncpy(sConsoleList[currentSConsole].matrixMessages[sConsoleList[currentSConsole].messageCount],sprompt,SPROMPT_LEN);
+				currentCharPos+= SPROMPT_LEN;
 				sConsoleList[currentSConsole].currentX += SPROMPT_LEN*CHAR_WIDTH;
 			}
 			break;

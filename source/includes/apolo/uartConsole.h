@@ -35,7 +35,6 @@ static const char prompt[] = "rOS232> ";
 typedef struct {
 	commandInterpreter_t commandInter;
 	char inBuffer[MAX_UCONSOLE_INBUFFER];
-	char outBuffer[MAX_COMMAND_OUTPUT];
 }uartConsole_t;
 
 void init_uartConsole(void);
