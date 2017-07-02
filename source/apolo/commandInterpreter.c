@@ -139,6 +139,10 @@ void apariencia(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG])
 
 	focusSConsole(getCurrentSConsole());
 }
+
+void clear(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	clearSConsole(getCurrentSConsole());
+}
 /*
 static char *  mdump(void * addr, uint32_t size) {
 
@@ -170,12 +174,12 @@ void init_commandInterpreter(void) {
 	commandInterpreter->commands[0].argc = 1;
 	commandInterpreter->commands[0].function = (void *) &hello;
 
-	//add regs
-	strcpy(commandInterpreter->commands[1].name,"regs");
-	strcpy(commandInterpreter->commands[1].descrp,"muestra el valor de todos los registros");
-	strcpy(commandInterpreter->commands[1].usage,"regs");
+	// Add clear
+	strcpy(commandInterpreter->commands[1].name,"clear");
+	strcpy(commandInterpreter->commands[1].descrp,"limpia el terminal");
+	strcpy(commandInterpreter->commands[1].usage,"clear");
 	commandInterpreter->commands[1].argc = 1;
-	commandInterpreter->commands[1].function = (void *) &reg;
+	commandInterpreter->commands[1].function = (void *) &clear;
 
 	// Add Print PID
 	strcpy(commandInterpreter->commands[2].name,"cpid");
@@ -197,7 +201,6 @@ void init_commandInterpreter(void) {
 	strcpy(commandInterpreter->commands[4].usage,"estilo 'name' donde 'name' = {navajo, ros, nyb, ayb}");
 	commandInterpreter->commands[4].argc = 2;
 	commandInterpreter->commands[4].function = (void *) &apariencia;
-
 
 	commandInterpreter->nCommands = 5;
 }
@@ -227,7 +230,8 @@ static command_t * searchCommand(const char * name) {
 void executeCommand(unsigned char * command) {
 
 	strcpy(commandInterpreter->commandBuffer,command);
-	unsigned char * commandInfo = commandInterpreter->commandBuffer + 6; /* SPROMPT LEN */
+	unsigned char * commandInfo = commandInterpreter->commandBuffer; /* SPROMPT LEN */
+
 
 	char i;
 	for(i = 0; i < commandInterpreter->nCommands
@@ -236,13 +240,7 @@ void executeCommand(unsigned char * command) {
 
 	if(i == commandInterpreter->nCommands) {
 		sConsoleWrite(getCurrentSConsole(),"No existe el comando!!!!");
-		uart_puts("command: ");
-		uart_puts(command);
-		uart_puts("\n\r");
 
-		uart_puts("commandInfo: ");
-		uart_puts(commandInfo);
-		uart_puts("\n\r");
 	}
 	else {
 		/* creamos la cadena de argumentos (argv) */
