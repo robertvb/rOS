@@ -47,10 +47,11 @@ void sample_process_2() {
 
 	uart_puts("Starting process 2 y haciendo swi1!\n\r");
 
-    volatile char * string = "\n\r\n\rHELLO SW1 ! \n\r\n\r\0";
+    volatile char * string = "HELLO SW1 ! \n\r\n\r\0";
     unsigned int addr = (unsigned int) string;
 	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
     asm volatile("SWI #1");
+    asm volatile("SWI #6");
 
 	asm volatile("SWI #0");
 /*

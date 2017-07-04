@@ -30,6 +30,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../atenea/pmem.h"
 #include "scheduler.h"
 #include "../hades/rpi-uart.h"
+#include "../apolo/screenConsole.h"
 
 
 #define SC_EXIT						0
@@ -38,13 +39,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SC_GET_PID					3
 #define SC_GET_PPID					4
 #define SC_GET_CHAR					5
+#define SC_TERMINAL_WRITE			6
 
-typedef int system_call_t(uint32_t pc, uint32_t sp, uint32_t spsr, ...);
+typedef unsigned int (*system_call_t)(unsigned int pc, unsigned int sp, unsigned int spsr);
 
 typedef struct system_call_entry {
 	uint32_t swi;
     char* name;
-    void * function;
+    system_call_t function;
     uint32_t flags;
     uint32_t params;
 } system_call_entry_t;
@@ -52,6 +54,6 @@ typedef struct system_call_entry {
 
 void init_syscalls(void);
 
-unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr,unsigned int swi,unsigned int arg0,unsigned int arg1,unsigned int arg2,unsigned int arg3);
+unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr, unsigned int swi);
 
 #endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */

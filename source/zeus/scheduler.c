@@ -63,12 +63,7 @@ unsigned int terminate_process(void) {
     // Obtenemos el siguiente proceso
 	active_process = ready_queue;
 
-    // If -1, halt TODO DEBUG
-    if (active_process == ready_queue_tail) {
-		uart_puts("No more waiting processes, halting.");
-		uart_puts("\n\r");
-		halt();
-	}
+	ready_queue = ready_queue->nextProc;
 
     return active_process->stack_pointer;
 

@@ -131,10 +131,6 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
 	volatile unsigned int lr_addr;
 	volatile unsigned int sp_addr;
 	volatile unsigned int spsr;
-	volatile unsigned int arg0;
-	volatile unsigned int arg1;
-	volatile unsigned int arg2;
-	volatile unsigned int arg3;
 	volatile unsigned int new_stack;
 
 	//uart_puts("INICIO SW RTI\n\r");
@@ -150,13 +146,6 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
 	// r14 = LR.
 	// r13 = SP. No queremos hacer push del stack pointer -> ARM doesn't guarantee what value it will have.
 	asm volatile("push	{r0-r12,r14}");
-
-	// Obtencion de los parametros
-	//asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
-	//asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
-	//asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
-	//asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
-
 
 	// Obtencion de la pila
     asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
@@ -178,20 +167,12 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
     uart_puts(uintToString(lr_addr,HEXADECIMAL));
 	uart_puts("\n\r");
 
-	uart_puts("Valor de arg0 en poseidon: 0x");
-    uart_puts(uintToString(arg0,HEXADECIMAL));
-	uart_puts("\n\r");
-
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(lr_addr - 4)) & 0x00ffffff;
 
 	// Handle syscall
-	new_stack = syscall_handler(sp_addr,lr_addr,spsr,swi,arg0,arg1,arg2,arg3);
+	new_stack = syscall_handler(sp_addr,lr_addr,spsr,swi);
 	_force_to_save_new_stack(new_stack);
-
-	if(new_stack == 0) {
-		new_stack = sp_addr;
-	}
 
 	// Cambio a modo SYSTEM para acceder a los registros del nuevo proceso
 	asm volatile("cps #0x1f");
