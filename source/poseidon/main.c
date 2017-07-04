@@ -398,27 +398,20 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 #endif
 
 #if(1)
+
 	bgInit(atagsAddr);
 	init_syscalls();
 	create_main_process();
 	init_commandInterpreter();
 	init_screen_consoles();
-	rpi_gpu_framebuffer_descriptor_t* a;
-	a = RPI_GetFrameBufferDescpr();
-	uart_puts("SIZE! = ");
-	uart_puts(uintToString(a->size,DECIMAL));
-	uart_puts("\r\n");
-	uart_puts("vH = ");
-	uart_puts(uintToString(a->vHeight,DECIMAL));
-	uart_puts("\r\n");
-	uart_puts("vW = ");
-	uart_puts(uintToString(a->vWidth,DECIMAL));
-	uart_puts("\r\n");
 
 	init_uartConsole();
 
+	//kfork("proceso 1", (Dir_t) &sample_process_2, (Dir_t) 0x1e000000);
+	//uart_puts("KFORK 1 HECHO\r\n");
+
 	/* Enable the timer interrupt IRQ */
-	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;
+	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;//RPI_BASIC_ARM_TIMER_IRQ;
 
 	/* Setup the system time r interrupt */
 	/* Timer frequency = Clk/256 * 0x400 */
@@ -431,15 +424,27 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	RPI_ARMTIMER_CTRL_INT_ENABLE |
 	RPI_ARMTIMER_CTRL_PRESCALE_256;
 
+
+
 	//Enable uart interrupts:
 
 	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
 	RPI_GetIrqController()->Disable_IRQs_2 = 0xFFFFFFFF;
 
-	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000000;
+	// UART + SWI
+	RPI_GetIrqController()->Enable_IRQs_2 = 0x02000200;
+
+	//uart_puts("antes del swi...\r\n");
+
+	//_enable_interrupts();
+	// asm volatile("SWI #1");
+
+	//uart_puts("despues del swi while...\r\n");
 
 	asm volatile("cpsie i,#0x10");
-	while(1);
+	while(1) {
+
+	}
 
 
 #endif

@@ -64,7 +64,7 @@ unsigned int terminate_process(void) {
 	active_process = ready_queue;
 
     // If -1, halt TODO DEBUG
-    if (active_process == NULL) {
+    if (active_process == ready_queue_tail) {
 		uart_puts("No more waiting processes, halting.");
 		uart_puts("\n\r");
 		halt();
@@ -216,7 +216,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
 	active_process->status = PROCESS_STATUS_READY;
 
     Process_t * proc;
-    /*uart_puts("estado de la readyQ: \n\r");
+    uart_puts("estado de la readyQ: \n\r");
 	for(proc = ready_queue; proc != NULL; proc = proc->nextProc) {
         uart_puts("encontrado un proc en readyQ. Pid: ");
         uart_puts(uintToString(proc->pid,DECIMAL));
@@ -224,7 +224,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
             uart_puts(" y es last executed");
         }
         uart_puts("\n\r");
-	}*/
+	}
 
     // Actuamos la cola de bloqueados
     //Process_t * proc;
@@ -259,7 +259,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     //uart_puts("Done! \n\r");
 
     // DEBUG CODE
-    /*uart_puts("Schedule timeout. Current active pid is ");
+    uart_puts("Schedule timeout. Current active pid is ");
     uart_puts(uintToString(active_process->pid,DECIMAL));
     uart_puts(" with name ");
     uart_puts(active_process->name);
@@ -275,7 +275,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
 
 	uart_puts("Saving spsr...");
     uart_puts(uintToString(spsr,HEXADECIMAL));
-	uart_puts("\n\r");*/
+	uart_puts("\n\r");
 
 	// Obtenemos siguiente proceso y encolamos el actual.
 
@@ -306,14 +306,14 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     // Incremetamos estadisticas y cambiamos status a RUNNING
     active_process->times_loaded++;
     active_process->status = PROCESS_STATUS_RUNNING;
-/*
+
     uart_puts("Restoring stack 0x");
     uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
 	uart_puts("\n\r");
 
     uart_puts("Restoring pc 0x");
     uart_puts(uintToString(active_process->pc,HEXADECIMAL));
-	uart_puts("\n\r");*/
+	uart_puts("\n\r");
 
 	return active_process->stack_pointer;
 

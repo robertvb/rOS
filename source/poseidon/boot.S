@@ -75,6 +75,7 @@ _reset_:
      stack works its way down memory, our heap will work it's way
      up memory toward the application stack. */
     mov r0, #(CPSR_MODE_SVR | CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
+    msr cpsr_c, r0
     mov sp, #(64 * 1024 * 1024)
 
     /* Set the stack pointer at some point in RAM that won't harm us

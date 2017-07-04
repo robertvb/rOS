@@ -61,6 +61,8 @@ unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned 
     unsigned int new_stack = 0;
 
 	uart_puts("Handling syscall: ");
+	uart_puts(uintToString(swi,DECIMAL));
+	uart_puts(" with name ");
 	uart_puts(system_call_table[swi].name);
 	uart_puts("\n\r");
 

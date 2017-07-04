@@ -127,15 +127,17 @@ void __attribute__((interrupt("UNDEF"))) undefined_instruction_vector(void)
 void __attribute__ ((naked)) software_interrupt_vector(void) {
 	// En esta funcion se entra en modo supervidor (SVR)
 
-	unsigned int swi;
-	unsigned int lr_addr;
-	unsigned int sp_addr;
-	unsigned int spsr;
-	unsigned int arg0;
-	unsigned int arg1;
-	unsigned int arg2;
-	unsigned int arg3;
-	unsigned int new_stack;
+	volatile unsigned int swi;
+	volatile unsigned int lr_addr;
+	volatile unsigned int sp_addr;
+	volatile unsigned int spsr;
+	volatile unsigned int arg0;
+	volatile unsigned int arg1;
+	volatile unsigned int arg2;
+	volatile unsigned int arg3;
+	volatile unsigned int new_stack;
+
+	//uart_puts("INICIO SW RTI\n\r");
 
 	// PUSH PC y SPSR en la pila del proceso interrumpido.
 	asm volatile("SRSDB #16!");
@@ -149,14 +151,15 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
 	// r13 = SP. No queremos hacer push del stack pointer -> ARM doesn't guarantee what value it will have.
 	asm volatile("push	{r0-r12,r14}");
 
+	// Obtencion de los parametros
+	//asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
+	//asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
+	//asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
+	//asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
+
+
 	// Obtencion de la pila
     asm volatile ("MOV %0, SP\n\t" : "=r" (sp_addr) );
-
-	/* cargamos los parametros */
-	asm volatile("mov %[arg0], r0" : [arg0] "=r" (arg0) );
-	asm volatile("mov %[arg1], r1" : [arg1] "=r" (arg1) );
-	asm volatile("mov %[arg2], r2" : [arg2] "=r" (arg2) );
-	asm volatile("mov %[arg3], r3" : [arg3] "=r" (arg3) );
 
     // Return to SVR mode
     asm volatile("cps #0x13");
@@ -168,7 +171,6 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
 	asm volatile("MRS %0, SPSR\n\t" : "=r" (spsr) );
 
 	// FIN DEL PROLOGO.
-
 	uart_puts("Valor de sp en poseidon: 0x");
     uart_puts(uintToString(sp_addr,HEXADECIMAL));
 	uart_puts("\n\r");
