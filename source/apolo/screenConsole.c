@@ -178,6 +178,7 @@ void sConsoleWrite(SCid_t consoleNum, char * str) {
 	sConsoleList[consoleNum].messageCount++;
 	strncpy(sConsoleList[consoleNum].matrixMessages[sConsoleList[consoleNum].messageCount],"      ",SPROMPT_LEN);
 	strncpy(sConsoleList[consoleNum].matrixMessages[sConsoleList[consoleNum].messageCount]+SPROMPT_LEN - 1,(uint8_t *)str,len+1);
+	sConsoleList[consoleNum].messageCount++;
 
 	if(currentSConsole == consoleNum) {
 		sConsoleList[consoleNum].currentX+= SPROMPT_LEN * CHAR_WIDTH;

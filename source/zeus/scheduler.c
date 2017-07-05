@@ -60,10 +60,28 @@ unsigned int terminate_process(void) {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	active_process->status = PROCESS_STATUS_TERMINATED;
 
-    // Obtenemos el siguiente proceso
-	active_process = ready_queue;
 
-	ready_queue = ready_queue->nextProc;
+	if(ready_queue == NULL) {
+		uart_puts("Se ha terminado el unico proceso que estaba en la cola. Proc que vamos a poner a ejecutar: ");
+		active_process = &process_list[0];
+	} else {
+		active_process = ready_queue;
+		ready_queue = ready_queue->nextProc;
+	}
+
+	active_process->nextProc = NULL;
+
+    // Incremetamos estadisticas y cambiamos status a RUNNING
+    active_process->times_loaded++;
+    active_process->status = PROCESS_STATUS_RUNNING;
+
+    uart_puts("Restoring stack 0x");
+    uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
+	uart_puts("\n\r");
+
+    uart_puts("Restoring pc 0x");
+    uart_puts(uintToString(active_process->pc,HEXADECIMAL));
+	uart_puts("\n\r");
 
     return active_process->stack_pointer;
 
@@ -233,18 +251,24 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     	if(BLKD_PASIVE_WAITING == GET_BLKD_REASON(proc->waiting_for)) {
     		unsigned int newValue = GET_BLKD_ARGS(proc->waiting_for);
     		newValue--;
-            //uart_puts("NewValue = ");
-            //uart_puts(uintToString(newValue,DECIMAL));
-            //uart_puts("\n\r");
+            uart_puts("NewValue = ");
+            uart_puts(uintToString(newValue,DECIMAL));
+            uart_puts("\n\r");
     		if(newValue == 0) {
     			if(bloqued_queue == procAnt) {
+    	            uart_puts("bloqued_queue == procAnt \n\r");
     				bloqued_queue = procAnt = proc->nextProc;
     			} else {
     				procAnt->nextProc = proc->nextProc;
     			}
     			// lo metemos en la cola de preparados
-    			proc->nextProc = ready_queue;
-    			ready_queue = proc;
+	            uart_puts("lo metemos al final de la cola de preparados \n\r");
+            	proc->nextProc = NULL;
+	            if(ready_queue == NULL) {
+	            	// si esta vacia
+					ready_queue = proc;
+	            }
+	            ready_queue_tail = proc;
     		} else {
     			proc->waiting_for = newValue;
     	    	procAnt = proc;

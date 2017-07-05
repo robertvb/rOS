@@ -59,13 +59,18 @@ static unsigned int wrapper_terminal_write(unsigned int pc,unsigned int sp, unsi
 	return sp;
 }
 
+static unsigned int wrapper_sleepCurrentProc(unsigned int pc,unsigned int sp, unsigned int spsr) {
+	unsigned int tics = getParameter(sp, 0);
+	return sleepCurrentProc(pc,sp,spsr,tics);
+}
+
 /*
  * Entradas de la tabla de llamadas al sistema
  */
 static system_call_entry_t system_call_table[] = {
 	    {SC_EXIT,"exit",(system_call_t) terminate_process,0,0},
 	    {SC_UART_WRITE,"uart_write",wrapper_uart_write,0,1},
-	    {SC_SLEEP,"sleep",sleepCurrentProc,0,1},
+	    {SC_SLEEP,"sleep",wrapper_sleepCurrentProc,0,1},
 	    {SC_GET_PID,"getpid", getCurrentProcessPid,0,0},
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
 		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,0},

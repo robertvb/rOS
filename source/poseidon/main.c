@@ -407,9 +407,12 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	init_uartConsole();
 
-	kfork("proceso 1", (Dir_t) &sample_process_2, (Dir_t) 0x1e000000);
+	kfork("proceso 1", (Dir_t) &sample_process_1, (Dir_t) 0x1e000000);
 	uart_puts("KFORK 1 HECHO\r\n");
-
+/*
+	kfork("proceso 2", (Dir_t) &sample_process_2, (Dir_t) 0x1e001000);
+	uart_puts("KFORK 2 HECHO\r\n");
+*/
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;//RPI_BASIC_ARM_TIMER_IRQ;
 
@@ -424,8 +427,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	RPI_ARMTIMER_CTRL_INT_ENABLE |
 	RPI_ARMTIMER_CTRL_PRESCALE_256;
 
-
-
 	//Enable uart interrupts:
 
 	RPI_GetIrqController()->Disable_IRQs_1 = 0xFFFFFFFF;
@@ -438,16 +439,6 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	//_enable_interrupts();
 	// asm volatile("SWI #1");
-
-	uart_puts("probando el str : proceso 1: ");
-	uart_puts(uintToString( (unsigned int)"proceso 1", HEXADECIMAL));
-	uart_puts(" '");
-	uart_puts((unsigned char *) 0x17214);
-	uart_puts("'\n\r");
-
-	uart_puts("probando el str: 0x16aac'");
-	uart_puts((unsigned char *) 0x16aac);
-	uart_puts("'\n\r");
 
 	asm volatile("cpsie i,#0x10");
 	while(1) {

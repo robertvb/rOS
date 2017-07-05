@@ -28,47 +28,93 @@ OTHER DEALINGS IN THE SOFTWARE.
 // Just some counting for easy debug on the screen. Simulate user process.
 void sample_process_1() {
 
-    //sConsoleWrite(getCurrentSConsole(),"Starting process 1 ");
+	   char caracter = 0;
+	    int to = 5;
 
-    int to = 10;
-    int i;
-    for (i=0; i<to; i++) {
-    	//sConsoleWrite(getCurrentSConsole(),"PROCESO1........");
-    }
+	    volatile char * string = "[PROC1] me voy a dormir! \n\r\n\r\0";
+	    unsigned int addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
 
+	    unsigned int sleep = 5;
+		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
+	    asm volatile("SWI #2");
 
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();
+	    string = "[PROC1] rme desperte! Me vuelvo a dormir! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
+	    asm volatile("SWI #2");
+/*
+	    string = "[PROC1] me desperte! Quiero una tecla! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+	    asm volatile("SWI #5");
+
+	    string = "[PROC1] rGracias! Quiero otra! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+	    asm volatile("SWI #5");
+*/
+	    string = "[PROC1] rme he terminado! \0\n\r\n\r";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+	    // llamada al sistema para terminar ejecucion
+	    asm volatile("SWI #0");
 }
 
 // Just some counting for easy debug on the screen. Simulate user process.
 void sample_process_2() {
 
-	uart_puts("Starting process 2 y haciendo swi1!\n\r");
+	   char caracter = 0;
+	    int to = 5;
 
-    volatile char * string = "HELLO SW1 ! \n\r\n\r\0";
-    unsigned int addr = (unsigned int) string;
-	asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-    asm volatile("SWI #1");
-    asm volatile("SWI #6");
+	    volatile char * string = "[PROC2] me voy a dormir! \n\r\n\r\0";
+	    unsigned int addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
 
-	asm volatile("SWI #0");
+	    unsigned int sleep = 5;
+		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
+	    asm volatile("SWI #2");
+
+	    string = "[PROC2] rme desperte! Me vuelvo a dormir! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
+	    asm volatile("SWI #2");
 /*
-	uart_puts("Starting process 2!\n\r");
+	    string = "[PROC2] me desperte! Quiero una tecla! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
 
-    int to = 200;
-    int i;
-    for (i=0; i<to; i++) {
-    	uart_puts("PROCESO2. VALOR DE I = \n\r");
-    	uart_puts(uintToString((unsigned int) i,DECIMAL));
-    	uart_puts("\n\r");
-    }
+	    asm volatile("SWI #5");
 
+	    string = "[PROC2] rGracias! Quiero otra! \n\r\n\r\0";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
 
-    // Call software interrupt #0 (terminate)
-    // asm volatile("SWI #0");
-    terminate_process();*/
+	    asm volatile("SWI #5");
+*/
+	    string = "[PROC2] rme he terminado! \0\n\r\n\r";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #1");
+
+	    // llamada al sistema para terminar ejecucion
+	    asm volatile("SWI #0");
 }
 
 void sample_process_console() {
