@@ -409,10 +409,10 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	kfork("proceso 1", (Dir_t) &sample_process_1, (Dir_t) 0x1e000000);
 	uart_puts("KFORK 1 HECHO\r\n");
-/*
+
 	kfork("proceso 2", (Dir_t) &sample_process_2, (Dir_t) 0x1e001000);
 	uart_puts("KFORK 2 HECHO\r\n");
-*/
+
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;//RPI_BASIC_ARM_TIMER_IRQ;
 

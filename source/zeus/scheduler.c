@@ -243,7 +243,7 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     //Process_t * proc;
     Process_t * procAnt;
     //uart_puts("Actuando sobre la cola de bloqueados: \n\r");
-    for(procAnt = proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
+    for(procAnt = proc = bloqued_queue; proc != NULL;) {
         //uart_puts("encontrado un proc en bloqueados. Pid: ");
         //uart_puts(uintToString(proc->pid,DECIMAL));
         //uart_puts("\n\r");
@@ -255,23 +255,33 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
             uart_puts(uintToString(newValue,DECIMAL));
             uart_puts("\n\r");
     		if(newValue == 0) {
-    			if(bloqued_queue == procAnt) {
-    	            uart_puts("bloqued_queue == procAnt \n\r");
-    				bloqued_queue = procAnt = proc->nextProc;
-    			} else {
-    				procAnt->nextProc = proc->nextProc;
-    			}
     			// lo metemos en la cola de preparados
-	            uart_puts("lo metemos al final de la cola de preparados \n\r");
-            	proc->nextProc = NULL;
+                uart_puts("DESBLOQUEADO PID = ");
+                uart_puts(uintToString(proc->pid,DECIMAL));
+                uart_puts("\n\r");
+	            // actualizamos cola bloqueados
+                if(bloqued_queue == procAnt) {
+                	bloqued_queue = proc->nextProc;
+                }
+                procAnt = proc->nextProc;
+            	// fin act cola bloqueados
 	            if(ready_queue == NULL) {
 	            	// si esta vacia
-					ready_queue = proc;
+		            ready_queue_tail = proc;
+					ready_queue = ready_queue_tail;
+
+	            } else {
+		            ready_queue_tail ->nextProc = proc;
+		            // actualizamos cola bloqueados
+	            	// fin act cola bloqueados
 	            }
 	            ready_queue_tail = proc;
+    	    	proc = proc->nextProc;
+    	    	ready_queue_tail->nextProc = NULL;
     		} else {
     			proc->waiting_for = newValue;
     	    	procAnt = proc;
+    	    	proc = proc->nextProc;
     		}
     	}
     }
@@ -343,11 +353,11 @@ unsigned int sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int s
 
 	uart_puts("metiendo proceso en la cola de bloqueados. Pid is ");
     uart_puts(uintToString(active_process->pid,DECIMAL));
-    uart_puts("con sp =  ");
+    uart_puts(" con sp =  ");
     uart_puts(uintToString(sp,HEXADECIMAL));
-    uart_puts("con addrlr = ");
+    uart_puts(" con addrlr = ");
     uart_puts(uintToString(addr,HEXADECIMAL));
-    uart_puts("con los siguientes tics: ");
+    uart_puts(" con los siguientes tics: ");
     uart_puts(uintToString(tics,DECIMAL));
     uart_puts("\r\n");
 
@@ -368,11 +378,17 @@ unsigned int sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int s
 		bloqued_queue = active_process;
 		active_process->nextProc = NULL;
 	} else {
-		uart_puts("la cola NO estaba vacia!\n\r");
-		Process_t * aux;
-		aux = bloqued_queue->nextProc;
+		uart_puts("la cola NO estaba vacia: \n\r");
+		active_process->nextProc = bloqued_queue;
 		bloqued_queue = active_process;
-		active_process->nextProc = aux;
+	}
+
+    uart_puts("Estado de la cola de bloqueados tras añadir el proceso: \n\r");
+	Process_t * proc;
+	for(proc = bloqued_queue; proc != NULL; proc = proc->nextProc) {
+        uart_puts("ENCONTRADO PID = ");
+        uart_puts(uintToString(proc->pid,DECIMAL));
+        uart_puts("\n\r");
 	}
 
 	if(ready_queue == NULL) {
@@ -382,6 +398,9 @@ unsigned int sleepCurrentProc(unsigned int addr, unsigned int sp, unsigned int s
 		active_process = ready_queue;
 		ready_queue = ready_queue->nextProc;
 	}
+
+	active_process -> nextProc = NULL;
+
 	uart_puts("Proc que vamos a poner a ejecutar: ");
     uart_puts(uintToString(active_process->pid,DECIMAL));
     uart_puts("\r\n");
@@ -407,6 +426,7 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 
 	Process_t * proc;
 	Process_t * lastProc;
+	// TODO DEBUG
 	uart_puts("Actuando sobre la cola de bloqueados: \n\r");
 	for (lastProc = proc = bloqued_queue;
 			proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO;

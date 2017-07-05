@@ -34,16 +34,16 @@ void sample_process_1() {
 	    volatile char * string = "[PROC1] me voy a dormir! \n\r\n\r\0";
 	    unsigned int addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 	    unsigned int sleep = 5;
 		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
 	    asm volatile("SWI #2");
 
-	    string = "[PROC1] rme desperte! Me vuelvo a dormir! \n\r\n\r\0";
+	    string = "[PROC1] me desperte! Me vuelvo a dormir! \n\r\n\r\0";
 	    addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
 	    asm volatile("SWI #2");
@@ -62,10 +62,10 @@ void sample_process_1() {
 
 	    asm volatile("SWI #5");
 */
-	    string = "[PROC1] rme he terminado! \0\n\r\n\r";
+	    string = "[PROC1] me he terminado! \0\n\r\n\r";
 	    addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 	    // llamada al sistema para terminar ejecucion
 	    asm volatile("SWI #0");
@@ -80,7 +80,7 @@ void sample_process_2() {
 	    volatile char * string = "[PROC2] me voy a dormir! \n\r\n\r\0";
 	    unsigned int addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 	    unsigned int sleep = 5;
 		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
@@ -89,7 +89,7 @@ void sample_process_2() {
 	    string = "[PROC2] rme desperte! Me vuelvo a dormir! \n\r\n\r\0";
 	    addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
 	    asm volatile("SWI #2");
@@ -111,7 +111,7 @@ void sample_process_2() {
 	    string = "[PROC2] rme he terminado! \0\n\r\n\r";
 	    addr = (unsigned int) string;
 		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
+	    asm volatile("SWI #6");
 
 	    // llamada al sistema para terminar ejecucion
 	    asm volatile("SWI #0");
