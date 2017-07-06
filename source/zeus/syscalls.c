@@ -55,13 +55,22 @@ static unsigned int wrapper_uart_write(unsigned int pc,unsigned int sp, unsigned
 
 static unsigned int wrapper_terminal_write(unsigned int pc,unsigned int sp, unsigned int spsr) {
 	unsigned int addr = getParameter(sp, 0);
-	sConsoleWrite(0,(unsigned char *) addr);
+	sConsoleWrite(getCurrentProcessTerminal(),(unsigned char *) addr);
 	return sp;
 }
 
 static unsigned int wrapper_sleepCurrentProc(unsigned int pc,unsigned int sp, unsigned int spsr) {
 	unsigned int tics = getParameter(sp, 0);
 	return sleepCurrentProc(pc,sp,spsr,tics);
+}
+
+static unsigned int wrapper_getCurrentProcessPid(unsigned int pc,unsigned int sp, unsigned int spsr) {
+	unsigned int pid = getCurrentProcessPid();
+	uart_puts(" <<<<<<<<<<<<<<<<<<<< getCurrentProcessPid() = ");
+	uart_puts(uintToString(pid,DECIMAL));
+	uart_puts("\n\r");
+	setParameter(sp,0,pid);
+	return sp;
 }
 
 /*
@@ -71,7 +80,7 @@ static system_call_entry_t system_call_table[] = {
 	    {SC_EXIT,"exit",(system_call_t) terminate_process,0,0},
 	    {SC_UART_WRITE,"uart_write",wrapper_uart_write,0,1},
 	    {SC_SLEEP,"sleep",wrapper_sleepCurrentProc,0,1},
-	    {SC_GET_PID,"getpid", getCurrentProcessPid,0,0},
+	    {SC_GET_PID,"getpid", wrapper_getCurrentProcessPid,0,0},
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
 		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,0},
 		{SC_TERMINAL_WRITE,"terminal_write",wrapper_terminal_write,0,1},

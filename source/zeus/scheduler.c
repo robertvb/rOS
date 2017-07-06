@@ -52,6 +52,10 @@ Pid_t getCurrentProcessPpid(void) {
 	return active_process->ppid;
 }
 
+unsigned char * getCurrentProcessTerminal(void) {
+	return active_process->terminal;
+}
+
 Process_t * getProcUsingPid(Pid_t pid) {
 	return (Process_t *) &process_list[pid];
 }
@@ -60,6 +64,8 @@ unsigned int terminate_process(void) {
 	// Cambiamos el estado a terminado, de esta manera el scheduler lo ignorará
 	active_process->status = PROCESS_STATUS_TERMINATED;
 
+	// desbloqueamos la consola del proceso
+	unLockSConsole(active_process->terminal);
 
 	if(ready_queue == NULL) {
 		uart_puts("Se ha terminado el unico proceso que estaba en la cola. Proc que vamos a poner a ejecutar: ");
@@ -101,6 +107,7 @@ void init_proc_scheduling() {
     process_list[process_count].status = PROCESS_STATUS_READY;
     process_list[process_count].tablePageDir = NULL; 	// El proceso main no tiene tabla de paginas.
     process_list[process_count].nextProc = NULL;		// En este punto no hay otros procesos en la cola
+    process_list[process_count].terminal = 5;
     bloqued_queue = NULL;					// El proceso main es el primero en ejecutarse
 
     // Se obtiene la dirección actual de la pila
@@ -166,6 +173,7 @@ void  kInternalExecute(char * name,  Dir_t pc) {
 	process_list[process_count].status = PROCESS_STATUS_READY;
 	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
 	process_list[process_count].spsr = 0x00000150;			  //Modo usuario
+	process_list[process_count].terminal = getCurrentSConsole();
 
 
     forked_stack_pointer--;

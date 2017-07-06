@@ -40,8 +40,9 @@ void init_screen_consoles(void) {
 		sConsoleList[i].currentX = 0;
 		sConsoleList[i].currentY = 3*CHAR_HEIGHT;
 		sConsoleList[i].messageCount = 0;
-		sConsoleList[i].bloquedProcs.head = NULL;
-		sConsoleList[i].bloquedProcs.tail = NULL;
+		sConsoleList[i].bloquedProcs.head = NULL; //unsued
+		sConsoleList[i].bloquedProcs.tail = NULL; //unsued
+		sConsoleList[i].locked = NULL;
 		clearSConsole(i);
 	}
 
@@ -63,6 +64,14 @@ void setSConsoleFontColour(SCid_t consoleNum, uint16_t colour) {
 
 void setSConsolebackGroundColour(SCid_t consoleNum, uint16_t colour) {
 	sConsoleList[consoleNum].backGroundColour = colour;
+}
+
+void lockSConsole(SCid_t consoleNum) {
+	sConsoleList[consoleNum].locked = 1;
+}
+
+void unLockSConsole(SCid_t consoleNum) {
+	sConsoleList[consoleNum].locked = 0;
 }
 
 void clearSConsole(SCid_t consoleNum) {
@@ -192,6 +201,9 @@ void sConsoleWrite(SCid_t consoleNum, char * str) {
 void sConsoleManageChar(char c) {
 
 	unsigned char nSC;
+	if(c != '\t' && sConsoleList[currentSConsole].locked) {
+		return;
+	}
 
 	switch(c) {
 		case '\t':

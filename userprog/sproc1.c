@@ -23,12 +23,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "../includes/zeus/process.h"
-
-
-
 // Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_1() {
+void main() {
 
 	   register unsigned int pid = 0;
 	   char caracter = 0;
@@ -98,61 +94,4 @@ void sample_process_1() {
 
 	    // llamada al sistema para terminar ejecucion
 	    asm volatile("SWI #0");
-}
-
-// Just some counting for easy debug on the screen. Simulate user process.
-void sample_process_2() {
-
-	   char caracter = 0;
-	    int to = 5;
-
-	    volatile char * string = "[PROC2] me voy a dormir! \n\r\n\r\0";
-	    unsigned int addr = (unsigned int) string;
-		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #6");
-
-	    unsigned int sleep = 5;
-		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
-	    asm volatile("SWI #2");
-
-	    string = "[PROC2] rme desperte! Me vuelvo a dormir! \n\r\n\r\0";
-	    addr = (unsigned int) string;
-		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #6");
-
-		asm volatile("MOV R0, %[sleep]" : : [sleep] "r" (sleep) );
-	    asm volatile("SWI #2");
-/*
-	    string = "[PROC2] me desperte! Quiero una tecla! \n\r\n\r\0";
-	    addr = (unsigned int) string;
-		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
-
-	    asm volatile("SWI #5");
-
-	    string = "[PROC2] rGracias! Quiero otra! \n\r\n\r\0";
-	    addr = (unsigned int) string;
-		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #1");
-
-	    asm volatile("SWI #5");
-*/
-	    string = "[PROC2] rme he terminado! \0\n\r\n\r";
-	    addr = (unsigned int) string;
-		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
-	    asm volatile("SWI #6");
-
-	    // llamada al sistema para terminar ejecucion
-	    asm volatile("SWI #0");
-}
-
-void sample_process_console() {
-
-	unsigned int getNextComand = 1;
-	unsigned char command[500];
-	command[0] = '\0';
-
-    while (getNextComand) {
-
-    }
 }

@@ -35,6 +35,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 Pid_t getCurrentProcessPid(void);
 Pid_t getCurrentProcessPpid(void);
+unsigned char * getCurrentProcessTerminal(void);
 Pid_t getNextPid(void);
 Process_t * getProcUsingPid(Pid_t);
 void init_proc_scheduling(void);

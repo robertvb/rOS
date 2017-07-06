@@ -47,10 +47,13 @@ typedef struct {
 	unsigned char matrixMessages[MAX_SCONSOLE_LINES][MAX_SCONSOLE_LINE_LEN];
 	unsigned int messageCount;
 	ProcessQueue_t bloquedProcs;
+	unsigned int locked;
 }ScreenConsole_t;
 
 void init_screen_consoles(void);
 SCid_t getCurrentSConsole(void);
+void lockSConsole(SCid_t consoleNum);
+void unLockSConsole(SCid_t consoleNum);
 void setSConsoleFontColour(SCid_t consoleNum, uint16_t colour);
 void setSConsolebackGroundColour(SCid_t consoleNum, uint16_t colour);
 void clearSConsole(SCid_t consoleNum);

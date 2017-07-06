@@ -31,11 +31,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../atenea/mem-utils.h"
 #include "../hefesto/string.h"
 
-#define MAX_COMMANDS			10
+#define MAX_COMMANDS			6
 #define MAX_SIZE_COMMAND		126
 #define MAX_SIZE_ARG			10
 #define MAX_SIZE_COMMAND_DESCRP 61
-#define MAX_SIZE_COMMAND_USAGE	31
+#define MAX_SIZE_COMMAND_USAGE	61
 #define MAX_SIZE_ARGV	 	   	 4
 
 typedef struct {

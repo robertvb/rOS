@@ -151,8 +151,32 @@ void exec(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
 		return;
 	}
 
+	lockSConsole(getCurrentSConsole());
 	kInternalExecute(argv_pointer[1],bDir);
 	return;
+}
+
+void help(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	int i;
+	if(argv_pointer[1] == '\0') {
+		// ayuda generica
+		sConsoleWrite(getCurrentSConsole(),"Lista de comandos disponibles: ");
+		for(i = 0; i < commandInterpreter->nCommands; i++) {
+			sConsoleWrite(getCurrentSConsole(),commandInterpreter->commands[i].name);
+		}
+		sConsoleWrite(getCurrentSConsole(),"Utiliza help 'comando' para mas informacion!");
+	} else {
+		for(i = 0; i < commandInterpreter->nCommands
+		&& strncmp(argv_pointer[1],commandInterpreter->commands[i].name,stringLength(commandInterpreter->commands[i].name)); i++);
+
+		if(i == commandInterpreter->nCommands) {
+			sConsoleWrite(getCurrentSConsole(),"No existe el comando!!!!");
+
+		} else {
+			sConsoleWrite(getCurrentSConsole(),commandInterpreter->commands[i].usage);
+			sConsoleWrite(getCurrentSConsole(),commandInterpreter->commands[i].descrp);
+		}
+	}
 }
 /*
 static char *  mdump(void * addr, uint32_t size) {
@@ -213,7 +237,14 @@ void init_commandInterpreter(void) {
 	commandInterpreter->commands[4].argc = 2;
 	commandInterpreter->commands[4].function = (void *) &apariencia;
 
-	commandInterpreter->nCommands = 5;
+	// Add help
+	strcpy(commandInterpreter->commands[5].name,"help");
+	strcpy(commandInterpreter->commands[5].descrp,"ayuda de comandos");
+	strcpy(commandInterpreter->commands[5].usage,"help y help 'comando'");
+	commandInterpreter->commands[5].argc = 2;
+	commandInterpreter->commands[5].function = (void *) &help;
+
+	commandInterpreter->nCommands = 6;
 }
 
 
@@ -241,7 +272,7 @@ static command_t * searchCommand(const char * name) {
 void executeCommand(unsigned char * command) {
 
 	strcpy(commandInterpreter->commandBuffer,command);
-	unsigned char * commandInfo = commandInterpreter->commandBuffer; /* SPROMPT LEN */
+	unsigned char * commandInfo = commandInterpreter->commandBuffer;
 
 
 	char i;
@@ -254,8 +285,14 @@ void executeCommand(unsigned char * command) {
 
 	}
 	else {
+		// limpiamos argv anteriores
+		char j;
+		for (j = 0; i < commandInterpreter->commands[i].argc; ++j) {
+			argv[j][0] = '\0';
+		}
+
 		/* creamos la cadena de argumentos (argv) */
-		char j,v,last;
+		char v,last;
 		for (j = 0, v = 0, last = 0; commandInfo[j] != '\0' && v < commandInterpreter->commands[i].argc - 1; j++) {
 			if(commandInfo[j] == ' ') {
 				commandInfo[j] = '\0';
@@ -268,10 +305,6 @@ void executeCommand(unsigned char * command) {
 		strcpy(argv[v],&commandInfo[last]);
 
 		commandInterpreter->commands[i].function(commandInterpreter->commands[i].argc, argv);
-
-		for (i = 0; i < commandInterpreter->commands[i].argc; ++i) {
-			argv[i][0] = '\0';
-		}
 
 		commandInterpreter->commandBuffer[0] = '\0';
 

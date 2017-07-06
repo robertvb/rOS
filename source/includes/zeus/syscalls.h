@@ -31,6 +31,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "scheduler.h"
 #include "../hades/rpi-uart.h"
 #include "../apolo/screenConsole.h"
+#include "../zeus/process.h"
 
 
 #define SC_EXIT						0
