@@ -74,7 +74,8 @@ static system_call_entry_t system_call_table[] = {
 	    {SC_GET_PID,"getpid", getCurrentProcessPid,0,0},
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
 		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,0},
-		{SC_TERMINAL_WRITE,"terminal_write",wrapper_terminal_write,0,1}
+		{SC_TERMINAL_WRITE,"terminal_write",wrapper_terminal_write,0,1},
+		{SC_EXEC_PROC,"exec_process",kInternalExecute,0,1}
 };
 
 static uint32_t MAX_SYSCALLS = 0;

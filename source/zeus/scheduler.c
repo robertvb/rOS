@@ -88,7 +88,7 @@ unsigned int terminate_process(void) {
 }
 
 // Funcion para crear el proceso base.
-void create_main_process() {
+void init_proc_scheduling() {
 
     process_count = 0;
     process_list[process_count].pid = process_count;
@@ -131,19 +131,34 @@ void create_main_process() {
  * to the memory address of the desired procedure
  */
 
-void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
+void  kInternalExecute(char * name,  Dir_t pc) {
 
+	// Comprobación si se ha alcanzado el número máximo de procesos
 	if(process_count >= MAX_PROCS) {
 		uart_puts("ERROR! ALCANZADO MAX_PROCS");
 		return;
 	}
+
+	// Obtención del PID
+	Pid_t pid = getNextPid();
+
+	// Obtencion de un marco de 4k para espacio del proceso
+	unsigned int frameDir = get4kframe(pid);
+
+	if(frameDir == NULL) {
+		uart_puts("ERROR! NO SE PUEDE RESERVAR MEMORIA PARA EJECUTAR EL PROCESO");
+		return;
+	}
+
+	// Calculamos dirección de la PILA
+	Dir_t forked_stack_pointer = (Dir_t) frameDir + PROC_FRAME_SIZE;
 
 	// DEBUG
 	uart_puts("Forked stack is 0x");
     uart_puts(uintToString((unsigned int) forked_stack_pointer, HEXADECIMAL));
 	uart_puts("\n\r");
 
-	process_list[process_count].pid = process_count;
+	process_list[process_count].pid = pid;
 	process_list[process_count].name = (char *) name;
 	process_list[process_count].pc = (unsigned int) pc;
 	process_list[process_count].ppid = active_process->ppid;
@@ -175,7 +190,7 @@ void  kfork( char * name,  Dir_t pc, Dir_t forked_stack_pointer) {
         uart_puts("\n\r");
     }
 
-	process_list[process_count].stack_pointer = (unsigned int) (forked_stack_pointer);
+	process_list[process_count].stack_pointer = forked_stack_pointer;
 
 	if(ready_queue == NULL) {
 		ready_queue_tail = &process_list[process_count];
@@ -429,9 +444,7 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 	// TODO DEBUG
 	uart_puts("Actuando sobre la cola de bloqueados: \n\r");
 	for (lastProc = proc = bloqued_queue;
-			proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO;
-			proc = lastProc = proc, proc->nextProc)
-		;
+			proc != NULL && GET_BLKD_REASON(proc->waiting_for) != BLKD_USER_IO; lastProc= proc, proc = proc->nextProc);
 
 	if (proc == NULL) {
 		uart_puts("No hay proceso esperando por uart input \n\r");

@@ -34,10 +34,6 @@ commandInterpreter_t * getCommandInterpreter(void) {
 	return commandInterpreter;
 }
 
-static void hello(void) {
-	sConsoleWrite(getCurrentSConsole(),"Hola amigo, que tal?");
-	return;
-}
 /*
 static char * boot(void) {
 
@@ -143,6 +139,21 @@ void apariencia(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG])
 void clear(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
 	clearSConsole(getCurrentSConsole());
 }
+
+void ls(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	sConsoleWrite(getCurrentSConsole(),getCurrentDirStr());
+}
+
+void exec(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	unsigned int bDir = getFileBuf(argv_pointer[1]);
+	if(bDir == NULL) {
+		sConsoleWrite(getCurrentSConsole(),"No se encuentra el fichero!");
+		return;
+	}
+
+	kInternalExecute(argv_pointer[1],bDir);
+	return;
+}
 /*
 static char *  mdump(void * addr, uint32_t size) {
 
@@ -167,12 +178,12 @@ void init_commandInterpreter(void) {
 	commandInterpreter->argv_pointer = argv;
 	commandInterpreter->commandBuffer[0] = '\0';
 
-	// add hello
-	strcpy(commandInterpreter->commands[0].name,"hello");
-	strcpy(commandInterpreter->commands[0].descrp,"hello");
-	strcpy(commandInterpreter->commands[0].usage,"hello");
+	// Add ls
+	strcpy(commandInterpreter->commands[0].name,"ls");
+	strcpy(commandInterpreter->commands[0].descrp,"muestra elementos del directorio actual");
+	strcpy(commandInterpreter->commands[0].usage,"ls");
 	commandInterpreter->commands[0].argc = 1;
-	commandInterpreter->commands[0].function = (void *) &hello;
+	commandInterpreter->commands[0].function = (void *) &ls;
 
 	// Add clear
 	strcpy(commandInterpreter->commands[1].name,"clear");
@@ -182,11 +193,11 @@ void init_commandInterpreter(void) {
 	commandInterpreter->commands[1].function = (void *) &clear;
 
 	// Add Print PID
-	strcpy(commandInterpreter->commands[2].name,"cpid");
-	strcpy(commandInterpreter->commands[2].descrp,"muestra el pid de la consola");
-	strcpy(commandInterpreter->commands[2].usage,"cpid");
-	commandInterpreter->commands[2].argc = 1;
-	commandInterpreter->commands[2].function = (void *) &printPid;
+	strcpy(commandInterpreter->commands[2].name,"exec");
+	strcpy(commandInterpreter->commands[2].descrp,"ejecuta el proceso seleccionado");
+	strcpy(commandInterpreter->commands[2].usage,"exec 'file'.elf");
+	commandInterpreter->commands[2].argc = 2;
+	commandInterpreter->commands[2].function = (void *) &exec;
 
 	// Add echo
 	strcpy(commandInterpreter->commands[3].name,"echo");

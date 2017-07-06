@@ -44,10 +44,10 @@ OTHER DEALINGS IN THE SOFTWARE.
  * El resto se utilizan para calculos, flags, contadores, ej:
  * waiting_for = 0x00001000 -> el proceso esta en esperando pasivamente 4K tics de reloj
  */
-#define BLKD_PASIVE_WAITING			0b00
-#define BLKD_DISK_IO				0b01
-#define BLKD_USER_IO				0b10
-#define BLKD_WAIT_PID				0b11
+#define BLKD_PASIVE_WAITING			0b00 // Espera pasiva wait()
+#define BLKD_DISK_IO				0b01 // Esperando por el disco
+#define BLKD_USER_IO				0b10 // Esperando por accion del usuario
+#define BLKD_WAIT_PID				0b11 // Esperando a que termine proceso
 
 #define GET_BLKD_REASON(WAITING_FOR) WAITING_FOR >> 30
 #define GET_BLKD_ARGS(WAITING_FOR) WAITING_FOR & 0x3FFFFFFF
@@ -57,18 +57,18 @@ typedef unsigned int Pid_t;
 typedef struct Process_t Process_t;
 
 struct Process_t {
-	Pid_t 			pid;
-    Pid_t 			ppid;
-    char * 			name;
-    char * 			fileName;
-    unsigned char	stoutPut;
-    unsigned int	tablePageDir;
-    unsigned int 	stack_pointer;
-	unsigned int 	pc;
-	unsigned int	spsr;
-    unsigned int 	times_loaded;
-    unsigned int 	status;
-    unsigned int	waiting_for;	// Recurso por el que se está esperando cuando el proceso esta bloqueado
+	Pid_t 			pid;			// Process ID
+    Pid_t 			ppid;			// Parent Process ID
+    char * 			name;			// Nombre
+    char * 			fileName;		// Nombre de fichero
+    unsigned char	terminal;		// Terminal asignado
+    unsigned int	tablePageDir;	// Dirección tabla de paginas
+    unsigned int 	stack_pointer;	// Puntero de pila
+	unsigned int 	pc;				// contador de programa
+	unsigned int	spsr;			// Registro de estado
+    unsigned int 	times_loaded;	// Veces ejecutado
+    unsigned int 	status;			// Estado
+    unsigned int	waiting_for;	// Motivo de bloqueo + args
     Process_t * 	nextProc;		// Siguiente proceso de la cola
 };
 

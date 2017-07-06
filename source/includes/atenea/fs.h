@@ -40,4 +40,7 @@ void prgm2proc(struct block_device * bd, unsigned int cluster,
 void verFich(struct block_device * bd, unsigned int cluster,
 		unsigned int fichTam, uint32_t * fat, unsigned int primerSectorDirRaiz);
 
+unsigned char * getCurrentDirStr(void);
+unsigned int getFileBuf(unsigned char * proc);
+
 #endif /* SOURCE_INCLUDES_ATENEA_FS_H_ */

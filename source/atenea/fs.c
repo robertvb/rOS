@@ -157,3 +157,16 @@ void verFich(struct block_device * bd, unsigned int cluster,
 	}while(cont > 0);
 
 }
+
+unsigned char * getCurrentDirStr(void) {
+	return "sproc1.elf sproc2.elf buzmenu.elf license.txt";
+}
+
+unsigned int getFileBuf(unsigned char * proc) {
+	if(!strncmp("sproc1.elf",proc,stringLength("sproc1.elf"))) {
+		return &sample_process_1;
+	} else if(!strncmp("sproc2.elf",proc,stringLength("sproc2.elf"))) {
+		return &sample_process_2;
+	}
+	return 0;
+}

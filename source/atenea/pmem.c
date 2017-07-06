@@ -180,7 +180,7 @@ Dir_t instance_process(Pid_t solicitant, unsigned int size) {
 	uart_puts(uintToString(((unsigned int) gotFramesListPointer) + 0x0ffc,DECIMAL));
 	uart_puts("\r\n");
 
-	kfork("proceso",(Dir_t)((unsigned int) returnValue + 0x54),(unsigned int) gotFramesListPointer + 0x0ffc);
+	kInternalExecute("proceso",(Dir_t)((unsigned int) returnValue + 0x54),(unsigned int) gotFramesListPointer + 0x0ffc);
 
 	return returnValue;
 }
@@ -202,7 +202,7 @@ unsigned int get4kframe(Pid_t solicitant) {
 
 	// TODO DEBUG
 	uart_puts("Dando 4kFrame: ");
-	uart_puts(uintToString(nextEmptyFrame,DECIMAL));
+	uart_puts(uintToString(nextEmptyFrame,HEXADECIMAL));
 	uart_puts("\r\n");
 
 	return procFrame2dir(nextEmptyFrame);

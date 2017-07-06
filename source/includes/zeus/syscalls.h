@@ -40,6 +40,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 #define SC_GET_PPID					4
 #define SC_GET_CHAR					5
 #define SC_TERMINAL_WRITE			6
+#define SC_EXEC_PROC				7
 
 typedef unsigned int (*system_call_t)(unsigned int pc, unsigned int sp, unsigned int spsr);
 

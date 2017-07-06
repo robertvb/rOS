@@ -288,7 +288,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 			init_syscalls();
 			uart_puts("inits have been done!\r\n");
 
-			create_main_process();
+			init_proc_scheduling();
 
 			//kfork("Sample process 1", (Dir_t) &sample_process_1);
 			//kfork("Sample process 2", (Dir_t) &sample_process_2);
@@ -355,7 +355,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	bgInit(atagsAddr);
 	init_syscalls();
-	create_main_process();
+	init_proc_scheduling();
 	init_uartConsole();
 
 	/* Enable the timer interrupt IRQ */
@@ -385,7 +385,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	uart_puts("KFORK 1 HECHO, resultado de la pila:\r\n");
 	printMemDump(0x1f000000 - 16*4,16);
 */
-	kfork("Uart_Console", (Dir_t) &activateUartConsole, (Dir_t) 0x1e000000);
+	kInternalExecute("Uart_Console", (Dir_t) &activateUartConsole, (Dir_t) 0x1e000000);
 	uart_puts("KFORK 2 HECHO, resultado de la pila:\r\n");
 	printMemDump(0x1e000000 - 16*4,16);
 
@@ -401,17 +401,11 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 
 	bgInit(atagsAddr);
 	init_syscalls();
-	create_main_process();
+	init_proc_scheduling();
 	init_commandInterpreter();
 	init_screen_consoles();
-
+	init_pmem();
 	init_uartConsole();
-
-	kfork("proceso 1", (Dir_t) &sample_process_1, (Dir_t) 0x1e000000);
-	uart_puts("KFORK 1 HECHO\r\n");
-
-	kfork("proceso 2", (Dir_t) &sample_process_2, (Dir_t) 0x1e001000);
-	uart_puts("KFORK 2 HECHO\r\n");
 
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;//RPI_BASIC_ARM_TIMER_IRQ;
