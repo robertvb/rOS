@@ -158,7 +158,7 @@ void exec(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
 
 void help(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
 	int i;
-	if(argv_pointer[1] == '\0') {
+	if(argv_pointer[1][0] == '\0') {
 		// ayuda generica
 		sConsoleWrite(getCurrentSConsole(),"Lista de comandos disponibles: ");
 		for(i = 0; i < commandInterpreter->nCommands; i++) {
@@ -178,15 +178,16 @@ void help(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
 		}
 	}
 }
-/*
-static char *  mdump(void * addr, uint32_t size) {
 
+void debuglvl(unsigned int argc, unsigned char (* argv_pointer)[MAX_SIZE_ARG]) {
+	if(argv_pointer[1][0] == '1') {
+		setDebugTracerLever(1);
+	}else if(argv_pointer[1][0] == '2') {
+		setDebugTracerLever(2);
+	}else if(argv_pointer[1][0] == '3') {
+		setDebugTracerLever(3);
+	}
 }
-
-static char *  run(void * addr) {
-
-}
-*/
 
 /*
  * Se inicializan los comandos del sistema:
@@ -244,7 +245,13 @@ void init_commandInterpreter(void) {
 	commandInterpreter->commands[5].argc = 2;
 	commandInterpreter->commands[5].function = (void *) &help;
 
-	commandInterpreter->nCommands = 6;
+	strcpy(commandInterpreter->commands[6].name,"tracelvl");
+	strcpy(commandInterpreter->commands[6].descrp,"Nivel de trace");
+	strcpy(commandInterpreter->commands[6].usage,"tracelvl 'nivel' donde nivel = {1, 2, 3}");
+	commandInterpreter->commands[6].argc = 1;
+	commandInterpreter->commands[6].function = (void *) &debuglvl;
+
+	commandInterpreter->nCommands = 7;
 }
 
 
@@ -304,6 +311,7 @@ void executeCommand(unsigned char * command) {
 
 		strcpy(argv[v],&commandInfo[last]);
 
+		// ejecución del comando interno y paso de parámetros
 		commandInterpreter->commands[i].function(commandInterpreter->commands[i].argc, argv);
 
 		commandInterpreter->commandBuffer[0] = '\0';

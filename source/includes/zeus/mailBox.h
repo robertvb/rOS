@@ -23,44 +23,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SYSCALLS_H
-#define SYSCALLS_H
+#ifndef SOURCE_INCLUDES_ZEUS_MAILBOX_H_
+#define SOURCE_INCLUDES_ZEUS_MAILBOX_H_
 
+#include "procUtils.h"
+#include "../hefesto/string.h"
 
-#include "../atenea/pmem.h"
-#include "scheduler.h"
-#include "../hades/rpi-uart.h"
-#include "../apolo/screenConsole.h"
-#include "process.h"
-#include "mailBox.h"
+#define MAX_MAILBOXES		5
+#define MAX_MESSAGES		5
+#define MAX_MESSAGE_SIZE	10
 
+typedef struct {
+	unsigned char * messages[MAX_MESSAGES][MAX_MESSAGE_SIZE];
+	unsigned char nMessages;
+	ProcessQueue_t bloqued_procs;
+} MailBox_t;
 
-#define SC_EXIT						0
-#define SC_UART_WRITE				1
-#define SC_SLEEP					2
-#define SC_GET_PID					3
-#define SC_GET_PPID					4
-#define SC_GET_CHAR					5
-#define SC_TERMINAL_WRITE			6
-#define SC_EXEC_PROC				7
-#define SC_READ_MAILBOX				8
-#define SC_WRITE_MAILBOX			9
+void init_mailBoxes(void);
+void writeMessage(unsigned char nMailBox, unsigned char * messageDir);
+unsigned int readMessage(unsigned char nMailBox, unsigned char * messageDir);
 
-typedef unsigned int (*system_call_t)(unsigned int pc, unsigned int sp, unsigned int spsr);
-
-typedef struct system_call_entry {
-	uint32_t swi;
-    char* name;
-    system_call_t function;
-    uint32_t flags;
-    uint32_t params;
-} system_call_entry_t;
-
-
-void init_syscalls(void);
-
-unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned int spsr, unsigned int swi);
-unsigned int getParameter(unsigned int sp, unsigned int param);
-void setParameter(unsigned int sp, unsigned int param, unsigned int value);
-
-#endif /* SOURCE_INCLUDES_ZEUS_SYSCALLS_H_ */
+#endif /* SOURCE_INCLUDES_ZEUS_MAILBOX_H_ */

@@ -28,11 +28,15 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "process.h"
 #include "../atenea/pmem.h"
+#include "syscalls.h"
 
 // todo DEBUG
 #include "../hades/rpi-uart.h"
 
-
+Process_t * getCurrentProcess();
+Process_t * stepReadyQueue();
+void addToReadyQueue(Process_t * proc);
+void setActiveProcess(Process_t * proc);
 Pid_t getCurrentProcessPid(void);
 Pid_t getCurrentProcessPpid(void);
 unsigned char * getCurrentProcessTerminal(void);

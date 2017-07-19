@@ -34,6 +34,14 @@ void init_debugTracer(void) {
 	level = 1;
 }
 
+unsigned int getDebugTracerLever(void) {
+	return level;
+}
+
+void setDebugTracerLever(unsigned int lvl) {
+	level = lvl;
+}
+
 void debugPrintStrV1(char * str) {
 	if(level == 1) {
 		uart_puts(promptL1);

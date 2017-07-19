@@ -162,11 +162,104 @@ unsigned char * getCurrentDirStr(void) {
 	return "sproc1.elf sproc2.elf buzmenu.elf license.txt";
 }
 
+// quitar de aqui
+void mBoxmenu() {
+
+	   register unsigned int pid = 0;
+	   register char caracter = 55;
+	   register char buzon = 0;
+	   volatile char * resultBuff = {"               "};
+	   volatile char * msgBuff =    {"mensaje 1 hola!"};
+
+	    volatile char * string = "[PROC] Hola soy el Proceso mBoxMenu!";
+	    unsigned int addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #6");
+
+	    string = "[PROC] Mi PID es.....";
+	    addr = (unsigned int) string;
+		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #6");
+
+	    // llamada a getPID
+	    asm volatile("SWI #3");
+
+	    asm volatile("MOV %[pid], R0" : : [pid] "r" (pid) );
+	    uintToStringStr(pid,DECIMAL,resultBuff);
+	    addr = (unsigned int) resultBuff;
+	    asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    asm volatile("SWI #6");
+
+	    char var;
+	    for (var = 0; var < 10; ++var) {
+	    	resultBuff[var] = ' ';
+		}
+	    resultBuff[var] = '\0';
+
+	    while(caracter != '0') {
+		    string = "[PROC] Opciones: 1 = escribir mensaje, 2 = leer mensaje, 0 = salir.";
+		    addr = (unsigned int) string;
+			asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+		    asm volatile("SWI #6");
+
+		    string = "[PROC] Opcion seleccionada: ";
+		    addr = (unsigned int) string;
+			asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+		    asm volatile("SWI #6");
+
+	    	asm volatile("SWI #5");
+	    	asm volatile("MOV %[caracter], R0" : : [caracter] "r" (caracter) );
+	    	if(caracter == '1') {
+	    	    string = "[PROC] Seleccione buzon a enviar: ";
+	    	    addr = (unsigned int) string;
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    	    asm volatile("SWI #6");
+
+		    	asm volatile("SWI #5");
+		    	asm volatile("MOV %[caracter], R0" : : [caracter] "r" (caracter) );
+
+		    	buzon = caracter - '0';
+
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (buzon) );
+	    		asm volatile("MOV R1, %[dir]" : : [dir] "r" (msgBuff) );
+		    	asm volatile("SWI #9");
+
+	    	} else if(caracter == '2') {
+	    	    string = "[PROC] Seleccione buzon a recibir: ";
+	    	    addr = (unsigned int) string;
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    	    asm volatile("SWI #6");
+
+		    	asm volatile("SWI #5");
+		    	asm volatile("MOV %[caracter], R0" : : [caracter] "r" (caracter) );
+
+		    	buzon = caracter - '0';
+
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (buzon) );
+	    		asm volatile("MOV R1, %[dir]" : : [dir] "r" (resultBuff) );
+		    	asm volatile("SWI #8");
+
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (resultBuff) );
+	    	    asm volatile("SWI #6");
+	    	} else {
+	    	    string = "[PROC] OPCION NO RECONOCIDA! ";
+	    	    addr = (unsigned int) string;
+	    		asm volatile("MOV R0, %[dir]" : : [dir] "r" (addr) );
+	    	    asm volatile("SWI #6");
+	    	    uart_puts("caracter obtenido en el proceso = ");
+	    		uart_putc(caracter);
+	    		uart_puts("\n\r");
+	    	}
+	    }
+}
+
 unsigned int getFileBuf(unsigned char * proc) {
 	if(!strncmp("sproc1.elf",proc,stringLength("sproc1.elf"))) {
 		return &sample_process_1;
 	} else if(!strncmp("sproc2.elf",proc,stringLength("sproc2.elf"))) {
 		return &sample_process_2;
+	} else if(!strncmp("mmbox.elf",proc,stringLength("mmbox.elf"))) {
+		return &mBoxmenu;
 	}
 	return 0;
 }

@@ -25,8 +25,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/zeus/process.h"
 
-
-
 // Just some counting for easy debug on the screen. Simulate user process.
 void sample_process_1() {
 

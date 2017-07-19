@@ -25,7 +25,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../includes/zeus/syscalls.h"
 
-static unsigned int getParameter(unsigned int sp, unsigned int param) {
+unsigned int getParameter(unsigned int sp, unsigned int param) {
 
 	if(param > 10) {
 		return 0;
@@ -33,12 +33,11 @@ static unsigned int getParameter(unsigned int sp, unsigned int param) {
 	return (unsigned int) (*(unsigned int *) (sp + param*4));
 }
 
-static void setParameter(unsigned int sp, unsigned int param, unsigned int value) {
+void setParameter(unsigned int sp, unsigned int param, unsigned int value) {
 
 	if(param > 10) {
 		return;
 	}
-
 	*((unsigned int *) (sp + param*4)) = value;
 
 }
@@ -66,10 +65,21 @@ static unsigned int wrapper_sleepCurrentProc(unsigned int pc,unsigned int sp, un
 
 static unsigned int wrapper_getCurrentProcessPid(unsigned int pc,unsigned int sp, unsigned int spsr) {
 	unsigned int pid = getCurrentProcessPid();
-	uart_puts(" <<<<<<<<<<<<<<<<<<<< getCurrentProcessPid() = ");
-	uart_puts(uintToString(pid,DECIMAL));
-	uart_puts("\n\r");
 	setParameter(sp,0,pid);
+	return sp;
+}
+
+static unsigned int wrapper_writeMailBox(unsigned int pc,unsigned int sp, unsigned int spsr) {
+	unsigned int nBuz = getParameter(sp, 0);
+	unsigned int messageDir = getParameter(sp, 1);
+	writeMessage(nBuz,messageDir);
+	return sp;
+}
+
+static unsigned int wrapper_readMailBox(unsigned int pc,unsigned int sp, unsigned int spsr) {
+	unsigned int nBuz = getParameter(sp, 0);
+	unsigned int messageDir = getParameter(sp, 1);
+	sp = readMessage(nBuz,messageDir);
 	return sp;
 }
 
@@ -84,7 +94,9 @@ static system_call_entry_t system_call_table[] = {
 	    {SC_GET_PPID,"getppid", getCurrentProcessPpid,0,0},
 		{SC_GET_CHAR,"getcharacter",getCharacterHandler,0,0},
 		{SC_TERMINAL_WRITE,"terminal_write",wrapper_terminal_write,0,1},
-		{SC_EXEC_PROC,"exec_process",kInternalExecute,0,1}
+		{SC_EXEC_PROC,"exec_process",kInternalExecute,0,1},
+		{SC_READ_MAILBOX,"read_mailBox",wrapper_writeMailBox,0,2},
+		{SC_WRITE_MAILBOX,"write_mailBox",wrapper_readMailBox,0,2}
 };
 
 static uint32_t MAX_SYSCALLS = 0;
@@ -101,13 +113,22 @@ unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned 
     system_call_entry_t* syscall_entry;
     unsigned int new_stack = 0;
 
-	uart_puts("Handling syscall: ");
-	uart_puts(uintToString(swi,DECIMAL));
-	uart_puts(" with name ");
-	uart_puts(system_call_table[swi].name);
-	uart_puts("sp ");
-	uart_puts(uintToString(sp_addr,HEXADECIMAL));
-	uart_puts("\n\r");
+    debugPrintStrV1("Se ha producido una LLAMADA AL SISTEMA. Se invoca rutina 'syscall_handler' del modulo 'zeus'\n\r");
+    debugPrintStrV1("ID de la llamada solicitada: '");
+    debugPrintStrV1(uintToString(swi,DECIMAL));
+    uart_puts("' con nombre '");
+    debugPrintStrV1(system_call_table[swi].name);
+    uart_puts("'\n\r");
+    debugPrintStrV1("ID del proceso solicitante: '");
+    debugPrintStrV1(uintToString(getCurrentProcess()->pid,DECIMAL));
+    uart_puts("' con nombre '");
+    debugPrintStrV1(getCurrentProcess()->name);
+    debugPrintStrV1("\n\rPC = '");
+    debugPrintStrV1(uintToString(lr_addr,HEXADECIMAL));
+    uart_puts("'\n\r");
+    debugPrintStrV1("\n\rSP = '");
+    debugPrintStrV1(uintToString(sp_addr,HEXADECIMAL));
+	uart_puts("'\n\r");
 
 	if(swi >= MAX_SYSCALLS) {
 		// SYSCALL no recenocida.
@@ -121,12 +142,7 @@ unsigned int syscall_handler(unsigned int sp_addr,unsigned int lr_addr,unsigned 
     syscall = syscall_entry->function;
 
     // Llamamos a la rutina del kernel encargada de dicha llamada al sistema con el número de parámetros especificado.
-
     new_stack = syscall(lr_addr,sp_addr,spsr);
-
-	uart_puts("new_stack: ");
-    uart_puts(uintToString(new_stack,HEXADECIMAL));
-	uart_puts("\n\r");
 
     return new_stack;
 }

@@ -406,6 +406,7 @@ int main(uint32_t r0, uint32_t r1, uint32_t atagsAddr) {
 	init_screen_consoles();
 	init_pmem();
 	init_uartConsole();
+	init_debugTracer();
 
 	/* Enable the timer interrupt IRQ */
 	RPI_GetIrqController()->Enable_Basic_IRQs = RPI_BASIC_ARM_TIMER_IRQ;//RPI_BASIC_ARM_TIMER_IRQ;

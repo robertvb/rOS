@@ -160,12 +160,12 @@ void __attribute__ ((naked)) software_interrupt_vector(void) {
 	asm volatile("MRS %0, SPSR\n\t" : "=r" (spsr) );
 
 	// FIN DEL PROLOGO.
-	uart_puts("Valor de sp en poseidon: 0x");
-    uart_puts(uintToString(sp_addr,HEXADECIMAL));
-	uart_puts("\n\r");
-	uart_puts("Valor de lr en poseidon: 0x");
-    uart_puts(uintToString(lr_addr,HEXADECIMAL));
-	uart_puts("\n\r");
+	//uart_puts("Valor de sp en poseidon: 0x");
+    //uart_puts(uintToString(sp_addr,HEXADECIMAL));
+	//uart_puts("\n\r");
+	//uart_puts("Valor de lr en poseidon: 0x");
+    //uart_puts(uintToString(lr_addr,HEXADECIMAL));
+	//uart_puts("\n\r");
 
 	// Bottom 24 bits of the SWI instruction are the SWI number
 	swi = *((unsigned int *)(lr_addr - 4)) & 0x00ffffff;

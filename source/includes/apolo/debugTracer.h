@@ -29,7 +29,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 #include "../hades/rpi-uart.h"
 
 void init_debugTracer(void);
-void setDebugDisplayLevel(unsigned int level);
+unsigned int getDebugTracerLever(void);
+void setDebugTracerLever(unsigned int lvl);
 void debugPrintStrV1(char * str);
 void debugPrintStrV2(char * str);
 void debugPrintStrV3(char * str);

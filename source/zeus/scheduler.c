@@ -44,6 +44,35 @@ Pid_t getNextPid(void) {
 	return process_count;
 }
 
+Process_t * getCurrentProcess(void) {
+	return active_process;
+}
+
+Process_t * stepReadyQueue(void) {
+	Process_t * proc = ready_queue;
+	ready_queue = ready_queue->nextProc;
+	active_process = proc;
+	active_process->nextProc = NULL;
+	active_process->status = PROCESS_STATUS_RUNNING;
+	return proc;
+}
+
+void addToReadyQueue(Process_t * proc) {
+	if(ready_queue == NULL) {
+		ready_queue = ready_queue_tail = proc;
+	} else {
+		ready_queue_tail->nextProc = proc;
+		ready_queue_tail = proc;
+		proc->nextProc = NULL;
+	}
+	proc->status = PROCESS_STATUS_READY;
+}
+
+void setActiveProcess(Process_t * proc) {
+	active_process = proc;
+	proc->nextProc = NULL;
+}
+
 Pid_t getCurrentProcessPid(void) {
 	return active_process->pid;
 }
@@ -171,13 +200,13 @@ void  kInternalExecute(char * name,  Dir_t pc) {
 	process_list[process_count].ppid = active_process->ppid;
 	process_list[process_count].times_loaded = 0;
 	process_list[process_count].status = PROCESS_STATUS_READY;
-	process_list[process_count].tablePageDir = 0x1f500000;    //TODO TEST
+	process_list[process_count].tablePageDir = getNextFld(pid);    //TODO TEST
 	process_list[process_count].spsr = 0x00000150;			  //Modo usuario
 	process_list[process_count].terminal = getCurrentSConsole();
 
 
     forked_stack_pointer--;
-    *forked_stack_pointer = 0x00000150;
+    *forked_stack_pointer = get4kframe(pid);
     uart_puts("Poniendo a cero word = ");
     uart_puts(uintToString((unsigned int) forked_stack_pointer,HEXADECIMAL));
     uart_puts("\n\r");
@@ -228,15 +257,21 @@ void halt() {
 unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsigned int spsr) {
 
 	unsigned int consolaAct = getCurrentSConsole();
-    uart_puts("CONSOLA ACT:  ");
-    uart_puts(uintToString(consolaAct,DECIMAL));
-    uart_puts("\n\r");
+	if(getDebugTracerLever() == 3) {
+		debugPrintStrV3("Se ha producido una INTERRUPCION DE RELOJ. Se invoca rutina 'schedule_timeout' del modulo 'zeus'\n\r");
+		debugPrintStrV3("ID del proceso interrumpido: '");
+	    uart_puts(uintToString(active_process->pid,DECIMAL));
+	    uart_puts("' with name '");
+	    uart_puts(active_process->name);
+	    uart_puts("'\n\r");
+		debugPrintStrV3("CONSOLA ACT:  ");
+		debugPrintStrV3(uintToString(consolaAct,DECIMAL));
+		uart_puts("\n\r");
+	}
 
 	if(consolaAct == 5) {
-		uart_puts("actualizando BG\n\r");
+		debugPrintStrV3("actualizando BackGround.\n\r");
 		bgRefresh();
-	} else {
-		uart_puts("hay una consola en este timeout\n\r");
 	}
 
 	unsigned int new_stack;
@@ -252,36 +287,45 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
 	active_process->status = PROCESS_STATUS_READY;
 
     Process_t * proc;
-    uart_puts("estado de la readyQ: \n\r");
-	for(proc = ready_queue; proc != NULL; proc = proc->nextProc) {
-        uart_puts("encontrado un proc en readyQ. Pid: ");
-        uart_puts(uintToString(proc->pid,DECIMAL));
-        if(ready_queue_tail == proc) {
-            uart_puts(" y es last executed");
-        }
-        uart_puts("\n\r");
-	}
+    debugPrintStrV3("estado de la readyQ: \n\r");
+    if(getDebugTracerLever() == 3) {
+		for(proc = ready_queue; proc != NULL; proc = proc->nextProc) {
+			debugPrintStrV3("Encontrado un proceso en la cola de preparados. Pid = ");
+			uart_puts(uintToString(proc->pid,DECIMAL));
+			if(ready_queue_tail == proc) {
+				uart_puts(" y es last executed");
+			}
+			uart_puts("\n\r");
+		}
+    }
 
     // Actuamos la cola de bloqueados
     //Process_t * proc;
     Process_t * procAnt;
-    //uart_puts("Actuando sobre la cola de bloqueados: \n\r");
+
+    debugPrintStrV3("Actuando sobre la cola de bloqueados: \n\r");
     for(procAnt = proc = bloqued_queue; proc != NULL;) {
-        //uart_puts("encontrado un proc en bloqueados. Pid: ");
-        //uart_puts(uintToString(proc->pid,DECIMAL));
-        //uart_puts("\n\r");
+    	debugPrintStrV3("encontrado un proc en bloqueados. Pid: ");
+    	if(getDebugTracerLever() == 3) {
+			uart_puts(uintToString(proc->pid,DECIMAL));
+			uart_puts("\n\r");
+    	}
         unsigned int reason = GET_BLKD_REASON(proc->waiting_for);
     	if(BLKD_PASIVE_WAITING == GET_BLKD_REASON(proc->waiting_for)) {
     		unsigned int newValue = GET_BLKD_ARGS(proc->waiting_for);
     		newValue--;
-            uart_puts("NewValue = ");
-            uart_puts(uintToString(newValue,DECIMAL));
-            uart_puts("\n\r");
+    		debugPrintStrV3("Numero de TICS restantes para desbloqueo = '");
+        	if(getDebugTracerLever() == 3) {
+				uart_puts(uintToString(newValue,DECIMAL));
+				uart_puts("'\n\r");
+        	}
     		if(newValue == 0) {
     			// lo metemos en la cola de preparados
-                uart_puts("DESBLOQUEADO PID = ");
-                uart_puts(uintToString(proc->pid,DECIMAL));
-                uart_puts("\n\r");
+            	if(getDebugTracerLever() == 3) {
+    			debugPrintStrV3("DESBLOQUEADO PID = ");
+					uart_puts(uintToString(proc->pid,DECIMAL));
+					uart_puts("\n\r");
+            	}
 	            // actualizamos cola bloqueados
                 if(bloqued_queue == procAnt) {
                 	bloqued_queue = proc->nextProc;
@@ -306,28 +350,27 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     	    	procAnt = proc;
     	    	proc = proc->nextProc;
     		}
+    	} else {
+	    	procAnt = proc;
+	    	proc = proc->nextProc;
     	}
     }
     //uart_puts("Done! \n\r");
 
     // DEBUG CODE
-    uart_puts("Schedule timeout. Current active pid is ");
-    uart_puts(uintToString(active_process->pid,DECIMAL));
-    uart_puts(" with name ");
-    uart_puts(active_process->name);
-    uart_puts(". Switching to next process.\n\r");
+	if(getDebugTracerLever() == 3) {
+		debugPrintStrV3("Guardando SP = '0x");
+		uart_puts(uintToString(stack_pointer,HEXADECIMAL));
+		uart_puts("'\n\r");
 
-    uart_puts("stack saved, was 0x");
-    uart_puts(uintToString(stack_pointer,HEXADECIMAL));
-	uart_puts("\n\r");
+		debugPrintStrV3("Guardando PC = '0x");
+		uart_puts(uintToString(pc,HEXADECIMAL));
+		uart_puts("'\n\r");
 
-	uart_puts("Saving pc...");
-    uart_puts(uintToString(pc,HEXADECIMAL));
-	uart_puts("\n\r");
-
-	uart_puts("Saving spsr...");
-    uart_puts(uintToString(spsr,HEXADECIMAL));
-	uart_puts("\n\r");
+		debugPrintStrV3("Guardando SPSR = '0x");
+		uart_puts(uintToString(spsr,HEXADECIMAL));
+		uart_puts("'\n\r");
+	}
 
 	// Obtenemos siguiente proceso y encolamos el actual.
 
@@ -359,13 +402,26 @@ unsigned int schedule_timeout(unsigned int stack_pointer, unsigned int pc, unsig
     active_process->times_loaded++;
     active_process->status = PROCESS_STATUS_RUNNING;
 
-    uart_puts("Restoring stack 0x");
-    uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
-	uart_puts("\n\r");
+	if(getDebugTracerLever() == 3) {
 
-    uart_puts("Restoring pc 0x");
-    uart_puts(uintToString(active_process->pc,HEXADECIMAL));
-	uart_puts("\n\r");
+		debugPrintStrV3("ID del siguiente proceso a ejecutar: '");
+		uart_puts(uintToString(active_process->pid,DECIMAL));
+		uart_puts("con nombre '");
+		uart_puts(active_process->name);
+		uart_puts("'\n\r");
+
+		debugPrintStrV3("Restaurando SP = '0x");
+		uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
+		uart_puts("'\n\r");
+
+		debugPrintStrV3("Restaurando PC = '0x");
+		uart_puts(uintToString(active_process->pc,HEXADECIMAL));
+		uart_puts("'\n\r");
+
+		debugPrintStrV3("Restaurando SPSR = '0x");
+		uart_puts(uintToString(active_process->spsr,HEXADECIMAL));
+		uart_puts("'\n\r");
+	}
 
 	return active_process->stack_pointer;
 
@@ -461,6 +517,8 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 		uart_puts(uintToString(proc->pid, DECIMAL));
 		uart_puts("\n\r");
 
+		setParameter(proc->stack_pointer,0,uCharacter);
+
 		if (lastProc == proc) {
 			bloqued_queue = proc->nextProc;
 		} else {
@@ -469,16 +527,18 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 
 	}
 
-	// TODO PRINTF DE DEBUG
-	if (ready_queue == NULL) {
-		uart_puts("REady Q = NULL");
-	} else {
-		uart_puts("REady Q = ");
-		uart_puts(uintToString(ready_queue->pid, DECIMAL));
-		uart_puts("\n\r");
-	}
+	// si habia un proc bloqueado esperando un caracer lo ponemos a ejecutar
+	if(proc != NULL) {
 
-	uart_puts("Done! \n\r");
+		if(ready_queue == NULL) {
+			ready_queue = ready_queue_tail = active_process;
+		} else {
+			ready_queue_tail->nextProc = active_process;
+			ready_queue_tail = active_process;
+		}
+
+		active_process = proc;
+	}
 
 	// A PARTIR DE AQUI COPIADO DEL DISPATCHER
 
@@ -493,14 +553,6 @@ unsigned int uart_interrupt_handler(unsigned int stack_pointer, unsigned int pc)
 	uart_puts("Saving pc...");
 	uart_puts(uintToString(pc, HEXADECIMAL));
 	uart_puts("\n\r");
-
-	// Actualizamos la cola
-	if(proc != NULL) {
-		active_process->status = PROCESS_STATUS_READY;
-		ready_queue_tail->nextProc = active_process;
-		ready_queue_tail = active_process;
-		active_process = proc;
-	}
 
 	// Incremetamos estadisticas y cambiamos status a RUNNING
 	active_process->times_loaded++;
@@ -533,17 +585,26 @@ unsigned int getCharacterHandler(unsigned int pc, unsigned int sp, unsigned int 
 
 	uart_puts("<<<<<<<<<<<<<<<<<<ESPERANDO CARACTER>>>>>>>>>>>>>>>>>>>\r\n");
 
-    // Ejecutar siguiente proceso. COPIADO DE SLEEPCURRENTPROC
-	if(ready_queue == NULL) {
-		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: PID = ");
-		active_process = &process_list[0];
-	    uart_puts(uintToString(active_process->pid,DECIMAL));
-	    uart_puts(" pc = 0x");
-	    uart_puts(uintToString(active_process->pc,HEXADECIMAL));
-	    uart_puts(" sp = 0x");
-	    uart_puts(uintToString(active_process->stack_pointer,HEXADECIMAL));
-	    uart_puts("\n\r");
+	// TODO PRINTF DE DEBUG
+	if (ready_queue == NULL) {
+		uart_puts("REady Q = NULL");
+	} else {
+		uart_puts("REady Q = ");
+		uart_puts(uintToString(ready_queue->pid, DECIMAL));
+		uart_puts("\n\r");
 	}
+
+    // Ejecutar siguiente proceso. COPIADO DE SLEEPCURRENTPROC
+
+	if(ready_queue == NULL) {
+		uart_puts("has bloqeuado al unico proceso en cola. Proc que vamos a poner a ejecutar: ");
+		active_process = &process_list[0];
+	} else {
+		active_process = ready_queue;
+		ready_queue = ready_queue->nextProc;
+	}
+
+	active_process -> nextProc = NULL;
 
 	return active_process->stack_pointer;
 
